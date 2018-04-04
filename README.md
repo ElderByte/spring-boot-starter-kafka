@@ -1,3 +1,5 @@
+ [ ![Download](https://api.bintray.com/packages/elderbyte/maven/spring-boot-starter-kafka/images/download.svg) ](https://bintray.com/elderbyte/maven/spring-boot-starter-kafka/_latestVersion)
+
 # spring-boot-starter-kafka
 Spring Boot auto configuration for the spring Kafka client.
 
