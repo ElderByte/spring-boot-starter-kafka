@@ -14,6 +14,18 @@ kafka.client:
   servers: localhost:9092
 ```
 
+Do disable the auto-configuration completely, set `kafka.client.enabled` to `false`
+You can also disable specific features of this auto-configuration, if you don't need all of it:
+
+```yaml
+kafka.client:
+    admin.enabled: false
+    consumer.enabled: false
+    producer.enabled: false
+```
+
+
+
 ## Generic Json Serialisation
 
 By default, this starter is very opiniated about serialisation:

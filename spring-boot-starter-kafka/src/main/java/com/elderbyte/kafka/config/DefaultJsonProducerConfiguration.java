@@ -4,6 +4,7 @@ import com.elderbyte.kafka.serialisation.SpringKafkaJsonSerializer;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
@@ -14,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
+@ConditionalOnProperty(value = "kafka.client.producer.enabled", matchIfMissing = true)
 public class DefaultJsonProducerConfiguration {
 
     @Autowired

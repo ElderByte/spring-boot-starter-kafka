@@ -5,6 +5,7 @@ import com.elderbyte.kafka.serialisation.SpringKafkaJsonDeserializer;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
@@ -16,6 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
+@ConditionalOnProperty(value = "kafka.client.consumer.enabled", matchIfMissing = true)
 public class DefaultJsonConsumerConfiguration {
 
     @Autowired
