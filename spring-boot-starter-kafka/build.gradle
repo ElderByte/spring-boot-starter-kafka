@@ -1,0 +1,115 @@
+buildscript {
+	repositories {
+		mavenCentral()
+		maven { url "https://repo.spring.io/snapshot" }
+		maven { url "https://repo.spring.io/milestone" }
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+	}
+}
+
+plugins {
+	id "com.jfrog.bintray" version "1.7.3"
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'maven-publish'
+
+
+compileJava {
+	sourceCompatibility = 9
+	targetCompatibility = 9
+	options.encoding = "UTF-8"
+}
+
+repositories {
+	mavenCentral()
+	maven { url "https://repo.spring.io/snapshot" }
+	maven { url "https://repo.spring.io/milestone" }
+	maven { url "http://dl.bintray.com/elderbyte/maven" }
+}
+
+
+dependencies {
+
+	// Basic Spring Boot
+	compile('org.springframework.boot:spring-boot-starter')
+
+	// Jackson (version managed by Spring Boot)
+	compile('com.fasterxml.jackson.core:jackson-core')
+	compile('com.fasterxml.jackson.core:jackson-databind')
+
+	// Kafka Client
+	compile('org.springframework.kafka:spring-kafka')
+
+	testCompile('org.springframework.boot:spring-boot-starter-test')
+}
+
+
+jar {
+	enabled = true
+}
+
+bootJar {
+	// Since this is a library, it cant be executed directly
+	enabled = false // Don't create a runnable fat jar
+}
+
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+	classifier = 'javadoc'
+	from javadoc.destinationDir
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+	classifier = 'sources'
+	from sourceSets.main.allSource
+}
+
+artifacts {
+	archives sourcesJar, javadocJar
+}
+
+// Publishing / Bintray
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			from components.java
+
+			groupId = project.group
+			artifactId = jar.baseName
+
+			artifact sourcesJar
+			artifact javadocJar
+		}
+	}
+}
+
+bintray {
+	user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
+	key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
+	publications = ['mavenJava']
+
+	dryRun = false // Whether to run this as dry-run, without deploying
+	publish = true // If version should be auto published after an upload
+
+	pkg {
+		repo = 'maven'
+		name = "${jar.baseName}"
+		userOrg = 'elderbyte'
+		licenses = ['Apache-2.0']
+		vcsUrl = 'https://github.com/ElderByte-/spring-boot-starter-kafka'
+
+		version {
+			name = project.version //Bintray logical version name
+		}
+	}
+}
+
+task upload { dependsOn bintrayUpload }
