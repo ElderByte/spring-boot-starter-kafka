@@ -1,5 +1,5 @@
  [ ![Download](https://api.bintray.com/packages/elderbyte/maven/spring-boot-starter-kafka/images/download.svg) ](https://bintray.com/elderbyte/maven/spring-boot-starter-kafka/_latestVersion)
- [![Build Status](https://travis-ci.org/ElderByte-/spring-boot-starter-kafka.svg?branch=master)](https://travis-ci.org/ElderByte-/spring-boot-starter-kafka)
+[![CircleCI](https://circleci.com/gh/ElderByte-/spring-boot-starter-kafka.svg?style=svg)](https://circleci.com/gh/ElderByte-/spring-boot-starter-kafka)
 
 # spring-boot-starter-kafka
 Spring Boot auto configuration for the spring Kafka client.

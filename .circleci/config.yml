@@ -9,10 +9,11 @@ jobs:
       # specify the version you desire here
       - image: circleci/openjdk:10-jdk
 
-    #working_directory: ~/repo
+    working_directory: ~/
 
     environment:
       JVM_OPTS: -Xmx3200m # JVM maximum heap limit
 
     steps:
+      - run: pwd
       - run: ./gradlew clean build
