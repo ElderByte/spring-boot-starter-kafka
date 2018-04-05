@@ -16,4 +16,5 @@ jobs:
 
     steps:
       - run: pwd
+      - checkout
       - run: ./gradlew clean build
