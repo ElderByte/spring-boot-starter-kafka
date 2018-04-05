@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
-@ConditionalOnProperty(value = "kafka.client.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "kafka.client.enabled", havingValue = "true", matchIfMissing = true)
 @Import( { DefaultJsonProducerConfiguration.class, DefaultJsonConsumerConfiguration.class })
 public class KafkaStarterAutoConfiguration {
 

@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
-@ConditionalOnProperty(value = "kafka.client.producer.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "kafka.client.producer.enabled", havingValue = "true", matchIfMissing = true)
 public class DefaultJsonProducerConfiguration {
 
     @Autowired

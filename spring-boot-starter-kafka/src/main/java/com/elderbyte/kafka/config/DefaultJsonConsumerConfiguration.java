@@ -3,6 +3,7 @@ package com.elderbyte.kafka.config;
 import com.elderbyte.kafka.serialisation.Json;
 import com.elderbyte.kafka.serialisation.SpringKafkaJsonDeserializer;
 import org.apache.kafka.clients.CommonClientConfigs;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -17,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
-@ConditionalOnProperty(value = "kafka.client.consumer.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "kafka.client.consumer.enabled", havingValue = "true", matchIfMissing = true)
 public class DefaultJsonConsumerConfiguration {
 
     @Autowired
@@ -31,8 +32,9 @@ public class DefaultJsonConsumerConfiguration {
     kafkaListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<String, Json> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
-        factory.setConcurrency(3);
-        factory.getContainerProperties().setPollTimeout(3000);
+        config.getConsumerConcurrency().ifPresent(c -> factory.setConcurrency(c));
+        config.getConsumerPollTimeout().ifPresent(t -> factory.getContainerProperties().setPollTimeout(t));
+        factory.setBatchListener(config.isConsumerEnableBatch());
         return factory;
     }
 
@@ -49,6 +51,7 @@ public class DefaultJsonConsumerConfiguration {
     public Map<String, Object> consumerConfigs() {
         Map<String, Object> props = new HashMap<>();
         props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, config.getKafkaServers());
+        config.getConsumerMaxPollRecords().ifPresent(max ->  props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, max));
         return props;
     }
 }
