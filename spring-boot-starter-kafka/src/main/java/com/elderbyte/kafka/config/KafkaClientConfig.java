@@ -20,7 +20,7 @@ public class KafkaClientConfig {
     @Value("${kafka.client.consumer.enableBatch:false}")
     private boolean consumerEnableBatch;
 
-    @Value("${kafka.client.consumer.enableBatch:}")
+    @Value("${kafka.client.consumer.maxPollRecords:}")
     private Integer consumerMaxPollRecords;
 
 
