@@ -9,7 +9,7 @@ jobs:
       # specify the version you desire here
       - image: circleci/openjdk:10-jdk
 
-    working_directory: ~/
+    working_directory: ~/repo
 
     environment:
       JVM_OPTS: -Xmx3200m # JVM maximum heap limit
