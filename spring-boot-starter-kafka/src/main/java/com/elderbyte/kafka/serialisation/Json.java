@@ -17,10 +17,10 @@ public class Json {
      *                                                                         *
      **************************************************************************/
 
-    public static Json Empty = new Json(null, null);
-
     public static Json from(ObjectMapper objectMapper, byte[] data){
         if(objectMapper == null) throw new IllegalArgumentException("objectMapper must not be null!");
+        if(data == null) throw new IllegalArgumentException("data must not be null!");
+
         try {
             JsonNode node = objectMapper.readTree(data);
             return new Json(objectMapper, node);
@@ -31,6 +31,8 @@ public class Json {
 
     public static Json from(ObjectMapper objectMapper, JsonNode node){
         if(objectMapper == null) throw new IllegalArgumentException("objectMapper must not be null!");
+        if(node == null) throw new IllegalArgumentException("node must not be null!");
+
         return new Json(objectMapper, node);
     }
 
@@ -50,6 +52,9 @@ public class Json {
      **************************************************************************/
 
     private Json(ObjectMapper objectMapper, JsonNode node){
+        if(objectMapper == null) throw new IllegalArgumentException("objectMapper must not be null!");
+        if(node == null) throw new IllegalArgumentException("node must not be null!");
+
         this.objectMapper = objectMapper;
         this.jsonNode = node;
     }
@@ -63,26 +68,22 @@ public class Json {
     /**
      * Get the untyped json node
      */
-    public Optional<JsonNode> getJsonNode(){
-        return Optional.ofNullable(jsonNode);
+    public JsonNode getJsonNode(){
+        return jsonNode;
     }
 
     /**
      * Decodes the generic json node into the given Java POJO object
      * @param clazz The target type ()necessary because java
      */
-    public <T> Optional<T> json(Class<T> clazz){
+    public <T> T json(Class<T> clazz){
 
         if(clazz == null) throw new IllegalArgumentException("clazz must not be null!");
 
-        if(jsonNode != null){
-            try {
-                return Optional.of(objectMapper.treeToValue(jsonNode, clazz));
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException("Failed to map json node to class " + clazz.getCanonicalName(), e);
-            }
-        }else{
-            return Optional.empty();
+        try {
+            return objectMapper.treeToValue(jsonNode, clazz);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to map json node to class " + clazz.getCanonicalName(), e);
         }
     }
 

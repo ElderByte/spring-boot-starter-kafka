@@ -52,7 +52,7 @@ public class SpringKafkaJsonDeserializer implements Deserializer<Json> {
   @Override
   public Json deserialize(String ignored, byte[] bytes) {
     if (bytes == null || bytes.length == 0) {
-      return Json.Empty;
+      return null;
     }
 
     try {
