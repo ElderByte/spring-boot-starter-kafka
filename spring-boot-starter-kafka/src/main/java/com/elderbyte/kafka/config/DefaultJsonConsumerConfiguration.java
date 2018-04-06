@@ -21,20 +21,32 @@ import java.util.Map;
 @ConditionalOnProperty(value = "kafka.client.consumer.enabled", havingValue = "true", matchIfMissing = true)
 public class DefaultJsonConsumerConfiguration {
 
+    public static final String JSON_BATCH_FACTORY = "kafkaBatchFactory";
+
     @Autowired
     private KafkaClientConfig config;
 
     @Autowired
     private SpringKafkaJsonDeserializer springKafkaJsonDeserializer;
 
+    /**
+     * Default factory as json
+     */
     @Bean
     public KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<String, Json>>
     kafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, Json> factory = new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(consumerFactory());
-        config.getConsumerConcurrency().ifPresent(c -> factory.setConcurrency(c));
-        config.getConsumerPollTimeout().ifPresent(t -> factory.getContainerProperties().setPollTimeout(t));
-        factory.setBatchListener(config.isConsumerEnableBatch());
+        var factory = buildJsonContainerFactory(consumerFactory());
+        return factory;
+    }
+
+    /**
+     * Json batch factory
+     */
+    @Bean
+    public KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<String, Json>>
+    kafkaBatchFactory() {
+        var factory = buildJsonContainerFactory(consumerFactory());
+        factory.setBatchListener(true);
         return factory;
     }
 
@@ -53,5 +65,13 @@ public class DefaultJsonConsumerConfiguration {
         props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, config.getKafkaServers());
         config.getConsumerMaxPollRecords().ifPresent(max ->  props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, max));
         return props;
+    }
+
+    private ConcurrentKafkaListenerContainerFactory<String, Json> buildJsonContainerFactory(ConsumerFactory<String, Json> consumerFactory){
+        var factory = new ConcurrentKafkaListenerContainerFactory<String, Json>();
+        factory.setConsumerFactory(consumerFactory);
+        config.getConsumerConcurrency().ifPresent(c -> factory.setConcurrency(c));
+        config.getConsumerPollTimeout().ifPresent(t -> factory.getContainerProperties().setPollTimeout(t));
+        return factory;
     }
 }

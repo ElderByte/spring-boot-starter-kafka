@@ -17,9 +17,6 @@ public class KafkaClientConfig {
     @Value("${kafka.client.consumer.pollTimeout:}")
     private Integer consumerPollTimeout;
 
-    @Value("${kafka.client.consumer.enableBatch:false}")
-    private boolean consumerEnableBatch;
-
     @Value("${kafka.client.consumer.maxPollRecords:}")
     private Integer consumerMaxPollRecords;
 
@@ -44,7 +41,4 @@ public class KafkaClientConfig {
         return Optional.ofNullable(consumerMaxPollRecords);
     }
 
-    public boolean isConsumerEnableBatch() {
-        return consumerEnableBatch;
-    }
 }
