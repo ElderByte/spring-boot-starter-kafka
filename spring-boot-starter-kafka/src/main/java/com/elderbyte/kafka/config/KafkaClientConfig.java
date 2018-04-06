@@ -20,6 +20,8 @@ public class KafkaClientConfig {
     @Value("${kafka.client.consumer.maxPollRecords:}")
     private Integer consumerMaxPollRecords;
 
+    @Value("${kafka.client.consumer.autoCommit:true}")
+    private boolean consumerAutoCommit;
 
     public String getKafkaServers(){
         return kafkaServers;
@@ -41,4 +43,7 @@ public class KafkaClientConfig {
         return Optional.ofNullable(consumerMaxPollRecords);
     }
 
+    public boolean isConsumerAutoCommit() {
+        return consumerAutoCommit;
+    }
 }

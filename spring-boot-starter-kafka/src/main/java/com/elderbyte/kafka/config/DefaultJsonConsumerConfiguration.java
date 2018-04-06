@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.KafkaListenerContainerFactory;
 import org.springframework.kafka.core.*;
+import org.springframework.kafka.listener.AbstractMessageListenerContainer;
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
 
 import java.util.HashMap;
@@ -63,6 +64,7 @@ public class DefaultJsonConsumerConfiguration {
     public Map<String, Object> consumerConfigs() {
         Map<String, Object> props = new HashMap<>();
         props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, config.getKafkaServers());
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, config.isConsumerAutoCommit());
         config.getConsumerMaxPollRecords().ifPresent(max ->  props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, max));
         return props;
     }
@@ -72,6 +74,13 @@ public class DefaultJsonConsumerConfiguration {
         factory.setConsumerFactory(consumerFactory);
         config.getConsumerConcurrency().ifPresent(c -> factory.setConcurrency(c));
         config.getConsumerPollTimeout().ifPresent(t -> factory.getContainerProperties().setPollTimeout(t));
+
+        factory.getContainerProperties().setAckMode(
+                config.isConsumerAutoCommit()
+                        ? AbstractMessageListenerContainer.AckMode.BATCH
+                        : AbstractMessageListenerContainer.AckMode.MANUAL
+        );
+
         return factory;
     }
 }

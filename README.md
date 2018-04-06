@@ -9,10 +9,25 @@ Spring Boot auto configuration for the spring Kafka client.
 
 Configure the kafka client with **application.yml**
 
+
+minimal config
+
 ```yaml
 kafka.client:
-  enabled: true
   servers: localhost:9092
+```
+
+advanced consumer config
+
+```yaml
+kafka.client:
+  servers: localhost:9092
+  consumer:
+    enabled: true
+    autoCommit: false
+    concurrency: 3
+    pollTimeout: 3000
+    maxPollRecords: 10
 ```
 
 Do disable the auto-configuration completely, set `kafka.client.enabled` to `false`
