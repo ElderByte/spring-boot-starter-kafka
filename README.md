@@ -17,17 +17,19 @@ kafka.client:
   servers: localhost:9092
 ```
 
-advanced consumer config
+advanced config
 
 ```yaml
 kafka.client:
   servers: localhost:9092
   consumer:
     enabled: true
-    autoCommit: false
+    autoCommit: false # Enables manual ACK
     concurrency: 3
     pollTimeout: 3000
     maxPollRecords: 10
+  producer:
+    transaction.id: my-producer-instance # Enables transaction support
 ```
 
 Do disable the auto-configuration completely, set `kafka.client.enabled` to `false`

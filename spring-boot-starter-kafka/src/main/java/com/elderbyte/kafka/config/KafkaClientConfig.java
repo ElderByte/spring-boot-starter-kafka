@@ -23,6 +23,10 @@ public class KafkaClientConfig {
     @Value("${kafka.client.consumer.autoCommit:true}")
     private boolean consumerAutoCommit;
 
+    @Value("${kafka.client.producer.transaction.id:}")
+    private String producerTransactionId;
+
+
     public String getKafkaServers(){
         return kafkaServers;
     }
@@ -45,5 +49,10 @@ public class KafkaClientConfig {
 
     public boolean isConsumerAutoCommit() {
         return consumerAutoCommit;
+    }
+
+
+    public Optional<String> getProducerTransactionId() {
+        return Optional.ofNullable(producerTransactionId);
     }
 }

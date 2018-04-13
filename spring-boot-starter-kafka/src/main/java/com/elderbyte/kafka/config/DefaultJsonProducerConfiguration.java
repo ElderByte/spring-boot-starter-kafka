@@ -29,6 +29,7 @@ public class DefaultJsonProducerConfiguration {
         DefaultKafkaProducerFactory<String, Object> factory = new DefaultKafkaProducerFactory<>(producerConfigs());
         factory.setKeySerializer(new StringSerializer());
         factory.setValueSerializer(springKafkaJsonSerializer);
+        config.getProducerTransactionId().ifPresent(factory::setTransactionIdPrefix);
         return factory;
     }
 
