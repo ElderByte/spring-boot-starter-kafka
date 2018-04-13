@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
@@ -24,22 +25,30 @@ public class DefaultJsonProducerConfiguration {
     @Autowired
     private SpringKafkaJsonSerializer springKafkaJsonSerializer;
 
-    @Bean
-    public ProducerFactory<String, Object> producerFactory() {
-        DefaultKafkaProducerFactory<String, Object> factory = new DefaultKafkaProducerFactory<>(producerConfigs());
-        factory.setKeySerializer(new StringSerializer());
-        factory.setValueSerializer(springKafkaJsonSerializer);
-        config.getProducerTransactionId().ifPresent(factory::setTransactionIdPrefix);
-        return factory;
-    }
 
     @Bean
+    @Primary
     public KafkaTemplate<String, Object> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 
+    @ConditionalOnProperty("kafka.client.producer.transaction.id")
+    @Bean("kafkaTemplateTransactional")
+    public KafkaTemplate<String, Object> kafkaTemplateTransactional() {
+        var factory = producerFactory();
+        config.getProducerTransactionId().ifPresent(tid -> factory.setTransactionIdPrefix(tid));
+        return new KafkaTemplate<>(factory);
+    }
+
+    private DefaultKafkaProducerFactory<String, Object> producerFactory() {
+        var factory = new DefaultKafkaProducerFactory<String, Object>(producerConfigs());
+        factory.setKeySerializer(new StringSerializer());
+        factory.setValueSerializer(springKafkaJsonSerializer);
+        return factory;
+    }
+
     private Map<String, Object> producerConfigs() {
-        Map<String, Object> props = new HashMap<>();
+        var props = new HashMap<String, Object>();
         props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, config.getKafkaServers());
         // See https://kafka.apache.org/documentation/#producerconfigs for more properties
         return props;
