@@ -16,7 +16,11 @@ import java.util.Map;
 
 @Configuration
 @ConditionalOnProperty(value = "kafka.client.enabled", havingValue = "true", matchIfMissing = true)
-@Import( { DefaultJsonProducerConfiguration.class, DefaultJsonConsumerConfiguration.class })
+@Import( {
+        DefaultKafkaAdminConfiguration.class,
+        DefaultJsonProducerConfiguration.class,
+        DefaultJsonConsumerConfiguration.class
+})
 public class KafkaStarterAutoConfiguration {
 
     @Autowired
@@ -37,11 +41,4 @@ public class KafkaStarterAutoConfiguration {
         return new SpringKafkaJsonSerializer(mapper);
     }
 
-    @Bean
-    @ConditionalOnProperty(value = "kafka.client.admin.enabled", matchIfMissing = true)
-    public KafkaAdmin admin() {
-        Map<String, Object> configs = new HashMap<>();
-        configs.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaClientConfig().getKafkaServers());
-        return new KafkaAdmin(configs);
-    }
 }
