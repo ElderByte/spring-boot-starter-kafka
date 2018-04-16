@@ -4,6 +4,7 @@ import com.elderbyte.kafka.serialisation.Json;
 import com.elderbyte.kafka.serialisation.SpringKafkaJsonDeserializer;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -53,10 +54,35 @@ public class DefaultJsonConsumerConfiguration {
 
     @Bean
     public ConsumerFactory<String, Json> consumerFactory() {
-        DefaultKafkaConsumerFactory<String, Json> factory = new DefaultKafkaConsumerFactory<>(consumerConfigs());
+        var factory = new DefaultKafkaConsumerFactory<String, Json>(consumerConfigs());
         factory.setKeyDeserializer(new StringDeserializer());
         factory.setValueDeserializer(springKafkaJsonDeserializer);
 
+        return factory;
+    }
+
+    @Bean
+    public ConsumerFactory<String, String> consumerFactoryStringString() {
+        var factory = new DefaultKafkaConsumerFactory<String, String>(consumerConfigs());
+        factory.setKeyDeserializer(new StringDeserializer());
+        factory.setValueDeserializer(new StringDeserializer());
+
+        return factory;
+    }
+
+    @Bean
+    public ConsumerFactory<String, byte[]> consumerFactoryStringByte() {
+        var factory = new DefaultKafkaConsumerFactory<String, byte[]>(consumerConfigs());
+        factory.setKeyDeserializer(new StringDeserializer());
+        factory.setValueDeserializer(new ByteArrayDeserializer());
+        return factory;
+    }
+
+    @Bean
+    public ConsumerFactory<byte[], byte[]> consumerFactoryByteByte() {
+        var factory = new DefaultKafkaConsumerFactory<byte[], byte[]>(consumerConfigs());
+        factory.setKeyDeserializer(new ByteArrayDeserializer());
+        factory.setValueDeserializer(new ByteArrayDeserializer());
         return factory;
     }
 
