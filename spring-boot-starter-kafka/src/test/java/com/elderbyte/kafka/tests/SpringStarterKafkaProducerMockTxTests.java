@@ -16,7 +16,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 @SpringBootTest(classes = SpringBootTestApp.class)
 @TestPropertySource(properties = {
         "kafka.client.enabled=false",
-        "kafka.client.producer.transaction.id=SpringStarterKafkaProducerMockTxTests"
 })
 public class SpringStarterKafkaProducerMockTxTests {
 

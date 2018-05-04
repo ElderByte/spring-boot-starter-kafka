@@ -90,7 +90,6 @@ public class KafkaProducerConfiguration {
         }
 
         @Bean
-        @ConditionalOnProperty("kafka.client.producer.transaction.id")
         public KafkaProducerTx<String, Object> kafkaProducerTx(){
             return new KafkaProducerTxMock<>();
         }
