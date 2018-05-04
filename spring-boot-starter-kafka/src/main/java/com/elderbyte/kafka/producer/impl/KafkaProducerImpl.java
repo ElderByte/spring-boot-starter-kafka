@@ -5,10 +5,12 @@ import com.elderbyte.kafka.producer.KafkaProducer;
 import org.apache.kafka.common.PartitionInfo;
 import org.springframework.kafka.core.KafkaOperations;
 import org.springframework.kafka.support.SendResult;
-import org.springframework.util.concurrent.ListenableFuture;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
+import static java.util.stream.Collectors.toList;
 
 public class KafkaProducerImpl<K,V> implements KafkaProducer<K,V> {
 
@@ -38,18 +40,18 @@ public class KafkaProducerImpl<K,V> implements KafkaProducer<K,V> {
      **************************************************************************/
 
     @Override
-    public ListenableFuture<SendResult<K, V>> send(String topic, K key, V data) {
-        return kafkaOperations.send(topic, key, data);
+    public CompletableFuture<SendResult<K, V>> send(String topic, K key, V data) {
+        return kafkaOperations.send(topic, key, data).completable();
     }
 
     @Override
-    public ListenableFuture<SendResult<K, V>> send(String topic, Integer partition, K key, V data) {
-        return kafkaOperations.send(topic, partition, key, data);
+    public CompletableFuture<SendResult<K, V>> send(String topic, Integer partition, K key, V data) {
+        return kafkaOperations.send(topic, partition, key, data).completable();
     }
 
     @Override
-    public ListenableFuture<SendResult<K, V>> send(String topic, KafkaMessage<K, V> message) {
-        return kafkaOperations.send(message.toRecord(topic));
+    public CompletableFuture<SendResult<K, V>> send(String topic, KafkaMessage<K, V> message) {
+        return kafkaOperations.send(message.toRecord(topic)).completable();
     }
 
     @Override
@@ -63,17 +65,19 @@ public class KafkaProducerImpl<K,V> implements KafkaProducer<K,V> {
     }
 
     @Override
-    public void sendAll(String topic, Collection<KafkaMessage<K, V>> kafkaMessages) {
-        kafkaMessages.forEach(m -> send(topic, m));
+    public List<CompletableFuture<SendResult<K, V>>> sendAll(String topic, Collection<KafkaMessage<K, V>> kafkaMessages) {
+        return kafkaMessages.stream()
+                .map(m -> send(topic, m))
+                .collect(toList());
     }
 
     /***************************************************************************
      *                                                                         *
-     * Private methods                                                         *
+     * Internal methods                                                        *
      *                                                                         *
      **************************************************************************/
 
-    protected KafkaOperations<K,V> getKafkaOperations(){
+    KafkaOperations<K,V> getKafkaOperations(){
         return kafkaOperations;
     }
 

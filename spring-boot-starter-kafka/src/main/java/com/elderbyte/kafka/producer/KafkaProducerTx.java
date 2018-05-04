@@ -1,6 +1,10 @@
 package com.elderbyte.kafka.producer;
 
+import org.springframework.kafka.support.SendResult;
+
 import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * This producer supports transactional operations on top of the default ones.
@@ -9,6 +13,6 @@ import java.util.Collection;
  */
 public interface KafkaProducerTx<K,V> extends KafkaProducer<K,V> {
 
-    void sendAllTransactionally(String topic, Collection<KafkaMessage<K, V>> messages);
+    List<CompletableFuture<SendResult<K, V>>> sendAllTransactionally(String topic, Collection<KafkaMessage<K, V>> messages);
 
 }

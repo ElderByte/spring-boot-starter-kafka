@@ -2,10 +2,15 @@ package com.elderbyte.kafka.producer.impl;
 
 import com.elderbyte.kafka.producer.KafkaMessage;
 import com.elderbyte.kafka.producer.KafkaProducerTx;
-import com.elderbyte.kafka.producer.impl.KafkaProducerImpl;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
+import org.springframework.util.concurrent.ListenableFuture;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
+import static java.util.stream.Collectors.toList;
 
 public class KafkaProducerTxImpl<K,V> extends KafkaProducerImpl<K,V> implements KafkaProducerTx<K,V> {
 
@@ -33,11 +38,11 @@ public class KafkaProducerTxImpl<K,V> extends KafkaProducerImpl<K,V> implements 
      **************************************************************************/
 
     @Override
-    public void sendAllTransactionally(String topic, Collection<KafkaMessage<K, V>> kafkaMessages) {
-        getKafkaOperations().executeInTransaction(t -> {
-            kafkaMessages.forEach(m -> t.send(m.toRecord(topic)));
-            return null;
-        });
+    public List<CompletableFuture<SendResult<K, V>>> sendAllTransactionally(String topic, Collection<KafkaMessage<K, V>> kafkaMessages) {
+        return getKafkaOperations().executeInTransaction(t -> kafkaMessages.stream()
+                .map(m -> t.send(m.toRecord(topic)))
+                .map(ListenableFuture::completable)
+                .collect(toList()));
     }
 
     /***************************************************************************

@@ -3,7 +3,6 @@ package com.elderbyte.kafka.producer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.common.PartitionInfo;
 import org.springframework.kafka.support.SendResult;
-import org.springframework.util.concurrent.ListenableFuture;
 
 import java.util.Collection;
 import java.util.List;
@@ -48,7 +47,7 @@ public interface KafkaProducer<K,V> {
      * @param topic The topic name
      * @param messages The messages to send
      */
-    void sendAll(String topic, Collection<KafkaMessage<K, V>> messages);
+    List<CompletableFuture<SendResult<K, V>>> sendAll(String topic, Collection<KafkaMessage<K, V>> messages);
 
 
     /**

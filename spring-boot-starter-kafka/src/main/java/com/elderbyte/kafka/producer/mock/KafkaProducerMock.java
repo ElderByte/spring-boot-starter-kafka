@@ -51,8 +51,9 @@ public class KafkaProducerMock<K,V> implements KafkaProducer<K,V> {
     }
 
     @Override
-    public void sendAll(String topic, Collection<KafkaMessage<K, V>> kafkaMessages) {
+    public List<CompletableFuture<SendResult<K, V>>> sendAll(String topic, Collection<KafkaMessage<K, V>> kafkaMessages) {
         logger.debug("Mocking Kafka Send! topic: {}, messages: {}", topic, kafkaMessages.size());
+        return new ArrayList<>();
     }
 
     @Override
