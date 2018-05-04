@@ -1,4 +1,4 @@
-package com.elderbyte.kafka.config.consumer;
+package com.elderbyte.kafka.consumer;
 
 import com.elderbyte.kafka.config.KafkaClientConfig;
 import com.elderbyte.kafka.serialisation.Json;

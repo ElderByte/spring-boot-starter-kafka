@@ -1,4 +1,4 @@
-package com.elderbyte.example.demo;
+package com.elderbyte.kafka.tests;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.SpringApplication;

@@ -1,4 +1,4 @@
-package com.elderbyte.kafka.config.admin;
+package com.elderbyte.kafka.admin;
 
 import com.elderbyte.kafka.admin.AdminClientFactory;
 import com.elderbyte.kafka.config.KafkaClientConfig;

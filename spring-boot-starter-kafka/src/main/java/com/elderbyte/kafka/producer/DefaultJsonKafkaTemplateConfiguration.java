@@ -1,4 +1,4 @@
-package com.elderbyte.kafka.config.producer;
+package com.elderbyte.kafka.producer;
 
 import com.elderbyte.kafka.config.KafkaClientConfig;
 import com.elderbyte.kafka.serialisation.SpringKafkaJsonSerializer;
@@ -11,14 +11,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.core.ProducerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
 @ConditionalOnProperty(value = "kafka.client.producer.enabled", havingValue = "true", matchIfMissing = true)
-public class DefaultJsonProducerConfiguration {
+public class DefaultJsonKafkaTemplateConfiguration {
 
     /***************************************************************************
      *                                                                         *

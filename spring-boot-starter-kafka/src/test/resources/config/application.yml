@@ -1,7 +1,6 @@
 
 kafka.client:
   servers: localhost:9092
-  producer.transaction.id: unit-test
 
 server:
     port: 8080
