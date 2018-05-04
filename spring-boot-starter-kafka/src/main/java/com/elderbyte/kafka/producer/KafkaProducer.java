@@ -7,7 +7,13 @@ import org.springframework.util.concurrent.ListenableFuture;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
+/**
+ * Provides the ability to send messages / records to a kafka broker.
+ * @param <K> The message key
+ * @param <V> The message content
+ */
 public interface KafkaProducer<K,V> {
 
     /**
@@ -17,7 +23,7 @@ public interface KafkaProducer<K,V> {
      * @param data The data.
      * @return a Future for the {@link SendResult}.
      */
-    ListenableFuture<SendResult<K, V>> send(String topic, K key, V data);
+    CompletableFuture<SendResult<K, V>> send(String topic, K key, V data);
 
     /**
      * Send the data to the provided topic with the provided key and partition.
@@ -27,7 +33,7 @@ public interface KafkaProducer<K,V> {
      * @param data the data.
      * @return a Future for the {@link SendResult}.
      */
-    ListenableFuture<SendResult<K, V>> send(String topic, Integer partition, K key, V data);
+    CompletableFuture<SendResult<K, V>> send(String topic, Integer partition, K key, V data);
 
     /**
      * Send the data to the provided topic with the provided key and partition.
@@ -35,8 +41,13 @@ public interface KafkaProducer<K,V> {
      * @param message the partition.
      * @return a Future for the {@link SendResult}.
      */
-    ListenableFuture<SendResult<K, V>> send(String topic, KafkaMessage<K, V> message);
+    CompletableFuture<SendResult<K, V>> send(String topic, KafkaMessage<K, V> message);
 
+    /**
+     * Send all messages to to given topic
+     * @param topic The topic name
+     * @param messages The messages to send
+     */
     void sendAll(String topic, Collection<KafkaMessage<K, V>> messages);
 
 
@@ -47,6 +58,8 @@ public interface KafkaProducer<K,V> {
      */
     List<PartitionInfo> partitionsFor(String topic);
 
-
+    /**
+     * Flush all pending messages to the broker
+     */
     void flush();
 }
