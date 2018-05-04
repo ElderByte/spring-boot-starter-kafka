@@ -1,5 +1,6 @@
-package com.elderbyte.kafka.config;
+package com.elderbyte.kafka.config.consumer;
 
+import com.elderbyte.kafka.config.KafkaClientConfig;
 import com.elderbyte.kafka.serialisation.Json;
 import com.elderbyte.kafka.serialisation.SpringKafkaJsonDeserializer;
 import org.apache.kafka.clients.CommonClientConfigs;
@@ -23,6 +24,12 @@ import java.util.Map;
 @ConditionalOnProperty(value = "kafka.client.consumer.enabled", havingValue = "true", matchIfMissing = true)
 public class DefaultJsonConsumerConfiguration {
 
+    /***************************************************************************
+     *                                                                         *
+     * Fields                                                                  *
+     *                                                                         *
+     **************************************************************************/
+
     public static final String JSON_BATCH_FACTORY = "kafkaBatchFactory";
 
     @Autowired
@@ -30,6 +37,12 @@ public class DefaultJsonConsumerConfiguration {
 
     @Autowired
     private SpringKafkaJsonDeserializer springKafkaJsonDeserializer;
+
+    /***************************************************************************
+     *                                                                         *
+     * Public API                                                              *
+     *                                                                         *
+     **************************************************************************/
 
     /**
      * Default factory as json
@@ -94,6 +107,12 @@ public class DefaultJsonConsumerConfiguration {
         config.getConsumerMaxPollRecords().ifPresent(max ->  props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, max));
         return props;
     }
+
+    /***************************************************************************
+     *                                                                         *
+     * Private methods                                                         *
+     *                                                                         *
+     **************************************************************************/
 
     private ConcurrentKafkaListenerContainerFactory<String, Json> buildJsonContainerFactory(ConsumerFactory<String, Json> consumerFactory){
         var factory = new ConcurrentKafkaListenerContainerFactory<String, Json>();

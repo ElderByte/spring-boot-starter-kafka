@@ -1,18 +1,16 @@
 package com.elderbyte.kafka.config;
 
+import com.elderbyte.kafka.config.admin.DefaultKafkaAdminConfiguration;
+import com.elderbyte.kafka.config.consumer.DefaultJsonConsumerConfiguration;
+import com.elderbyte.kafka.config.producer.DefaultJsonProducerConfiguration;
 import com.elderbyte.kafka.serialisation.SpringKafkaJsonDeserializer;
 import com.elderbyte.kafka.serialisation.SpringKafkaJsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.kafka.core.KafkaAdmin;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Configuration
 @ConditionalOnProperty(value = "kafka.client.enabled", havingValue = "true", matchIfMissing = true)

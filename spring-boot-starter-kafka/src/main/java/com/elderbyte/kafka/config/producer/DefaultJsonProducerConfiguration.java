@@ -1,5 +1,6 @@
-package com.elderbyte.kafka.config;
+package com.elderbyte.kafka.config.producer;
 
+import com.elderbyte.kafka.config.KafkaClientConfig;
 import com.elderbyte.kafka.serialisation.SpringKafkaJsonSerializer;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -19,12 +20,23 @@ import java.util.Map;
 @ConditionalOnProperty(value = "kafka.client.producer.enabled", havingValue = "true", matchIfMissing = true)
 public class DefaultJsonProducerConfiguration {
 
+    /***************************************************************************
+     *                                                                         *
+     * Fields                                                                  *
+     *                                                                         *
+     **************************************************************************/
+
     @Autowired
     private KafkaClientConfig config;
 
     @Autowired
     private SpringKafkaJsonSerializer springKafkaJsonSerializer;
 
+    /***************************************************************************
+     *                                                                         *
+     * Public API                                                              *
+     *                                                                         *
+     **************************************************************************/
 
     @Bean
     @Primary
@@ -39,6 +51,12 @@ public class DefaultJsonProducerConfiguration {
         config.getProducerTransactionId().ifPresent(tid -> factory.setTransactionIdPrefix(tid));
         return new KafkaTemplate<>(factory);
     }
+
+    /***************************************************************************
+     *                                                                         *
+     * Private methods                                                         *
+     *                                                                         *
+     **************************************************************************/
 
     private DefaultKafkaProducerFactory<String, Object> producerFactory() {
         var factory = new DefaultKafkaProducerFactory<String, Object>(producerConfigs());
