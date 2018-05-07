@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Optional;
 
 /**
@@ -72,6 +73,20 @@ public class Json {
         return parseJson(jsonData);
     }
 
+    public String getContentAsString(){
+        try {
+            return new String(jsonData,"UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    /***************************************************************************
+     *                                                                         *
+     * Public API                                                              *
+     *                                                                         *
+     **************************************************************************/
+
     /**
      * Decodes the generic json node into the given Java POJO object
      * @param clazz The target type (necessary because java)
@@ -103,7 +118,9 @@ public class Json {
         }catch (Exception e){
             throw new JsonParseException("Failed to deserialize bytes into JSON", e); // TODO Proper exception
         }
-
     }
+
+
+
 
 }
