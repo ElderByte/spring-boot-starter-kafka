@@ -17,7 +17,12 @@ import java.util.Objects;
 
 import static java.util.stream.Collectors.toList;
 
-public class ErrorAwareProcessor<K, V> {
+/**
+ * Manages the stream processing of json based data streams. Including metrics and error handling / reporting.
+ * @param <K> The key type
+ * @param <V> The value type (converted from json)
+ */
+public class ManagedJsonProcessor<K, V> {
 
 
     /***************************************************************************
@@ -26,7 +31,7 @@ public class ErrorAwareProcessor<K, V> {
      *                                                                         *
      **************************************************************************/
 
-    private final Logger log = LoggerFactory.getLogger(ErrorAwareProcessor.class);
+    private final Logger log = LoggerFactory.getLogger(ManagedJsonProcessor.class);
     private final MetricsReporter reporter;
     private final Class<V> valueClazz;
     private final boolean skipOnError;
@@ -39,7 +44,7 @@ public class ErrorAwareProcessor<K, V> {
      **************************************************************************/
 
 
-    public ErrorAwareProcessor(Class<V> valueClazz, boolean skipOnError, boolean skipOnDtoMappingError, MetricsReporter reporter){
+    public ManagedJsonProcessor(Class<V> valueClazz, boolean skipOnError, boolean skipOnDtoMappingError, MetricsReporter reporter){
         if(valueClazz == null) throw new IllegalArgumentException("valueClazz must not be null");
         if(reporter == null) throw new IllegalArgumentException("reporter must not be null");
         this.reporter = reporter;
