@@ -1,4 +1,4 @@
-package com.elderbyte.kafka.consumer;
+package com.elderbyte.kafka.consumer.processing;
 
 public class ProcessingException extends RuntimeException {
 

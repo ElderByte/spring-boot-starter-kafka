@@ -3,6 +3,7 @@ package com.elderbyte.kafka;
 import com.elderbyte.kafka.admin.DefaultKafkaAdminConfiguration;
 import com.elderbyte.kafka.config.KafkaClientConfig;
 import com.elderbyte.kafka.consumer.DefaultJsonConsumerConfiguration;
+import com.elderbyte.kafka.consumer.processing.ManagedProcessorFactoryConfiguration;
 import com.elderbyte.kafka.producer.DefaultJsonKafkaTemplateConfiguration;
 import com.elderbyte.kafka.producer.KafkaProducerConfiguration;
 import com.elderbyte.kafka.serialisation.SpringKafkaJsonDeserializer;
@@ -17,7 +18,8 @@ import org.springframework.context.annotation.Import;
 @Configuration
 @Import( {
         KafkaStarterAutoConfiguration.InnerKafkaConfiguration.class,
-        KafkaProducerConfiguration.class
+        KafkaProducerConfiguration.class,
+        ManagedProcessorFactoryConfiguration.class
 })
 public class KafkaStarterAutoConfiguration {
 

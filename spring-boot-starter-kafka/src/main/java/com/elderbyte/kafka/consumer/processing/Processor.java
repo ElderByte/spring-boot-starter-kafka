@@ -1,4 +1,4 @@
-package com.elderbyte.kafka.consumer;
+package com.elderbyte.kafka.consumer.processing;
 
 @FunctionalInterface
 public interface Processor<T> {

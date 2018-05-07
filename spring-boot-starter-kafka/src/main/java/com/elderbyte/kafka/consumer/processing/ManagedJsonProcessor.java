@@ -1,5 +1,7 @@
-package com.elderbyte.kafka.consumer;
+package com.elderbyte.kafka.consumer.processing;
 
+import com.elderbyte.kafka.consumer.ConsumerRecordBuilder;
+import com.elderbyte.kafka.metrics.MetricsContext;
 import com.elderbyte.kafka.metrics.MetricsReporter;
 import com.elderbyte.kafka.serialisation.Json;
 import com.elderbyte.kafka.serialisation.JsonMappingException;
@@ -37,6 +39,8 @@ public class ManagedJsonProcessor<K, V> {
     private final boolean skipOnError;
     private final boolean skipOnDtoMappingError;
 
+    private final MetricsContext metricsCtx;
+
     /***************************************************************************
      *                                                                         *
      * Constructor                                                             *
@@ -44,13 +48,21 @@ public class ManagedJsonProcessor<K, V> {
      **************************************************************************/
 
 
-    public ManagedJsonProcessor(Class<V> valueClazz, boolean skipOnError, boolean skipOnDtoMappingError, MetricsReporter reporter){
+    public ManagedJsonProcessor(
+            Class<V> valueClazz,
+            boolean skipOnError,
+            boolean skipOnDtoMappingError,
+            MetricsReporter reporter,
+            MetricsContext metricsContext){
+
         if(valueClazz == null) throw new IllegalArgumentException("valueClazz must not be null");
         if(reporter == null) throw new IllegalArgumentException("reporter must not be null");
+
         this.reporter = reporter;
         this.valueClazz = valueClazz;
         this.skipOnError = skipOnError;
         this.skipOnDtoMappingError = skipOnDtoMappingError;
+        this.metricsCtx = metricsContext;
     }
 
 
@@ -63,7 +75,7 @@ public class ManagedJsonProcessor<K, V> {
     public boolean convertAndProcess(
             ConsumerRecord<K, Json> rawRecord,
             Processor<ConsumerRecord<K, V>> processor,
-            Acknowledgment ack){
+            Acknowledgment ack) throws UnrecoverableProcessingException {
 
         return convertAndProcessAll(
                 Collections.singletonList(rawRecord),
@@ -75,7 +87,7 @@ public class ManagedJsonProcessor<K, V> {
     public boolean convertAndProcessAll(
             Collection<ConsumerRecord<K, Json>> rawRecords,
             Processor<List<ConsumerRecord<K, V>>> processor,
-            Acknowledgment ack){
+            Acknowledgment ack) throws UnrecoverableProcessingException {
 
         long start = System.nanoTime();
 
@@ -91,7 +103,7 @@ public class ManagedJsonProcessor<K, V> {
             if(skipOnError){
                 return false; // We cant even try to process, just skip this
             }else{
-                reporter.reportUnrecoverableCrash(rawRecords, e);
+                reporter.reportUnrecoverableCrash(metricsCtx, rawRecords, e);
                 throw new UnrecoverableProcessingException("Failed to parse/convert record", e);
             }
         }
@@ -106,7 +118,9 @@ public class ManagedJsonProcessor<K, V> {
             success = true;
         }
 
-        reporter.reportStreamingMetrics(records.size(), (System.nanoTime() - start) /  (1000 * 1000));
+        if(success){
+            reporter.reportStreamingMetrics(metricsCtx, records.size(), System.nanoTime() - start);
+        }
 
         return success;
     }
@@ -128,7 +142,7 @@ public class ManagedJsonProcessor<K, V> {
             processor.proccess(records);
             success = true;
         }catch (Exception e){
-            reporter.reportProcessingError(records, e);
+            reporter.reportProcessingError(metricsCtx, records, e);
             success = false;
         }finally {
             if(ack != null) { ack.acknowledge(); }
@@ -159,7 +173,7 @@ public class ManagedJsonProcessor<K, V> {
                 ++errorLoopIteration;
                 log.warn("Error while processing records! Retry " + errorLoopIteration, e);
 
-                reporter.reportProcessingError(records, e, errorLoopIteration);
+                reporter.reportProcessingError(metricsCtx, records, e, errorLoopIteration);
 
                 try {
                     // Error Backoff
@@ -177,11 +191,11 @@ public class ManagedJsonProcessor<K, V> {
                 return ConsumerRecordBuilder.fromRecordWithValue(record, value);
             }catch (JsonParseException e){
                 // Not even valid json! Assume poison message.
-                reporter.reportMalformedRecord(record, e); // Report
+                reporter.reportMalformedRecord(metricsCtx, record, e); // Report
                 return null; // Skip
             }catch (JsonMappingException e) {
 
-                reporter.reportMalformedRecord(record, e);
+                reporter.reportMalformedRecord(metricsCtx, record, e);
 
                 if(skipOnDtoMappingError){
                     return null; // Skip

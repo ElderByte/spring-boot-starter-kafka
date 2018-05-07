@@ -1,4 +1,4 @@
-package com.elderbyte.kafka.consumer;
+package com.elderbyte.kafka.consumer.processing;
 
 import java.util.Arrays;
 import java.util.HashSet;
