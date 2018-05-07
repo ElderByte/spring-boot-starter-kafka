@@ -19,21 +19,20 @@ public class Json {
 
     public static Json from(ObjectMapper objectMapper, byte[] data){
         if(objectMapper == null) throw new IllegalArgumentException("objectMapper must not be null!");
-        if(data == null) throw new IllegalArgumentException("data must not be null!");
-
-        try {
-            JsonNode node = objectMapper.readTree(data);
-            return new Json(objectMapper, node);
-        }catch (Exception e){
-            throw new RuntimeException("Failed to deserialize bytes into JSON", e);
-        }
+        return new Json(objectMapper, data);
     }
 
-    public static Json from(ObjectMapper objectMapper, JsonNode node){
+    public static Json fromDto(ObjectMapper objectMapper, Object pojo){
         if(objectMapper == null) throw new IllegalArgumentException("objectMapper must not be null!");
-        if(node == null) throw new IllegalArgumentException("node must not be null!");
+        if(pojo == null) throw new IllegalArgumentException("pojo must not be null!");
 
-        return new Json(objectMapper, node);
+        byte[] utf8Bytes;
+        try {
+            utf8Bytes = objectMapper.writeValueAsBytes(pojo);
+            return new Json(objectMapper, utf8Bytes);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to write json node as bytes", e);
+        }
     }
 
     /***************************************************************************
@@ -43,7 +42,7 @@ public class Json {
      **************************************************************************/
 
     private final ObjectMapper objectMapper;
-    private final JsonNode jsonNode;
+    private final byte[] jsonData;
 
     /***************************************************************************
      *                                                                         *
@@ -51,12 +50,12 @@ public class Json {
      *                                                                         *
      **************************************************************************/
 
-    private Json(ObjectMapper objectMapper, JsonNode node){
+    private Json(ObjectMapper objectMapper, byte[] jsonData){
         if(objectMapper == null) throw new IllegalArgumentException("objectMapper must not be null!");
-        if(node == null) throw new IllegalArgumentException("node must not be null!");
+        if(jsonData == null) throw new IllegalArgumentException("node must not be null!");
 
         this.objectMapper = objectMapper;
-        this.jsonNode = node;
+        this.jsonData = jsonData;
     }
 
     /***************************************************************************
@@ -67,23 +66,25 @@ public class Json {
 
     /**
      * Get the untyped json node
+     * @throws JsonParseException thrown when the data was not in valid json format.
      */
-    public JsonNode getJsonNode(){
-        return jsonNode;
+    public JsonNode getJsonNode() throws JsonParseException {
+        return parseJson(jsonData);
     }
 
     /**
      * Decodes the generic json node into the given Java POJO object
-     * @param clazz The target type ()necessary because java
+     * @param clazz The target type (necessary because java)
+     * @throws JsonMappingException thrown when the json cant be mapped to the given dto
      */
-    public <T> T json(Class<T> clazz){
+    public <T> T json(Class<T> clazz) throws JsonMappingException {
 
         if(clazz == null) throw new IllegalArgumentException("clazz must not be null!");
 
         try {
-            return objectMapper.treeToValue(jsonNode, clazz);
+            return objectMapper.treeToValue(getJsonNode(), clazz);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to map json node to class " + clazz.getCanonicalName(), e);
+            throw new JsonMappingException("Failed to map json node to class " + clazz.getCanonicalName(), e);
         }
     }
 
@@ -92,5 +93,17 @@ public class Json {
      * Private methods                                                         *
      *                                                                         *
      **************************************************************************/
+
+    private JsonNode parseJson(byte[] data) throws JsonParseException {
+
+        if(data == null) throw new IllegalArgumentException("data must not be null!");
+
+        try {
+            return objectMapper.readTree(data);
+        }catch (Exception e){
+            throw new JsonParseException("Failed to deserialize bytes into JSON", e); // TODO Proper exception
+        }
+
+    }
 
 }
