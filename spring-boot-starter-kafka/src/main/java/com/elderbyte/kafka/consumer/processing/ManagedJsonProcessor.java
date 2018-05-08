@@ -74,6 +74,12 @@ public class ManagedJsonProcessor<K, V> {
 
     public boolean convertAndProcess(
             ConsumerRecord<K, Json> rawRecord,
+            Processor<ConsumerRecord<K, V>> processor) throws UnrecoverableProcessingException {
+        return convertAndProcess(rawRecord, processor, null);
+    }
+
+    public boolean convertAndProcess(
+            ConsumerRecord<K, Json> rawRecord,
             Processor<ConsumerRecord<K, V>> processor,
             Acknowledgment ack) throws UnrecoverableProcessingException {
 
@@ -82,6 +88,12 @@ public class ManagedJsonProcessor<K, V> {
                 records -> processor.proccess(records.get(0)),
                 ack
                 );
+    }
+
+    public boolean convertAndProcessAll(
+            Collection<ConsumerRecord<K, Json>> rawRecords,
+            Processor<List<ConsumerRecord<K, V>>> processor){
+        return convertAndProcessAll(rawRecords, processor, null);
     }
 
     public boolean convertAndProcessAll(
