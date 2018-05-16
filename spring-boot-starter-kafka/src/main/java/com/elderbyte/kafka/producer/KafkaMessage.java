@@ -10,6 +10,11 @@ public class KafkaMessage<K,V> {
      *                                                                         *
      **************************************************************************/
 
+    public static <K,V> KafkaMessage<K,V> buildSave(K key, V value) {
+        if(key == null) throw new IllegalArgumentException("key must not be null!");
+
+        return value != null ? build(key, value) : tombstone(key);
+    }
 
     public static <K,V> KafkaMessage<K,V> tombstone(K key){
 
