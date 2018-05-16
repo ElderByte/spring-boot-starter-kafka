@@ -1,11 +1,9 @@
-import org.gradle.api.logging.configuration.ShowStacktrace
-
 task wrapper(type: Wrapper) {
     gradleVersion = '4.6'
 }
 
 allprojects {
-    version =  '2.0.1.E14'
+    version =  '2.0.2.E14'
     group = 'com.elderbyte.spring.boot'
 
     //Always show stacktrace
