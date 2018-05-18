@@ -10,6 +10,11 @@ public class KafkaMessage<K,V> {
      *                                                                         *
      **************************************************************************/
 
+    /**
+     * Builds a message which might be a value or tombstone.
+     * @param key The message key. Must not be null.
+     * @param value The message value which might be null. (tombstone)
+     */
     public static <K,V> KafkaMessage<K,V> buildSave(K key, V value) {
         if(key == null) throw new IllegalArgumentException("key must not be null!");
 
