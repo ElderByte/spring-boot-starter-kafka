@@ -104,6 +104,7 @@ public class DefaultJsonConsumerConfiguration {
         Map<String, Object> props = new HashMap<>();
         props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, config.getKafkaServers());
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, config.isConsumerAutoCommit());
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, config.getConsumerAutoOffsetReset());
         config.getConsumerMaxPollRecords().ifPresent(max ->  props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, max));
         return props;
     }
@@ -125,6 +126,7 @@ public class DefaultJsonConsumerConfiguration {
                         ? AbstractMessageListenerContainer.AckMode.BATCH
                         : AbstractMessageListenerContainer.AckMode.MANUAL
         );
+
 
         return factory;
     }

@@ -23,6 +23,9 @@ public class KafkaClientConfig {
     @Value("${kafka.client.consumer.autoCommit:true}")
     private boolean consumerAutoCommit;
 
+    @Value("${kafka.client.consumer.autoOffsetReset:earliest}")
+    private String consumerAutoOffsetReset;
+
     @Value("${kafka.client.producer.transaction.id:}")
     private String producerTransactionId;
 
@@ -49,6 +52,10 @@ public class KafkaClientConfig {
 
     public boolean isConsumerAutoCommit() {
         return consumerAutoCommit;
+    }
+
+    public String getConsumerAutoOffsetReset(){
+        return consumerAutoOffsetReset;
     }
 
 
