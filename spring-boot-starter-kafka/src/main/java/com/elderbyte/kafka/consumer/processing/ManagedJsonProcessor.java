@@ -103,22 +103,7 @@ public class ManagedJsonProcessor<K, V> {
 
         long start = System.nanoTime();
 
-        List<ConsumerRecord<K, V>> records;
-
-        try {
-            records = rawRecords.stream()
-                    .map(this::convertRecord)
-                    .filter(Objects::nonNull) // Skipped records will be null
-                    .collect(toList());
-        }catch (Exception e){
-
-            if(skipOnError){
-                return false; // We cant even try to process, just skip this
-            }else{
-                reporter.reportUnrecoverableCrash(metricsCtx, rawRecords, e);
-                throw new UnrecoverableProcessingException("Failed to parse/convert record", e);
-            }
-        }
+        var records = decodeAllRecords(rawRecords);
 
         // If we are here we have converted the records. Now run the user processing code.
 
@@ -137,12 +122,13 @@ public class ManagedJsonProcessor<K, V> {
         return success;
     }
 
-
     /***************************************************************************
      *                                                                         *
      * Private methods                                                         *
      *                                                                         *
      **************************************************************************/
+
+
 
     private boolean processAllSkipOnError(
             List<ConsumerRecord<K, V>> records,
@@ -196,7 +182,34 @@ public class ManagedJsonProcessor<K, V> {
         } while (errorLoop);
     }
 
-    private ConsumerRecord<K, V> convertRecord(ConsumerRecord<K, Json> record){
+    private List<ConsumerRecord<K, V>> decodeAllRecords(Collection<ConsumerRecord<K, Json>> rawRecords) throws UnrecoverableProcessingException {
+        List<ConsumerRecord<K, V>> records;
+
+        try {
+            records = rawRecords.stream()
+                    .map(r -> decodeRecord(r, skipOnError || skipOnDtoMappingError))
+                    .filter(Objects::nonNull) // Skipped records will be null
+                    .collect(toList());
+        }catch (Exception e){
+
+            // In case a json record failed to map to our dto and don't skip those, its over.
+
+            reporter.reportUnrecoverableCrash(metricsCtx, rawRecords, e);
+            throw new UnrecoverableProcessingException("Failed to parse/convert record", e);
+        }
+        return records;
+    }
+
+    /**
+     * Decodes the payload of a json record into a java DTO.
+     *
+     * In case skipOnDtoMappingError is false and a record is malformed, it will throw an exception.
+     *
+     * @param record The raw json param
+     * @param skipOnError In case there is a mapping error, skip and return null.
+     * @return Returns the mapped record. If errors are skipped, might return null if mapping has failed.
+     */
+    private ConsumerRecord<K, V> decodeRecord(ConsumerRecord<K, Json> record, boolean skipOnError){
         if(record.value() != null){
             try{
                 V value = record.value().json(valueClazz);
@@ -209,7 +222,7 @@ public class ManagedJsonProcessor<K, V> {
 
                 reporter.reportMalformedRecord(metricsCtx, record, e);
 
-                if(skipOnDtoMappingError){
+                if(skipOnError){
                     return null; // Skip
                 }else{
                     throw e; // Escalate
@@ -219,6 +232,8 @@ public class ManagedJsonProcessor<K, V> {
             return ConsumerRecordBuilder.fromRecordWithValue(record, null);
         }
     }
+
+
 
 
 }
