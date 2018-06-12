@@ -54,3 +54,45 @@ By default, this starter is very opiniated about serialisation:
 The `Json` object will decode the json byte array from the message into a generic json node. To decode this into your Java POJO just use the `.json(MyDto.class)` helper method.
 
 The Json Encoder/Decoder use the Spring `ObjectMapper` bean.
+
+
+
+## Advanced Kafka listener
+
+* Fluent api for standard listener config
+* All config of listener in one place
+* Posion Message handling with retry logic
+
+
+```java
+@Service
+public class MyListener {
+
+  @Autowired
+  public MyListener(KafkaListenerFactory factory){
+    
+    factory.start("my-topic")
+ 		.consumerGroup("group-xyz")
+    	.autoCommit(false)
+
+		.keyDeserializer() // Default to string
+		.valueDeserializer() // Default to string
+		
+		.valueJson(MyDto.class)
+
+    	// Retry config   
+		.retry(2)   // retry locally 2 times
+		.delay(300) // ms delay locally
+		.asyncRetry(10) // -> creates a retry topic: my-topic.retry
+		.asyncRetryDelay(60000)
+		.deadLetter() // -> creates a dead-letter topic
+        
+        .listenBatch(records -> {
+        	// Do someting with the records
+        });   
+
+  }
+
+}
+```
+
