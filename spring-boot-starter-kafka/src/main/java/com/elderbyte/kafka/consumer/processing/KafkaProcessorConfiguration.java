@@ -16,4 +16,8 @@ public interface KafkaProcessorConfiguration<K,V> {
 
     MetricsContext getMetricsContext();
 
+    boolean isIgnoreErrors();
+
+    int getBlockingRetries();
+
 }

@@ -36,7 +36,8 @@ public class KafkaListenerBuilderImpl<K,V> implements KafkaListenerBuilder<K,V>,
 
     private AutoOffsetReset autoOffsetReset = AutoOffsetReset.latest;
     private MetricsContext metricsContext = MetricsContext.from("", "");
-
+    private boolean skipOnError = false;
+    private int blockingRetries = 1;
 
     private Processor<List<ConsumerRecord<K, V>>> processor;
     private boolean batch = false;
@@ -124,9 +125,23 @@ public class KafkaListenerBuilderImpl<K,V> implements KafkaListenerBuilder<K,V>,
         return this;
     }
 
+    @Override
+    public KafkaListenerBuilder<K,V> ignoreErrors() {
+        this.skipOnError = true;
+        return this;
+    }
+
+    @Override
+    public KafkaListenerBuilder<K, V> blockingRetries(int retries) {
+        this.blockingRetries = retries;
+        return this;
+    }
+
     public KafkaListenerBuilder<K,V> apply(KafkaListenerConfiguration<?,?> prototype){
         this.autoOffsetReset = prototype.getAutoOffsetReset();
         this.metricsContext = prototype.getMetricsContext();
+        this.blockingRetries = prototype.getBlockingRetries();
+        this.skipOnError = prototype.isIgnoreErrors();
         return this;
     }
 
@@ -201,5 +216,15 @@ public class KafkaListenerBuilderImpl<K,V> implements KafkaListenerBuilder<K,V>,
     @Override
     public MetricsContext getMetricsContext() {
         return metricsContext;
+    }
+
+    @Override
+    public boolean isIgnoreErrors() {
+        return skipOnError;
+    }
+
+    @Override
+    public int getBlockingRetries() {
+        return blockingRetries;
     }
 }

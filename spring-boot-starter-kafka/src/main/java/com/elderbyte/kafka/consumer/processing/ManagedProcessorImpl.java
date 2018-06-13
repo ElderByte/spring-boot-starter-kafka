@@ -72,7 +72,7 @@ public class ManagedProcessorImpl<K,V> implements ManagedProcessor<K,V> {
         if(skipOnAllErrors()){
             success = processAllSkipOnError(records, configuration.getProcessor(), ack);
         }else{
-            processAllErrorLoop(records, configuration.getProcessor(), ack);
+            processAllErrorHandler(records, configuration.getProcessor(), ack, configuration.getBlockingRetries(), null);
             success = true;
         }
 
@@ -124,40 +124,45 @@ public class ManagedProcessorImpl<K,V> implements ManagedProcessor<K,V> {
     }
 
 
-    private void processAllErrorLoop(
+
+    private void processAllErrorHandler(
             List<ConsumerRecord<K, V>> records,
             Processor<List<ConsumerRecord<K, V>>> processor,
-            Acknowledgment ack){
+            Acknowledgment ack,
+            int blockingRetryAttempts,
+            ProcessingErrorHandler<K,V> errorHandler){
 
         if(records == null) throw new IllegalArgumentException("records must not be null");
         if(processor == null) throw new IllegalArgumentException("processor must not be null");
         if(ack == null) throw new IllegalArgumentException("ack must not be null");
 
         int errorLoopIteration = 0;
-        boolean errorLoop;
+        int retryRemaining = blockingRetryAttempts;
 
+        boolean success = false;
         do{
             try{
                 processor.proccess(records);
                 ack.acknowledge();
-                errorLoop = false;
+                retryRemaining = 0;
+                success = true;
             }catch (Exception e){
-                errorLoop = true;
+                retryRemaining--; // Maybe check for bad health of sink system and block until healthy
                 ++errorLoopIteration;
-                log.warn("Error while processing records! Retry " + errorLoopIteration, e);
-
+                log.warn("Error while processing records! Retries remaining: " + retryRemaining + " of " + blockingRetryAttempts, e);
                 reporter.reportProcessingError(metricsCtx, records, e, errorLoopIteration);
-
                 try {
                     // Error Backoff
                     Thread.sleep(Math.min(errorLoopIteration * 1000, 1000*60));
                 } catch (InterruptedException e1) { }
             }
+        } while (!success && retryRemaining > 0);
 
-        } while (errorLoop);
+        if(!success){
+            // Unsucessful, and all retries have been used
+            // TODO -> invoke error handler
+            if(errorHandler != null) { errorHandler.handleError(records); }
+            ack.acknowledge(); // Skip after delegating error
+        }
     }
-
-
-
-
 }

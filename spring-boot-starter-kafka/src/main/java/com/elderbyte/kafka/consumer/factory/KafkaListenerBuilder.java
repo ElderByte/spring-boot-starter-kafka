@@ -39,6 +39,11 @@ public interface KafkaListenerBuilder<K,V> {
 
     KafkaListenerBuilder<K,V> metrics(MetricsContext metricsContext);
 
+    KafkaListenerBuilder<K,V> ignoreErrors();
+
+    KafkaListenerBuilder<K,V> blockingRetries(int retries);
+
+
     /***************************************************************************
      *                                                                         *
      * Builder end API                                                         *
