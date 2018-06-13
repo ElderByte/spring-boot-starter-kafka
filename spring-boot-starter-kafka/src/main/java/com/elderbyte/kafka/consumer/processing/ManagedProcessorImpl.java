@@ -1,6 +1,5 @@
 package com.elderbyte.kafka.consumer.processing;
 
-import com.elderbyte.kafka.consumer.ConsumerRecordBuilder;
 import com.elderbyte.kafka.metrics.MetricsContext;
 import com.elderbyte.kafka.metrics.MetricsReporter;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -10,9 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.kafka.support.Acknowledgment;
 
 import java.util.List;
-import java.util.Objects;
 
-import static java.util.stream.Collectors.toList;
 
 @SuppressWarnings("Duplicates")
 public class ManagedProcessorImpl<K,V> implements ManagedProcessor<K,V> {
@@ -29,6 +26,8 @@ public class ManagedProcessorImpl<K,V> implements ManagedProcessor<K,V> {
     private final MetricsReporter reporter;
     private final MetricsContext metricsCtx;
 
+    private RecordBatchDecoder<K,V> recordBatchDecoder;
+
     /***************************************************************************
      *                                                                         *
      * Constructor                                                             *
@@ -43,6 +42,13 @@ public class ManagedProcessorImpl<K,V> implements ManagedProcessor<K,V> {
       this.configuration = configuration;
       this.reporter = reporter;
       this.metricsCtx = configuration.getMetricsContext();
+
+      this.recordBatchDecoder = new RecordBatchDecoder<>(
+              reporter,
+              metricsCtx,
+              configuration.getKeyDeserializer(),
+              configuration.getValueDeserializer()
+      );
     }
 
     /***************************************************************************
@@ -57,7 +63,7 @@ public class ManagedProcessorImpl<K,V> implements ManagedProcessor<K,V> {
         long start = System.nanoTime();
 
         // decode records
-        var records = decodeAllRecords(rawRecords);
+        var records = recordBatchDecoder.decodeAllRecords(rawRecords);
 
         // If we are here we have converted the records. Now run the user processing code.
 
@@ -152,76 +158,6 @@ public class ManagedProcessorImpl<K,V> implements ManagedProcessor<K,V> {
     }
 
 
-    private List<ConsumerRecord<K, V>> decodeAllRecords(List<ConsumerRecord<byte[], byte[]>> rawRecords) throws UnrecoverableProcessingException {
-        List<ConsumerRecord<K, V>> records;
 
-        try {
-            records = rawRecords.stream()
-                    .map(this::decodeRecord)
-                    .filter(Objects::nonNull) // Skipped records will be null
-                    .collect(toList());
-        }catch (Exception e){
-
-            // In case a json record failed to map to our dto and don't skip those, its over.
-
-            reporter.reportUnrecoverableCrash(metricsCtx, rawRecords, e);
-            throw new UnrecoverableProcessingException("Failed to parse/convert record", e);
-        }
-        return records;
-    }
-
-
-    private K deserializeKey(ConsumerRecord<byte[], byte[]> record){
-        try {
-            return configuration.getKeyDeserializer().deserialize(record.topic(), record.key());
-        }catch (Exception e){
-            throw new IllegalStateException("Failed to deserialize record key!(" + record.serializedKeySize() + ")", e);
-        }
-    }
-
-    private V deserializeValue(ConsumerRecord<byte[], byte[]> record){
-        try {
-            return configuration.getValueDeserializer().deserialize(record.topic(), record.value());
-        }catch (Exception e){
-            throw new IllegalStateException("Failed to deserialize record value! (" + record.serializedValueSize() + ")", e);
-        }
-    }
-
-    /**
-     * Decodes the payload of a json record into a java DTO.
-     *
-     * In case skipOnDtoMappingError is false and a record is malformed, it will throw an exception.
-     *
-     * @param record The raw json param
-     * @return Returns the mapped record. If errors are skipped, might return null if mapping has failed.
-     */
-    private ConsumerRecord<K, V> decodeRecord(ConsumerRecord<byte[], byte[]> record){
-
-        K decodedKey;
-        // Decode key
-        try {
-            decodedKey = deserializeKey(record);
-        }catch (Exception e){
-            // Not able do deserialize key
-            reporter.reportMalformedRecord(metricsCtx, record, e); // Report key explicitly
-            return null; // Skip
-        }
-
-        V decodedValue;
-        // Decode Value
-        if(record.value() != null){
-            try{
-                decodedValue = deserializeValue(record);
-                return ConsumerRecordBuilder.fromRecordWithKeyValue(record, decodedKey, decodedValue);
-            }catch (Exception e){
-                // Not able do deserialize value
-                // Assume poison message
-                reporter.reportMalformedRecord(metricsCtx, record, e); // Report
-                return null; // Skip
-            }
-        }else{
-            return ConsumerRecordBuilder.fromRecordWithKeyValue(record, decodedKey,null);
-        }
-    }
 
 }
