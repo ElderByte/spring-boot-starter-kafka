@@ -91,10 +91,6 @@ public class ManagedProcessorImpl<K,V> implements ManagedProcessor<K,V> {
      *                                                                         *
      **************************************************************************/
 
-    public boolean skipOnDecodingErrors(){
-        return true;
-    }
-
     public boolean skipOnAllErrors(){
         return true;
     }
@@ -122,8 +118,6 @@ public class ManagedProcessorImpl<K,V> implements ManagedProcessor<K,V> {
         }
         return success;
     }
-
-
 
     private void processAllErrorHandler(
             List<ConsumerRecord<K, V>> records,
@@ -160,9 +154,13 @@ public class ManagedProcessorImpl<K,V> implements ManagedProcessor<K,V> {
 
         if(!success){
             // Unsucessful, and all retries have been used
-            // TODO -> invoke error handler
             if(errorHandler != null) { errorHandler.handleError(records); }
             ack.acknowledge(); // Skip after delegating error
+            log.warn("Failed to process message and all retries failed too. Skipping now!");
+
+            // TODO we probably skip a whole batch here even if only one record causes an issue
+            // maybe we can unwrap the batch and try them one after each other
+            // or the sink actually handles partial updates
         }
     }
 }
