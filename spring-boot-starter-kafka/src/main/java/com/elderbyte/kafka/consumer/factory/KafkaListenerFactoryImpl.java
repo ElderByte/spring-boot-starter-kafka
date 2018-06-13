@@ -1,27 +1,21 @@
 package com.elderbyte.kafka.consumer.factory;
 
 import com.elderbyte.kafka.config.KafkaClientConfig;
-import com.elderbyte.kafka.consumer.factory.listeners.ManagedAckBatchRawListener;
-import com.elderbyte.kafka.consumer.factory.listeners.ManagedAckRawListener;
-import com.elderbyte.kafka.consumer.factory.listeners.ManagedBatchRawListener;
-import com.elderbyte.kafka.consumer.factory.listeners.ManagedRawListener;
-import com.elderbyte.kafka.consumer.processing.Processor;
+import com.elderbyte.kafka.consumer.factory.listeners.*;
+import com.elderbyte.kafka.consumer.factory.processor.ManagedProcessorImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.listener.AbstractMessageListenerContainer;
 import org.springframework.kafka.listener.GenericMessageListenerContainer;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 import org.springframework.kafka.listener.config.ContainerProperties;
 import org.springframework.kafka.support.TopicPartitionInitialOffset;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -35,7 +29,7 @@ public class KafkaListenerFactoryImpl implements KafkaListenerFactory, ManagedLi
      **************************************************************************/
 
     @Autowired
-    private KafkaClientConfig config;
+    private KafkaClientConfig globalConfig;
 
     @Autowired
     private ObjectMapper mapper;
@@ -67,12 +61,11 @@ public class KafkaListenerFactoryImpl implements KafkaListenerFactory, ManagedLi
      *                                                                         *
      **************************************************************************/
 
-    public <K,V> GenericMessageListenerContainer<byte[], byte[]> buildListener(KafkaListenerBuilder<K,V> builder, Processor<ConsumerRecord<K, V>> processor){
-        return buildListenerInternal(builder, buildListener(processor, builder));
-    }
-
-    public <K,V> GenericMessageListenerContainer<byte[], byte[]> buildBatchListener(KafkaListenerBuilder<K,V> builder,Processor<List<ConsumerRecord<K, V>>> processor){
-        return buildListenerInternal(builder, buildBatchListener(processor, builder));
+    @Override
+    public <K,V> GenericMessageListenerContainer<byte[], byte[]> buildListenerContainer(KafkaListenerConfiguration<K,V> configuration){
+        var managedProcessor = new ManagedProcessorImpl<>(configuration);
+        var listener = SpringListenerAdapter.buildListenerAdapter(configuration, managedProcessor);
+        return buildListenerInternal(configuration, listener);
     }
 
     /***************************************************************************
@@ -81,30 +74,25 @@ public class KafkaListenerFactoryImpl implements KafkaListenerFactory, ManagedLi
      *                                                                         *
      **************************************************************************/
 
-    private <K,V> GenericMessageListenerContainer<byte[], byte[]> buildListenerInternal(KafkaListenerBuilder<K,V> builder, Object listener){
-        var containerProps = builder.getContainerProperties();
+    private <K,V> GenericMessageListenerContainer<byte[], byte[]> buildListenerInternal(KafkaListenerConfiguration<K,V> config, Object listener){
+        var containerProps = config.getContainerProperties();
         containerProps.setMessageListener(listener);
-        var config = defaultConfig();
-        // TODO APPLY CONFIG FROM USER
-        return new KafkaMessageListenerContainer<>(consumerFactoryByteByte(config), containerProps);
+        var kafkaConfig = defaultConfig();
+
+        kafkaConfig.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, !config.isManualAck());
+        kafkaConfig.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, config.getAutoOffsetReset().toString());
+
+        return new KafkaMessageListenerContainer<>(consumerFactoryByteByte(kafkaConfig), containerProps);
     }
 
     private KafkaListenerBuilder<byte[], byte[]> startBuilder(ContainerProperties properties) {
-        return new KafkaListenerBuilder<>(
+        return new KafkaListenerBuilderImpl<>(
                 this,
                 properties,
                 mapper,
                 new ByteArrayDeserializer(),
                 new ByteArrayDeserializer()
         );
-    }
-
-    private <K,V> Object buildListener(Processor<ConsumerRecord<K, V>> processor, KafkaListenerBuilder<K,V> builder){
-        return builder.isManualAck() ? new ManagedAckRawListener<>(processor) : new ManagedRawListener<>(processor);
-    }
-
-    private <K,V> Object buildBatchListener(Processor<List<ConsumerRecord<K, V>>> processor, KafkaListenerBuilder<K,V> builder){
-        return builder.isManualAck() ? new ManagedAckBatchRawListener<>(processor) : new ManagedBatchRawListener<>(processor);
     }
 
     private ConsumerFactory<byte[], byte[]> consumerFactoryByteByte(Map<String, Object> config) {
@@ -116,10 +104,8 @@ public class KafkaListenerFactoryImpl implements KafkaListenerFactory, ManagedLi
 
     private Map<String, Object> defaultConfig() {
         var props = new HashMap<String, Object>();
-        props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, config.getKafkaServers());
-        // props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, config.isConsumerAutoCommit());
-        // props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, config.getConsumerAutoOffsetReset());
-        config.getConsumerMaxPollRecords().ifPresent(max ->  props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, max));
+        props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, globalConfig.getKafkaServers());
+        globalConfig.getConsumerMaxPollRecords().ifPresent(max ->  props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, max));
         return props;
     }
 
