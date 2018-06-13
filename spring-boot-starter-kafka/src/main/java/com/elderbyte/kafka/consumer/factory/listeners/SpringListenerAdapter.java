@@ -1,7 +1,7 @@
 package com.elderbyte.kafka.consumer.factory.listeners;
 
 import com.elderbyte.kafka.consumer.factory.KafkaListenerConfiguration;
-import com.elderbyte.kafka.consumer.factory.processor.ManagedProcessor;
+import com.elderbyte.kafka.consumer.processing.ManagedProcessor;
 import org.springframework.kafka.listener.BatchMessageListener;
 import org.springframework.kafka.listener.GenericMessageListener;
 import org.springframework.kafka.listener.MessageListener;

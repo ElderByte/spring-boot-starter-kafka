@@ -1,5 +1,7 @@
 package com.elderbyte.kafka.tests;
 
+import com.elderbyte.kafka.consumer.factory.KafkaListenerFactory;
+import com.elderbyte.kafka.consumer.processing.KafkaProcessorConfiguration;
 import com.elderbyte.kafka.consumer.processing.ManagedProcessorFactory;
 import com.elderbyte.kafka.metrics.MetricsContext;
 import com.elderbyte.kafka.producer.KafkaProducer;
@@ -23,11 +25,15 @@ public class SpringStarterKafkaManagedProcessorTests {
 	@Autowired
 	private ManagedProcessorFactory processorFactory;
 
+	@Autowired
+	private KafkaListenerFactory listenerFactory;
+
 	@Test
 	public void producersAreMocked() {
-
-		var managedProcessor = processorFactory.buildSkipping(Object.class, MetricsContext.from("unit-app", "instance-id"));
-
+		var builder = listenerFactory.start("test");
+		var config = (KafkaProcessorConfiguration)builder;
+		var managedProcessor = processorFactory.buildWithConfiguration(config);
+		// var managedProcessor = processorFactory.buildWithConfiguration(Object.class, MetricsContext.from("unit-app", "instance-id"));
 		Assert.assertNotNull(managedProcessor);
 	}
 }

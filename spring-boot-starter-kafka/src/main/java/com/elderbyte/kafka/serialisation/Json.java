@@ -10,6 +10,7 @@ import java.util.Optional;
 /**
  * Represents a generic JSON object
  */
+@Deprecated
 public class Json {
 
     /***************************************************************************

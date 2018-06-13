@@ -2,7 +2,8 @@ package com.elderbyte.kafka.consumer.factory;
 
 import com.elderbyte.kafka.config.KafkaClientConfig;
 import com.elderbyte.kafka.consumer.factory.listeners.*;
-import com.elderbyte.kafka.consumer.factory.processor.ManagedProcessorImpl;
+import com.elderbyte.kafka.consumer.processing.ManagedProcessorImpl;
+import com.elderbyte.kafka.metrics.MetricsReporter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -30,6 +31,7 @@ public class KafkaListenerFactoryImpl implements KafkaListenerFactory, ManagedLi
 
     private final KafkaClientConfig globalConfig;
     private final ObjectMapper mapper;
+    private final MetricsReporter reporter;
 
     /***************************************************************************
      *                                                                         *
@@ -38,9 +40,10 @@ public class KafkaListenerFactoryImpl implements KafkaListenerFactory, ManagedLi
      **************************************************************************/
 
     @Autowired
-    public KafkaListenerFactoryImpl(KafkaClientConfig globalConfig, ObjectMapper mapper){
+    public KafkaListenerFactoryImpl(KafkaClientConfig globalConfig, ObjectMapper mapper, MetricsReporter reporter){
         this.globalConfig = globalConfig;
         this.mapper = mapper;
+        this.reporter = reporter;
     }
 
     /***************************************************************************
@@ -72,7 +75,7 @@ public class KafkaListenerFactoryImpl implements KafkaListenerFactory, ManagedLi
 
     @Override
     public <K,V> GenericMessageListenerContainer<byte[], byte[]> buildListenerContainer(KafkaListenerConfiguration<K,V> configuration){
-        var managedProcessor = new ManagedProcessorImpl<>(configuration);
+        var managedProcessor = new ManagedProcessorImpl<>(configuration, reporter);
         var listener = SpringListenerAdapter.buildListenerAdapter(configuration, managedProcessor);
         return buildListenerInternal(configuration, listener);
     }

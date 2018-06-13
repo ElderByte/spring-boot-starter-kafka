@@ -3,6 +3,7 @@ package com.elderbyte.kafka.serialisation;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.common.errors.SerializationException;
 import org.apache.kafka.common.serialization.Deserializer;
+import org.apache.kafka.common.serialization.StringDeserializer;
 
 import java.util.Map;
 
@@ -10,7 +11,7 @@ import java.util.Map;
 /**
  * Generic JSON deserializer.
  */
-public class SpringKafkaJsonDeserializer implements Deserializer<Json> {
+public class SpringKafkaJsonDeserializer<V> implements Deserializer<V> {
 
 
   /***************************************************************************
@@ -19,7 +20,9 @@ public class SpringKafkaJsonDeserializer implements Deserializer<Json> {
    *                                                                         *
    **************************************************************************/
 
+  private final StringDeserializer stringDeserializer = new StringDeserializer();
   private final ObjectMapper objectMapper;
+  private final Class<V> clazz;
 
   /***************************************************************************
    *                                                                         *
@@ -28,13 +31,14 @@ public class SpringKafkaJsonDeserializer implements Deserializer<Json> {
    **************************************************************************/
 
 
-  public SpringKafkaJsonDeserializer() {
-    this(DefaultJsonMapper.buildDefaultMapper());
+  public SpringKafkaJsonDeserializer(Class<V> clazz) {
+    this(clazz, DefaultJsonMapper.buildDefaultMapper());
   }
 
 
-  public SpringKafkaJsonDeserializer(ObjectMapper mapper) {
+  public SpringKafkaJsonDeserializer(Class<V> clazz, ObjectMapper mapper) {
     this.objectMapper = mapper;
+    this.clazz = clazz;
   }
 
   /***************************************************************************
@@ -50,15 +54,15 @@ public class SpringKafkaJsonDeserializer implements Deserializer<Json> {
 
 
   @Override
-  public Json deserialize(String ignored, byte[] bytes) {
+  public V deserialize(String topic, byte[] bytes) {
     if (bytes == null || bytes.length == 0) {
       return null;
     }
 
     try {
-      return Json.from(objectMapper, bytes);
+      return objectMapper.readValue(bytes, clazz);
     } catch (Exception e) {
-      throw new SerializationException(e);
+      throw new SerializationException("Failed to deserialize bytes on topic "+topic+" to json: " + stringDeserializer.deserialize(topic, bytes), e);
     }
   }
 

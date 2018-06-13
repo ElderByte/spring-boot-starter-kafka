@@ -2,12 +2,13 @@ package com.elderbyte.kafka.consumer.factory;
 
 import com.elderbyte.kafka.consumer.configuration.AutoOffsetReset;
 import com.elderbyte.kafka.consumer.processing.Processor;
+import com.elderbyte.kafka.metrics.MetricsContext;
+import com.elderbyte.kafka.serialisation.SpringKafkaJsonDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.springframework.kafka.listener.AbstractMessageListenerContainer;
 import org.springframework.kafka.listener.config.ContainerProperties;
-import org.springframework.kafka.support.serializer.JsonDeserializer;
 
 import java.util.List;
 
@@ -33,6 +34,7 @@ public class KafkaListenerBuilderImpl<K,V> implements KafkaListenerBuilder<K,V>,
 
 
     private AutoOffsetReset autoOffsetReset = AutoOffsetReset.latest;
+    private MetricsContext metricsContext = MetricsContext.from("", "");
 
 
     private Processor<List<ConsumerRecord<K, V>>> processor;
@@ -66,11 +68,11 @@ public class KafkaListenerBuilderImpl<K,V> implements KafkaListenerBuilder<K,V>,
      **************************************************************************/
 
     public <NV> KafkaListenerBuilder<K,NV> jsonValue(Class<NV> valueClazz){
-        return valueDeserializer(new JsonDeserializer<>(valueClazz, mapper));
+        return valueDeserializer(new SpringKafkaJsonDeserializer<>(valueClazz, mapper));
     }
 
     public <NK> KafkaListenerBuilder<NK,V> jsonKey(Class<NK> keyClazz){
-        return keyDeserializer(new JsonDeserializer<>(keyClazz, mapper));
+        return keyDeserializer(new SpringKafkaJsonDeserializer<>(keyClazz, mapper));
     }
 
     public <NV> KafkaListenerBuilder<K,NV> valueDeserializer(Deserializer<NV> valueDeserializer){
@@ -108,8 +110,14 @@ public class KafkaListenerBuilderImpl<K,V> implements KafkaListenerBuilder<K,V>,
         return this;
     }
 
+    public KafkaListenerBuilder<K,V> metrics(MetricsContext metricsContext){
+        this.metricsContext = metricsContext;
+        return this;
+    }
+
     public KafkaListenerBuilder<K,V> apply(KafkaListenerConfiguration<?,?> prototype){
         this.autoOffsetReset = prototype.getAutoOffsetReset();
+        this.metricsContext = prototype.getMetricsContext();
         return this;
     }
 
@@ -179,5 +187,10 @@ public class KafkaListenerBuilderImpl<K,V> implements KafkaListenerBuilder<K,V>,
     @Override
     public AutoOffsetReset getAutoOffsetReset() {
         return autoOffsetReset;
+    }
+
+    @Override
+    public MetricsContext getMetricsContext() {
+        return metricsContext;
     }
 }

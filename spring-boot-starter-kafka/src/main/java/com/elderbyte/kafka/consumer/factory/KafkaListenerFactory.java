@@ -9,10 +9,10 @@ import java.util.regex.Pattern;
  */
 public interface KafkaListenerFactory {
 
-    KafkaListenerBuilder start(String... topics);
+    KafkaListenerBuilder<byte[], byte[]> start(String... topics);
 
-    KafkaListenerBuilder start(Pattern topicPattern);
+    KafkaListenerBuilder<byte[], byte[]> start(Pattern topicPattern);
 
-    KafkaListenerBuilder start(TopicPartitionInitialOffset... topicPartitions);
+    KafkaListenerBuilder<byte[], byte[]> start(TopicPartitionInitialOffset... topicPartitions);
 
 }

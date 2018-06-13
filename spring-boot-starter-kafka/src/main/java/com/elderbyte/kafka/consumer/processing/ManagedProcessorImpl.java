@@ -3,29 +3,19 @@ package com.elderbyte.kafka.consumer.processing;
 import com.elderbyte.kafka.consumer.ConsumerRecordBuilder;
 import com.elderbyte.kafka.metrics.MetricsContext;
 import com.elderbyte.kafka.metrics.MetricsReporter;
-import com.elderbyte.kafka.serialisation.Json;
-import com.elderbyte.kafka.serialisation.JsonMappingException;
-import com.elderbyte.kafka.serialisation.JsonParseException;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.support.Acknowledgment;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-
 import static java.util.stream.Collectors.toList;
 
-/**
- * Manages the stream processing of json based data streams. Including metrics and error handling / reporting.
- * @param <K> The key type
- * @param <V> The value type (converted from json)
- */
-public class ManagedJsonProcessor<K, V> {
-
+@SuppressWarnings("Duplicates")
+public class ManagedProcessorImpl<K,V> implements ManagedProcessor<K,V> {
 
     /***************************************************************************
      *                                                                         *
@@ -33,12 +23,10 @@ public class ManagedJsonProcessor<K, V> {
      *                                                                         *
      **************************************************************************/
 
-    private final Logger log = LoggerFactory.getLogger(ManagedJsonProcessor.class);
-    private final MetricsReporter reporter;
-    private final Class<V> valueClazz;
-    private final boolean skipOnError;
-    private final boolean skipOnDtoMappingError;
+    private final Logger log = LoggerFactory.getLogger(ManagedProcessorImpl.class);
 
+    private final KafkaProcessorConfiguration<K,V> configuration;
+    private final MetricsReporter reporter;
     private final MetricsContext metricsCtx;
 
     /***************************************************************************
@@ -48,23 +36,14 @@ public class ManagedJsonProcessor<K, V> {
      **************************************************************************/
 
 
-    public ManagedJsonProcessor(
-            Class<V> valueClazz,
-            boolean skipOnError,
-            boolean skipOnDtoMappingError,
-            MetricsReporter reporter,
-            MetricsContext metricsContext){
-
-        if(valueClazz == null) throw new IllegalArgumentException("valueClazz must not be null");
-        if(reporter == null) throw new IllegalArgumentException("reporter must not be null");
-
-        this.reporter = reporter;
-        this.valueClazz = valueClazz;
-        this.skipOnError = skipOnError;
-        this.skipOnDtoMappingError = skipOnDtoMappingError;
-        this.metricsCtx = metricsContext;
+    public ManagedProcessorImpl(
+            KafkaProcessorConfiguration<K,V> configuration,
+            MetricsReporter reporter
+    ){
+      this.configuration = configuration;
+      this.reporter = reporter;
+      this.metricsCtx = configuration.getMetricsContext();
     }
-
 
     /***************************************************************************
      *                                                                         *
@@ -72,46 +51,22 @@ public class ManagedJsonProcessor<K, V> {
      *                                                                         *
      **************************************************************************/
 
-    public boolean convertAndProcess(
-            ConsumerRecord<K, Json> rawRecord,
-            Processor<ConsumerRecord<K, V>> processor) throws UnrecoverableProcessingException {
-        return convertAndProcess(rawRecord, processor, null);
-    }
-
-    public boolean convertAndProcess(
-            ConsumerRecord<K, Json> rawRecord,
-            Processor<ConsumerRecord<K, V>> processor,
-            Acknowledgment ack) throws UnrecoverableProcessingException {
-
-        return convertAndProcessAll(
-                Collections.singletonList(rawRecord),
-                records -> processor.proccess(records.get(0)),
-                ack
-                );
-    }
-
-    public boolean convertAndProcessAll(
-            Collection<ConsumerRecord<K, Json>> rawRecords,
-            Processor<List<ConsumerRecord<K, V>>> processor){
-        return convertAndProcessAll(rawRecords, processor, null);
-    }
-
-    public boolean convertAndProcessAll(
-            Collection<ConsumerRecord<K, Json>> rawRecords,
-            Processor<List<ConsumerRecord<K, V>>> processor,
-            Acknowledgment ack) throws UnrecoverableProcessingException {
+    @Override
+    public void processMessages(List<ConsumerRecord<byte[], byte[]>> rawRecords, Acknowledgment ack, Consumer<?, ?> consumer) {
 
         long start = System.nanoTime();
 
+        // decode records
         var records = decodeAllRecords(rawRecords);
 
         // If we are here we have converted the records. Now run the user processing code.
 
         boolean success;
-        if(skipOnError){
-            success = processAllSkipOnError(records, processor, ack);
+
+        if(skipOnAllErrors()){
+            success = processAllSkipOnError(records, configuration.getProcessor(), ack);
         }else{
-            processAllErrorLoop(records, processor, ack);
+            processAllErrorLoop(records, configuration.getProcessor(), ack);
             success = true;
         }
 
@@ -119,7 +74,23 @@ public class ManagedJsonProcessor<K, V> {
             reporter.reportStreamingMetrics(metricsCtx, records.size(), System.nanoTime() - start);
         }
 
-        return success;
+        // retry logic
+
+        // health check ??
+    }
+
+    /***************************************************************************
+     *                                                                         *
+     * Properties                                                              *
+     *                                                                         *
+     **************************************************************************/
+
+    public boolean skipOnDecodingErrors(){
+        return true;
+    }
+
+    public boolean skipOnAllErrors(){
+        return true;
     }
 
     /***************************************************************************
@@ -127,8 +98,6 @@ public class ManagedJsonProcessor<K, V> {
      * Private methods                                                         *
      *                                                                         *
      **************************************************************************/
-
-
 
     private boolean processAllSkipOnError(
             List<ConsumerRecord<K, V>> records,
@@ -182,12 +151,13 @@ public class ManagedJsonProcessor<K, V> {
         } while (errorLoop);
     }
 
-    private List<ConsumerRecord<K, V>> decodeAllRecords(Collection<ConsumerRecord<K, Json>> rawRecords) throws UnrecoverableProcessingException {
+
+    private List<ConsumerRecord<K, V>> decodeAllRecords(List<ConsumerRecord<byte[], byte[]>> rawRecords) throws UnrecoverableProcessingException {
         List<ConsumerRecord<K, V>> records;
 
         try {
             records = rawRecords.stream()
-                    .map(r -> decodeRecord(r, skipOnError || skipOnDtoMappingError))
+                    .map(this::decodeRecord)
                     .filter(Objects::nonNull) // Skipped records will be null
                     .collect(toList());
         }catch (Exception e){
@@ -200,40 +170,58 @@ public class ManagedJsonProcessor<K, V> {
         return records;
     }
 
+
+    private K deserializeKey(ConsumerRecord<byte[], byte[]> record){
+        try {
+            return configuration.getKeyDeserializer().deserialize(record.topic(), record.key());
+        }catch (Exception e){
+            throw new IllegalStateException("Failed to deserialize record key!(" + record.serializedKeySize() + ")", e);
+        }
+    }
+
+    private V deserializeValue(ConsumerRecord<byte[], byte[]> record){
+        try {
+            return configuration.getValueDeserializer().deserialize(record.topic(), record.value());
+        }catch (Exception e){
+            throw new IllegalStateException("Failed to deserialize record value! (" + record.serializedValueSize() + ")", e);
+        }
+    }
+
     /**
      * Decodes the payload of a json record into a java DTO.
      *
      * In case skipOnDtoMappingError is false and a record is malformed, it will throw an exception.
      *
      * @param record The raw json param
-     * @param skipOnError In case there is a mapping error, skip and return null.
      * @return Returns the mapped record. If errors are skipped, might return null if mapping has failed.
      */
-    private ConsumerRecord<K, V> decodeRecord(ConsumerRecord<K, Json> record, boolean skipOnError){
+    private ConsumerRecord<K, V> decodeRecord(ConsumerRecord<byte[], byte[]> record){
+
+        K decodedKey;
+        // Decode key
+        try {
+            decodedKey = deserializeKey(record);
+        }catch (Exception e){
+            // Not able do deserialize key
+            reporter.reportMalformedRecord(metricsCtx, record, e); // Report key explicitly
+            return null; // Skip
+        }
+
+        V decodedValue;
+        // Decode Value
         if(record.value() != null){
             try{
-                V value = record.value().json(valueClazz);
-                return ConsumerRecordBuilder.fromRecordWithValue(record, value);
-            }catch (JsonParseException e){
-                // Not even valid json! Assume poison message.
+                decodedValue = deserializeValue(record);
+                return ConsumerRecordBuilder.fromRecordWithKeyValue(record, decodedKey, decodedValue);
+            }catch (Exception e){
+                // Not able do deserialize value
+                // Assume poison message
                 reporter.reportMalformedRecord(metricsCtx, record, e); // Report
                 return null; // Skip
-            }catch (JsonMappingException e) {
-
-                reporter.reportMalformedRecord(metricsCtx, record, e);
-
-                if(skipOnError){
-                    return null; // Skip
-                }else{
-                    throw e; // Escalate
-                }
             }
         }else{
-            return ConsumerRecordBuilder.fromRecordWithValue(record, null);
+            return ConsumerRecordBuilder.fromRecordWithKeyValue(record, decodedKey,null);
         }
     }
-
-
-
 
 }

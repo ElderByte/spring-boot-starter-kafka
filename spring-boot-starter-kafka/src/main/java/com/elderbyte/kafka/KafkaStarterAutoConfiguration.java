@@ -7,7 +7,6 @@ import com.elderbyte.kafka.consumer.factory.KafkaListenerFactoryConfiguration;
 import com.elderbyte.kafka.consumer.processing.ManagedProcessorFactoryConfiguration;
 import com.elderbyte.kafka.producer.DefaultJsonKafkaTemplateConfiguration;
 import com.elderbyte.kafka.producer.KafkaProducerConfiguration;
-import com.elderbyte.kafka.serialisation.SpringKafkaJsonDeserializer;
 import com.elderbyte.kafka.serialisation.SpringKafkaJsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,11 +41,6 @@ public class KafkaStarterAutoConfiguration {
 
         @Autowired
         private ObjectMapper mapper;
-
-        @Bean
-        public SpringKafkaJsonDeserializer springKafkaJsonDeserializer(){
-            return new SpringKafkaJsonDeserializer(mapper);
-        }
 
         @Bean
         public SpringKafkaJsonSerializer springKafkaJsonSerializer(){
