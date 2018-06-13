@@ -1,6 +1,8 @@
 package com.elderbyte.kafka.consumer.factory;
 
+import com.elderbyte.kafka.consumer.configuration.AutoOffsetReset;
 import com.elderbyte.kafka.consumer.processing.Processor;
+import com.elderbyte.kafka.metrics.MetricsContext;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.Deserializer;
 
@@ -17,12 +19,25 @@ public interface KafkaListenerBuilder<K,V> {
      *                                                                         *
      **************************************************************************/
 
-     <NV> KafkaListenerBuilder<K,NV> jsonValue(Class<NV> valueClazz);
+    <NV> KafkaListenerBuilder<K,NV> jsonValue(Class<NV> valueClazz);
 
-     <NV> KafkaListenerBuilder<K,NV> valueDeserializer(Deserializer<NV> valueDeserializer);
+    <NK> KafkaListenerBuilder<NK,V> jsonKey(Class<NK> keyClazz);
 
-     <NK> KafkaListenerBuilder<NK,V> keyDeserializer(Deserializer<NK> keyDeserializer);
+    KafkaListenerBuilder<K,String> stringValue();
 
+    KafkaListenerBuilder<String,V> stringKey();
+
+    <NV> KafkaListenerBuilder<K,NV> valueDeserializer(Deserializer<NV> valueDeserializer);
+
+    <NK> KafkaListenerBuilder<NK,V> keyDeserializer(Deserializer<NK> keyDeserializer);
+
+    KafkaListenerBuilder<K,V>  autoOffsetReset(AutoOffsetReset autoOffsetReset);
+
+    KafkaListenerBuilder<K,V> consumerGroup(String groupId);
+
+    KafkaListenerBuilder<K,V> consumerId(String clientId);
+
+    KafkaListenerBuilder<K,V> metrics(MetricsContext metricsContext);
 
     /***************************************************************************
      *                                                                         *

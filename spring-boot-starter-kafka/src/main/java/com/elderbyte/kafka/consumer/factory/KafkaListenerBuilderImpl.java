@@ -7,6 +7,7 @@ import com.elderbyte.kafka.serialisation.SpringKafkaJsonDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.Deserializer;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.kafka.listener.AbstractMessageListenerContainer;
 import org.springframework.kafka.listener.config.ContainerProperties;
 
@@ -73,6 +74,14 @@ public class KafkaListenerBuilderImpl<K,V> implements KafkaListenerBuilder<K,V>,
 
     public <NK> KafkaListenerBuilder<NK,V> jsonKey(Class<NK> keyClazz){
         return keyDeserializer(new SpringKafkaJsonDeserializer<>(keyClazz, mapper));
+    }
+
+    public KafkaListenerBuilder<K,String> stringValue(){
+        return valueDeserializer(new StringDeserializer());
+    }
+
+    public KafkaListenerBuilder<String,V> stringKey(){
+        return keyDeserializer(new StringDeserializer());
     }
 
     public <NV> KafkaListenerBuilder<K,NV> valueDeserializer(Deserializer<NV> valueDeserializer){
