@@ -8,7 +8,7 @@ public class KafkaClientConfig {
     @Value("${kafka.client.enabled:true}")
     private boolean kafkaEnabled;
 
-    @Value("${kafka.client.servers}")
+    @Value("${kafka.client.servers:}")
     private String kafkaServers;
 
     @Value("${kafka.client.consumer.concurrency:}")
