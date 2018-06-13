@@ -10,6 +10,7 @@ import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.listener.GenericMessageListener;
 import org.springframework.kafka.listener.GenericMessageListenerContainer;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 import org.springframework.kafka.listener.config.ContainerProperties;
@@ -19,7 +20,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-@SuppressWarnings("Duplicates")
 public class KafkaListenerFactoryImpl implements KafkaListenerFactory, ManagedListenerBuilder {
 
     /***************************************************************************
@@ -28,11 +28,20 @@ public class KafkaListenerFactoryImpl implements KafkaListenerFactory, ManagedLi
      *                                                                         *
      **************************************************************************/
 
-    @Autowired
-    private KafkaClientConfig globalConfig;
+    private final KafkaClientConfig globalConfig;
+    private final ObjectMapper mapper;
+
+    /***************************************************************************
+     *                                                                         *
+     * Constructor                                                             *
+     *                                                                         *
+     **************************************************************************/
 
     @Autowired
-    private ObjectMapper mapper;
+    public KafkaListenerFactoryImpl(KafkaClientConfig globalConfig, ObjectMapper mapper){
+        this.globalConfig = globalConfig;
+        this.mapper = mapper;
+    }
 
     /***************************************************************************
      *                                                                         *
@@ -74,7 +83,7 @@ public class KafkaListenerFactoryImpl implements KafkaListenerFactory, ManagedLi
      *                                                                         *
      **************************************************************************/
 
-    private <K,V> GenericMessageListenerContainer<byte[], byte[]> buildListenerInternal(KafkaListenerConfiguration<K,V> config, Object listener){
+    private <K,V> GenericMessageListenerContainer<byte[], byte[]> buildListenerInternal(KafkaListenerConfiguration<K,V> config, GenericMessageListener<?> listener){
         var containerProps = config.getContainerProperties();
         containerProps.setMessageListener(listener);
         var kafkaConfig = defaultConfig();

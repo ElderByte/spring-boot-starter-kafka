@@ -98,8 +98,15 @@ public class KafkaListenerBuilderImpl<K,V> implements KafkaListenerBuilder<K,V>,
         return this;
     }
 
+    public KafkaListenerBuilder<K,V> consumerGroup(String groupId){
+        this.containerProperties.setGroupId(groupId);
+        return this;
+    }
 
-
+    public KafkaListenerBuilder<K,V> consumerId(String clientId){
+        this.containerProperties.setClientId(clientId);
+        return this;
+    }
 
     public KafkaListenerBuilder<K,V> apply(KafkaListenerConfiguration<?,?> prototype){
         this.autoOffsetReset = prototype.getAutoOffsetReset();

@@ -3,6 +3,7 @@ package com.elderbyte.kafka;
 import com.elderbyte.kafka.admin.DefaultKafkaAdminConfiguration;
 import com.elderbyte.kafka.config.KafkaClientConfig;
 import com.elderbyte.kafka.consumer.DefaultJsonConsumerConfiguration;
+import com.elderbyte.kafka.consumer.factory.KafkaListenerFactoryConfiguration;
 import com.elderbyte.kafka.consumer.processing.ManagedProcessorFactoryConfiguration;
 import com.elderbyte.kafka.producer.DefaultJsonKafkaTemplateConfiguration;
 import com.elderbyte.kafka.producer.KafkaProducerConfiguration;
@@ -19,13 +20,16 @@ import org.springframework.context.annotation.Import;
 @Import( {
         KafkaStarterAutoConfiguration.InnerKafkaConfiguration.class,
         KafkaProducerConfiguration.class,
-        ManagedProcessorFactoryConfiguration.class
+        ManagedProcessorFactoryConfiguration.class,
+        KafkaListenerFactoryConfiguration.class
 })
 public class KafkaStarterAutoConfiguration {
 
 
-
-
+    @Bean
+    public KafkaClientConfig kafkaClientConfig(){
+        return new KafkaClientConfig();
+    }
 
     @Configuration
     @ConditionalOnProperty(value = "kafka.client.enabled", havingValue = "true", matchIfMissing = true)
@@ -38,11 +42,6 @@ public class KafkaStarterAutoConfiguration {
 
         @Autowired
         private ObjectMapper mapper;
-
-        @Bean
-        public KafkaClientConfig kafkaClientConfig(){
-            return new KafkaClientConfig();
-        }
 
         @Bean
         public SpringKafkaJsonDeserializer springKafkaJsonDeserializer(){
