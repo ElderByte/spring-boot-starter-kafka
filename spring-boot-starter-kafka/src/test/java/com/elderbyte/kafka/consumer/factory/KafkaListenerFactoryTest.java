@@ -40,7 +40,7 @@ public class KafkaListenerFactoryTest {
 
     @Test
     public void start_process() {
-        var builder = listenerFactory.start("test")
+        listenerFactory.start("test")
                 .consumerGroup("my-simple-group")
                 .stringKey()
                 .jsonValue(Object.class)
