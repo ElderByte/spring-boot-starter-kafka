@@ -61,6 +61,8 @@ public class KafkaListenerBuilderImpl<K,V> implements KafkaListenerBuilder<K,V>,
         this.mapper = mapper;
         this.keyDeserializer = keyDeserializer;
         this.valueDeserializer = valueDeserializer;
+
+        autoCommit(false);
     }
 
     /***************************************************************************
@@ -69,22 +71,27 @@ public class KafkaListenerBuilderImpl<K,V> implements KafkaListenerBuilder<K,V>,
      *                                                                         *
      **************************************************************************/
 
+    @Override
     public <NV> KafkaListenerBuilder<K,NV> jsonValue(Class<NV> valueClazz){
         return valueDeserializer(new SpringKafkaJsonDeserializer<>(valueClazz, mapper));
     }
 
+    @Override
     public <NK> KafkaListenerBuilder<NK,V> jsonKey(Class<NK> keyClazz){
         return keyDeserializer(new SpringKafkaJsonDeserializer<>(keyClazz, mapper));
     }
 
+    @Override
     public KafkaListenerBuilder<K,String> stringValue(){
         return valueDeserializer(new StringDeserializer());
     }
 
+    @Override
     public KafkaListenerBuilder<String,V> stringKey(){
         return keyDeserializer(new StringDeserializer());
     }
 
+    @Override
     public <NV> KafkaListenerBuilder<K,NV> valueDeserializer(Deserializer<NV> valueDeserializer){
         return new KafkaListenerBuilderImpl<>(
                 this.managedListenerBuilder,
@@ -95,6 +102,7 @@ public class KafkaListenerBuilderImpl<K,V> implements KafkaListenerBuilder<K,V>,
         ).apply(this);
     }
 
+    @Override
     public <NK> KafkaListenerBuilder<NK,V> keyDeserializer(Deserializer<NK> keyDeserializer){
         return new KafkaListenerBuilderImpl<>(
                 this.managedListenerBuilder,
@@ -105,21 +113,25 @@ public class KafkaListenerBuilderImpl<K,V> implements KafkaListenerBuilder<K,V>,
         ).apply(this);
     }
 
+    @Override
     public KafkaListenerBuilder<K,V>  autoOffsetReset(AutoOffsetReset autoOffsetReset) {
         this.autoOffsetReset = autoOffsetReset;
         return this;
     }
 
+    @Override
     public KafkaListenerBuilder<K,V> consumerGroup(String groupId){
         this.containerProperties.setGroupId(groupId);
         return this;
     }
 
+    @Override
     public KafkaListenerBuilder<K,V> consumerId(String clientId){
         this.containerProperties.setClientId(clientId);
         return this;
     }
 
+    @Override
     public KafkaListenerBuilder<K,V> metrics(MetricsContext metricsContext){
         this.metricsContext = metricsContext;
         return this;
@@ -136,6 +148,13 @@ public class KafkaListenerBuilderImpl<K,V> implements KafkaListenerBuilder<K,V>,
         this.blockingRetries = retries;
         return this;
     }
+
+    @Override
+    public KafkaListenerBuilder<K, V> autoCommit(boolean autoCommit) {
+        this.containerProperties.setAckMode(autoCommit ? AbstractMessageListenerContainer.AckMode.BATCH : AbstractMessageListenerContainer.AckMode.MANUAL);
+        return this;
+    }
+
 
     public KafkaListenerBuilder<K,V> apply(KafkaListenerConfiguration<?,?> prototype){
         this.autoOffsetReset = prototype.getAutoOffsetReset();

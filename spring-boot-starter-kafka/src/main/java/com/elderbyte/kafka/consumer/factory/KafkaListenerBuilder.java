@@ -39,9 +39,21 @@ public interface KafkaListenerBuilder<K,V> {
 
     KafkaListenerBuilder<K,V> metrics(MetricsContext metricsContext);
 
+    /**
+     * Skip records on error
+     */
     KafkaListenerBuilder<K,V> ignoreErrors();
 
+    /**
+     * On error, retry the given number of times.
+     * After that, a errorhandler is invoked and the records are skipped.
+     */
     KafkaListenerBuilder<K,V> blockingRetries(int retries);
+
+    /**
+     * Enable / Disable auto-commit. Default is false to support error handling.
+     */
+    KafkaListenerBuilder<K, V> autoCommit(boolean autoCommit);
 
 
     /***************************************************************************
