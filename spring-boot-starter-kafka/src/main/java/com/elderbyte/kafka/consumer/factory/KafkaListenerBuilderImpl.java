@@ -9,6 +9,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.kafka.listener.AbstractMessageListenerContainer;
+import org.springframework.kafka.listener.ConsumerAwareRebalanceListener;
 import org.springframework.kafka.listener.config.ContainerProperties;
 
 import java.util.List;
@@ -155,6 +156,23 @@ public class KafkaListenerBuilderImpl<K,V> implements KafkaListenerBuilder<K,V>,
         return this;
     }
 
+    @Override
+    public KafkaListenerBuilder<K, V> rebalanceListener(ConsumerAwareRebalanceListener rebalanceListener){
+        this.containerProperties.setConsumerRebalanceListener(rebalanceListener);
+        return this;
+    }
+
+    @Override
+    public KafkaListenerBuilder<K, V> syncCommits(boolean syncCommits){
+        this.containerProperties.setSyncCommits(syncCommits);
+        return this;
+    }
+
+    @Override
+    public KafkaListenerBuilder<K, V> pollTimeout(long pollTimeout){
+        this.containerProperties.setPollTimeout(pollTimeout);
+        return this;
+    }
 
     public KafkaListenerBuilder<K,V> apply(KafkaListenerConfiguration<?,?> prototype){
         this.autoOffsetReset = prototype.getAutoOffsetReset();
