@@ -1,7 +1,6 @@
 package com.elderbyte.kafka.consumer;
 
 import com.elderbyte.kafka.config.KafkaClientConfig;
-import com.elderbyte.kafka.serialisation.Json;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
