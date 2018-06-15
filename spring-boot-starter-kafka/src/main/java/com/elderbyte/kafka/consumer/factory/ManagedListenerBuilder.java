@@ -1,8 +1,8 @@
 package com.elderbyte.kafka.consumer.factory;
 
-import org.springframework.kafka.listener.GenericMessageListenerContainer;
+import org.springframework.kafka.listener.MessageListenerContainer;
 
 
 public interface ManagedListenerBuilder {
-    <K,V> GenericMessageListenerContainer<byte[], byte[]> buildListenerContainer(KafkaListenerConfiguration<K,V> configuration);
+    <K,V> MessageListenerContainer buildListenerContainer(KafkaListenerConfiguration<K,V> configuration);
 }

@@ -18,6 +18,7 @@ import static org.junit.Assert.*;
 @SpringBootTest(classes = SpringBootTestApp.class)
 @TestPropertySource(properties = {
         "kafka.client.enabled=false",
+        "kafka.client.servers=",
 })
 public class KafkaListenerFactoryTest {
 
@@ -39,7 +40,7 @@ public class KafkaListenerFactoryTest {
     }
 
     @Test
-    public void start_process() {
+    public void ensure_mock_env_works() {
         listenerFactory.start("test")
                 .consumerGroup("my-simple-group")
                 .stringKey()
