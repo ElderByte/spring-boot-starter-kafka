@@ -15,8 +15,13 @@ import org.springframework.context.annotation.Configuration;
 public class KafkaListenerFactoryConfiguration {
 
     @Bean
-    public KafkaListenerFactory kafkaListenerFactory(KafkaClientConfig globalConfig, ObjectMapper mapper, MetricsReporter reporter){
-        return new KafkaListenerFactoryImpl(globalConfig, mapper, reporter);
+    public ManagedListenerBuilder managedListenerBuilder(KafkaClientConfig globalConfig, MetricsReporter reporter){
+        return new ManagedListenerBuilderImpl(globalConfig, reporter);
+    }
+
+    @Bean
+    public KafkaListenerFactory kafkaListenerFactory(ObjectMapper mapper, ManagedListenerBuilder managedListenerBuilder){
+        return new KafkaListenerFactoryImpl(mapper, managedListenerBuilder);
     }
 
     @Bean
