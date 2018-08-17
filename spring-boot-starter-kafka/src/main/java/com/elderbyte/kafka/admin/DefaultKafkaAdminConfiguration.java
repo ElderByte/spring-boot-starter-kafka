@@ -1,6 +1,5 @@
 package com.elderbyte.kafka.admin;
 
-import com.elderbyte.kafka.admin.AdminClientFactory;
 import com.elderbyte.kafka.config.KafkaClientConfig;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +13,6 @@ import java.util.Map;
 
 @Configuration
 @ConditionalOnProperty(value = "kafka.client.admin.enabled", matchIfMissing = true)
-
 public class DefaultKafkaAdminConfiguration {
 
     /***************************************************************************
