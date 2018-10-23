@@ -1,9 +1,9 @@
 task wrapper(type: Wrapper) {
-    gradleVersion = '4.6'
+    gradleVersion = '4.10'
 }
 
 allprojects {
-    version =  '2.0.4.E26'
+    version =  '2.0.6.E26'
     group = 'com.elderbyte.spring.boot'
 
     //Always show stacktrace
@@ -12,6 +12,6 @@ allprojects {
 
 subprojects {
     ext {
-        springBootVersion = '2.0.4.RELEASE'
+        springBootVersion = '2.0.6.RELEASE'
     }
 }
