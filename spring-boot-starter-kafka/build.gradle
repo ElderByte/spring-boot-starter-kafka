@@ -9,17 +9,13 @@ buildscript {
 	}
 }
 
-plugins {
-	id "com.jfrog.bintray" version "1.7.3"
-}
-
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 apply plugin: 'maven-publish'
-
+apply plugin: 'com.jfrog.bintray'
 
 compileJava {
 	sourceCompatibility = 11
@@ -110,7 +106,7 @@ bintray {
 		vcsUrl = 'https://github.com/ElderByte-/spring-boot-starter-kafka'
 
 		version {
-			name = project.version //Bintray logical version name
+			name = project.version // Bintray logical version name
 		}
 	}
 }
