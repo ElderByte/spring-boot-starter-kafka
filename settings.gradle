@@ -1,1 +1,1 @@
-include 'spring-boot-starter-kafka'
+include 'spring-boot-starter-kafka', 'spring-boot-starter-kafka-demo'

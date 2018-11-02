@@ -1,0 +1,17 @@
+spring.output.ansi.enabled: always
+
+logging:
+    level:
+        root: WARN
+        com.elderbyte: ${LOG_LEVEL:INFO}
+
+kafka:
+  client:
+    enabled: true
+    servers: ${KAFKA_BROKERS:localhost:9092}
+    producer:
+      transaction.id: demo-app
+    consumer:
+      enabled: true
+      pollTimeout: 3000
+

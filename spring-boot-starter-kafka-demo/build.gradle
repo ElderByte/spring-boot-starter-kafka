@@ -1,0 +1,44 @@
+buildscript {
+	repositories {
+		mavenCentral()
+		maven { url "https://repo.spring.io/snapshot" }
+		maven { url "https://repo.spring.io/milestone" }
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+	}
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+
+
+compileJava {
+	sourceCompatibility = 10
+	targetCompatibility = 10
+	options.encoding = "UTF-8"
+}
+
+repositories {
+	mavenCentral()
+	maven { url "https://repo.spring.io/snapshot" }
+	maven { url "https://repo.spring.io/milestone" }
+}
+
+
+dependencies {
+
+	compile project(':spring-boot-starter-kafka')
+
+	// Basic Spring Boot
+	compile('org.springframework.boot:spring-boot-starter')
+
+
+	// Kafka Client
+	compile('org.springframework.kafka:spring-kafka')
+	compile 'org.apache.kafka:kafka-clients:1.1.1' // Kafka Client 1.1.1
+	compile('org.apache.kafka:kafka-streams:1.1.1')
+}
