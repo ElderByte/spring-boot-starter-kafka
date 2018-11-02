@@ -9,7 +9,7 @@ import java.util.Map;
 /**
  * Serialize objects to UTF-8 JSON. This works with any object which is serializable with Jackson.
  */
-public class SpringKafkaJsonSerializer implements Serializer<Object> {
+public class SpringKafkaJsonSerializer<V> implements Serializer<V> {
 
   /***************************************************************************
    *                                                                         *
@@ -47,7 +47,7 @@ public class SpringKafkaJsonSerializer implements Serializer<Object> {
 
 
   @Override
-  public byte[] serialize(String topic, Object data) {
+  public byte[] serialize(String topic, V data) {
     if (data == null) {
       return null;
     }
