@@ -2,7 +2,7 @@ package com.elderbyte.kafka.consumer.factory;
 
 import com.elderbyte.kafka.consumer.configuration.AutoOffsetReset;
 import com.elderbyte.kafka.consumer.processing.KafkaProcessorConfiguration;
-import org.springframework.kafka.listener.config.ContainerProperties;
+import org.springframework.kafka.listener.ContainerProperties;
 
 
 /**

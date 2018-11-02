@@ -85,7 +85,7 @@ public class KafkaProducerMock<K,V> implements KafkaProducer<K,V> {
                 0,
                 0,
                 0,
-                0,
+                null,
                 0,
                 0
         );

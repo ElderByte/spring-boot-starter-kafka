@@ -10,7 +10,7 @@ import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.kafka.listener.AbstractMessageListenerContainer;
 import org.springframework.kafka.listener.ConsumerAwareRebalanceListener;
-import org.springframework.kafka.listener.config.ContainerProperties;
+import org.springframework.kafka.listener.ContainerProperties;
 
 import java.util.List;
 
@@ -152,7 +152,7 @@ public class KafkaListenerBuilderImpl<K,V> implements KafkaListenerBuilder<K,V>,
 
     @Override
     public KafkaListenerBuilder<K, V> autoCommit(boolean autoCommit) {
-        this.containerProperties.setAckMode(autoCommit ? AbstractMessageListenerContainer.AckMode.BATCH : AbstractMessageListenerContainer.AckMode.MANUAL);
+        this.containerProperties.setAckMode(autoCommit ? ContainerProperties.AckMode.BATCH : ContainerProperties.AckMode.MANUAL);
         return this;
     }
 
@@ -221,8 +221,8 @@ public class KafkaListenerBuilderImpl<K,V> implements KafkaListenerBuilder<K,V>,
 
     @Override
     public boolean isManualAck(){
-        return getContainerProperties().getAckMode() == AbstractMessageListenerContainer.AckMode.MANUAL
-                || getContainerProperties().getAckMode() == AbstractMessageListenerContainer.AckMode.MANUAL_IMMEDIATE;
+        return getContainerProperties().getAckMode() == ContainerProperties.AckMode.MANUAL
+                || getContainerProperties().getAckMode() == ContainerProperties.AckMode.MANUAL_IMMEDIATE;
     }
 
     @Override

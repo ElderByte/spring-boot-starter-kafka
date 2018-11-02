@@ -3,7 +3,7 @@ package com.elderbyte.kafka.consumer.factory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.kafka.listener.config.ContainerProperties;
+import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.support.TopicPartitionInitialOffset;
 
 import java.util.regex.Pattern;
