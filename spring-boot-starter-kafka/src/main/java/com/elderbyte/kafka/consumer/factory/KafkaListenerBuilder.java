@@ -36,6 +36,8 @@ public interface KafkaListenerBuilder<K,V> {
 
     KafkaListenerBuilder<K,V>  autoOffsetReset(AutoOffsetReset autoOffsetReset);
 
+    KafkaListenerBuilder<K,V> failIfTopicsAreMissing(boolean value);
+
     KafkaListenerBuilder<K,V> consumerGroup(String groupId);
 
     KafkaListenerBuilder<K,V> consumerId(String clientId);

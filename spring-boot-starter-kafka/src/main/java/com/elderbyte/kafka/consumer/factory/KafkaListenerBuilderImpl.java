@@ -39,6 +39,7 @@ public class KafkaListenerBuilderImpl<K,V> implements KafkaListenerBuilder<K,V>,
     private MetricsContext metricsContext = MetricsContext.from("", "");
     private boolean skipOnError = false;
     private int blockingRetries = 1;
+    private boolean failIfTopicsAreMissing = false;
 
     private Processor<List<ConsumerRecord<K, V>>> processor;
     private boolean batch = false;
@@ -117,6 +118,11 @@ public class KafkaListenerBuilderImpl<K,V> implements KafkaListenerBuilder<K,V>,
     @Override
     public KafkaListenerBuilder<K,V>  autoOffsetReset(AutoOffsetReset autoOffsetReset) {
         this.autoOffsetReset = autoOffsetReset;
+        return this;
+    }
+
+    public KafkaListenerBuilder<K,V> failIfTopicsAreMissing(boolean value){
+        this.failIfTopicsAreMissing = value;
         return this;
     }
 
@@ -248,6 +254,11 @@ public class KafkaListenerBuilderImpl<K,V> implements KafkaListenerBuilder<K,V>,
     @Override
     public AutoOffsetReset getAutoOffsetReset() {
         return autoOffsetReset;
+    }
+
+    @Override
+    public boolean failIfTopicsAreMissing() {
+        return failIfTopicsAreMissing;
     }
 
     @Override

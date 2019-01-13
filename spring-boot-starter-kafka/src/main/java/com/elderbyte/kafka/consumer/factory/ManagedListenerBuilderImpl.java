@@ -70,15 +70,21 @@ public class ManagedListenerBuilderImpl implements ManagedListenerBuilder {
      *                                                                         *
      **************************************************************************/
 
-    private <K,V> MessageListenerContainer buildListenerInternal(KafkaListenerConfiguration<K,V> config, GenericMessageListener<?> listener){
+    private <K,V> MessageListenerContainer buildListenerInternal(
+            KafkaListenerConfiguration<K,V> config,
+            GenericMessageListener<?> listener)
+    {
         var containerProps = config.getContainerProperties();
         containerProps.setMessageListener(listener);
+        containerProps.setMissingTopicsFatal(config.failIfTopicsAreMissing());
         var kafkaConfig = defaultConfig();
 
         kafkaConfig.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, !config.isManualAck());
         kafkaConfig.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, config.getAutoOffsetReset().toString());
 
-        return new KafkaMessageListenerContainer<>(consumerFactoryByteByte(kafkaConfig), containerProps);
+        return new KafkaMessageListenerContainer<>(
+                consumerFactoryByteByte(kafkaConfig),
+                containerProps);
     }
 
     private ConsumerFactory<byte[], byte[]> consumerFactoryByteByte(Map<String, Object> config) {
