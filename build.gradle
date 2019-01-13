@@ -13,7 +13,7 @@ task wrapper(type: Wrapper) {
 }
 
 allprojects {
-    version =  '2.1.2.E26'
+    version =  '2.1.2.E27'
     group = 'com.elderbyte.spring.boot'
 
     //Always show stacktrace
