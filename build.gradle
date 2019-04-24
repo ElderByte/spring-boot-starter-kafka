@@ -8,10 +8,6 @@ buildscript {
     }
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '4.10.2'
-}
-
 allprojects {
     version =  '2.1.2.E27'
     group = 'com.elderbyte.spring.boot'
