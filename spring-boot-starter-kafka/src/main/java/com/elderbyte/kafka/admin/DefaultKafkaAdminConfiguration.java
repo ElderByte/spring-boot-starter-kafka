@@ -31,7 +31,7 @@ public class DefaultKafkaAdminConfiguration {
      **************************************************************************/
 
     @Bean
-    public KafkaAdmin admin() {
+    public KafkaAdmin kafkaAdmin() {
         return new KafkaAdmin(adminConfig());
     }
 
