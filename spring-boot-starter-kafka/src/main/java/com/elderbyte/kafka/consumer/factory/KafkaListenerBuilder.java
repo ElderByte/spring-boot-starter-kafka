@@ -7,6 +7,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.annotation.InterfaceStability;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.springframework.kafka.listener.ConsumerAwareRebalanceListener;
+import org.springframework.kafka.listener.MessageListenerContainer;
 
 import java.util.List;
 
@@ -87,7 +88,29 @@ public interface KafkaListenerBuilder<K,V> {
      *                                                                         *
      **************************************************************************/
 
-    void startProcess(Processor<ConsumerRecord<K, V>> processor);
+    /**
+     * @deprecated Please switch to build(processor).start();
+     */
+    @Deprecated
+    default void startProcess(Processor<ConsumerRecord<K, V>> processor) {
+        build(processor).start();
+    }
 
-    void startProcessBatch(Processor<List<ConsumerRecord<K, V>>> processor);
+    /**
+     * @deprecated Please switch to buildBatch(processor).start();
+     */
+    @Deprecated
+    default void startProcessBatch(Processor<List<ConsumerRecord<K, V>>> processor){
+        buildBatch(processor).start();
+    }
+
+    /**
+     * Build a single record listener from this builder configuration.
+     */
+    MessageListenerContainer build(Processor<ConsumerRecord<K, V>> processor);
+
+    /**
+     * Build a kafka batch listener from this builder configuration.
+     */
+    MessageListenerContainer buildBatch(Processor<List<ConsumerRecord<K, V>>> processor);
 }

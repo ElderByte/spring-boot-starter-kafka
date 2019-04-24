@@ -8,9 +8,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.springframework.kafka.listener.AbstractMessageListenerContainer;
 import org.springframework.kafka.listener.ConsumerAwareRebalanceListener;
 import org.springframework.kafka.listener.ContainerProperties;
+import org.springframework.kafka.listener.MessageListenerContainer;
 
 import java.util.List;
 
@@ -194,24 +194,23 @@ public class KafkaListenerBuilderImpl<K,V> implements KafkaListenerBuilder<K,V>,
      *                                                                         *
      **************************************************************************/
 
-
-    public void startProcess(Processor<ConsumerRecord<K, V>> processor){
-        startProcessing(batch -> {
+    /**
+     * Build a single record listener from this builder configuration.
+     */
+    public MessageListenerContainer build(Processor<ConsumerRecord<K, V>> processor){
+        return buildListenerContainer(batch -> {
             for(var e : batch){
                 processor.proccess(e);
             }
         });
     }
 
-    public void startProcessBatch(Processor<List<ConsumerRecord<K, V>>> processor){
+    /**
+     * Build a kafka batch listener from this builder configuration.
+     */
+    public MessageListenerContainer buildBatch(Processor<List<ConsumerRecord<K, V>>> processor){
         this.batch = true;
-        startProcessing(processor);
-    }
-
-    private void startProcessing(Processor<List<ConsumerRecord<K, V>>> processor){
-        this.processor = processor;
-        managedListenerBuilder.buildListenerContainer(this)
-                .start();
+        return buildListenerContainer(processor);
     }
 
     /***************************************************************************
@@ -274,5 +273,16 @@ public class KafkaListenerBuilderImpl<K,V> implements KafkaListenerBuilder<K,V>,
     @Override
     public int getBlockingRetries() {
         return blockingRetries;
+    }
+
+    /***************************************************************************
+     *                                                                         *
+     * Private methods                                                         *
+     *                                                                         *
+     **************************************************************************/
+
+    private MessageListenerContainer buildListenerContainer(Processor<List<ConsumerRecord<K, V>>> processor){
+        this.processor = processor;
+        return managedListenerBuilder.buildListenerContainer(this);
     }
 }
