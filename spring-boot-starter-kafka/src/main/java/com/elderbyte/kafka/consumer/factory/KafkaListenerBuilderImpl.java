@@ -4,6 +4,7 @@ import com.elderbyte.kafka.consumer.configuration.AutoOffsetReset;
 import com.elderbyte.kafka.consumer.processing.Processor;
 import com.elderbyte.kafka.metrics.MetricsContext;
 import com.elderbyte.kafka.serialisation.SpringKafkaJsonDeserializer;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.Deserializer;
@@ -81,6 +82,16 @@ public class KafkaListenerBuilderImpl<K,V> implements KafkaListenerBuilder<K,V>,
     @Override
     public <NK> KafkaListenerBuilder<NK,V> jsonKey(Class<NK> keyClazz){
         return keyDeserializer(new SpringKafkaJsonDeserializer<>(keyClazz, mapper));
+    }
+
+    @Override
+    public <NV> KafkaListenerBuilder<K,NV> jsonValue(TypeReference<NV> valueTypeRef){
+        return valueDeserializer(new SpringKafkaJsonDeserializer<>(valueTypeRef, mapper));
+    }
+
+    @Override
+    public <NK> KafkaListenerBuilder<NK,V> jsonKey(TypeReference<NK> keyTypeRef){
+        return keyDeserializer(new SpringKafkaJsonDeserializer<>(keyTypeRef, mapper));
     }
 
     @Override

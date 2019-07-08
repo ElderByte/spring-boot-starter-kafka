@@ -3,6 +3,8 @@ package com.elderbyte.kafka.consumer.factory;
 import com.elderbyte.kafka.consumer.configuration.AutoOffsetReset;
 import com.elderbyte.kafka.consumer.processing.Processor;
 import com.elderbyte.kafka.metrics.MetricsContext;
+import com.elderbyte.kafka.serialisation.SpringKafkaJsonDeserializer;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.annotation.InterfaceStability;
 import org.apache.kafka.common.serialization.Deserializer;
@@ -26,6 +28,10 @@ public interface KafkaListenerBuilder<K,V> {
     <NV> KafkaListenerBuilder<K,NV> jsonValue(Class<NV> valueClazz);
 
     <NK> KafkaListenerBuilder<NK,V> jsonKey(Class<NK> keyClazz);
+
+    <NV> KafkaListenerBuilder<K,NV> jsonValue(TypeReference<NV> valueTypeRef);
+
+    <NK> KafkaListenerBuilder<NK,V> jsonKey(TypeReference<NK> keyTypeRef);
 
     KafkaListenerBuilder<K,String> stringValue();
 

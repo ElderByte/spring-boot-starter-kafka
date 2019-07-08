@@ -1,5 +1,6 @@
 package com.elderbyte.kafka.serialisation;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.common.errors.SerializationException;
 import org.apache.kafka.common.serialization.Deserializer;
@@ -22,7 +23,9 @@ public class SpringKafkaJsonDeserializer<V> implements Deserializer<V> {
 
   private final StringDeserializer stringDeserializer = new StringDeserializer();
   private final ObjectMapper objectMapper;
+
   private final Class<V> clazz;
+  private final TypeReference<V> typeReference;
 
   /***************************************************************************
    *                                                                         *
@@ -37,10 +40,21 @@ public class SpringKafkaJsonDeserializer<V> implements Deserializer<V> {
 
 
   public SpringKafkaJsonDeserializer(Class<V> clazz, ObjectMapper mapper) {
-    this.objectMapper = mapper;
-    this.clazz = clazz;
+    this(clazz, null, mapper);
   }
 
+  public SpringKafkaJsonDeserializer(TypeReference<V> typeReference, ObjectMapper mapper) {
+    this(null, typeReference, mapper);
+  }
+
+  private SpringKafkaJsonDeserializer(
+          Class<V> clazz,
+          TypeReference<V> typeReference,
+          ObjectMapper mapper) {
+    this.objectMapper = mapper;
+    this.typeReference = typeReference;
+    this.clazz = clazz;
+  }
   /***************************************************************************
    *                                                                         *
    * Public API                                                              *
@@ -60,7 +74,11 @@ public class SpringKafkaJsonDeserializer<V> implements Deserializer<V> {
     }
 
     try {
-      return objectMapper.readValue(bytes, clazz);
+      if(typeReference != null){
+        return objectMapper.readValue(bytes, typeReference);
+      }else{
+        return objectMapper.readValue(bytes, clazz);
+      }
     } catch (Exception e) {
       throw new SerializationException("Failed to deserialize bytes on topic "+topic+" to json: " + stringDeserializer.deserialize(topic, bytes), e);
     }
