@@ -6,13 +6,16 @@ import com.elderbyte.kafka.metrics.MetricsContext;
 import com.elderbyte.kafka.serialisation.SpringKafkaJsonDeserializer;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.kafka.listener.ConsumerAwareRebalanceListener;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.MessageListenerContainer;
 
+import java.util.Collection;
 import java.util.List;
 
 
@@ -178,6 +181,29 @@ public class KafkaListenerBuilderImpl<K,V> implements KafkaListenerBuilder<K,V>,
         this.containerProperties.setConsumerRebalanceListener(rebalanceListener);
         return this;
     }
+
+    @Override
+    public KafkaListenerBuilder<K, V> seekToEarliest(){
+        rebalanceListener(new ConsumerAwareRebalanceListener() {
+            @Override
+            public void onPartitionsAssigned(Consumer<?, ?> consumer, Collection<TopicPartition> partitions) {
+                consumer.seekToBeginning(partitions);
+            }
+        });
+        return this;
+    }
+
+    @Override
+    public KafkaListenerBuilder<K, V> seekToLatest(){
+        rebalanceListener(new ConsumerAwareRebalanceListener() {
+            @Override
+            public void onPartitionsAssigned(Consumer<?, ?> consumer, Collection<TopicPartition> partitions) {
+                consumer.seekToEnd(partitions);
+            }
+        });
+        return this;
+    }
+
 
     @Override
     public KafkaListenerBuilder<K, V> syncCommits(boolean syncCommits){

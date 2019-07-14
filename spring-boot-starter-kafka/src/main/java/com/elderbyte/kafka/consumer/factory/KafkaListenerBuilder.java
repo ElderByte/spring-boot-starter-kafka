@@ -77,6 +77,19 @@ public interface KafkaListenerBuilder<K,V> {
     KafkaListenerBuilder<K, V> rebalanceListener(ConsumerAwareRebalanceListener rebalanceListener); // TODO custom builder
 
     /**
+     * When partitions are assigned to this listener, seek to the beginning offset. (0)
+     * This causes this listener to replay all events from the assigned partitions.
+     */
+    KafkaListenerBuilder<K, V> seekToEarliest();
+
+    /**
+     * When partitions are assigned to this listener, seek to the latest offset.
+     * This causes this listener to ignores all previous data. Useful for realtime monitoring
+     * of a topic.
+     */
+    KafkaListenerBuilder<K, V> seekToLatest();
+
+    /**
      * Set whether or not to call consumer.commitSync() or commitAsync() when the
      * container is responsible for commits. Default true.
      */
