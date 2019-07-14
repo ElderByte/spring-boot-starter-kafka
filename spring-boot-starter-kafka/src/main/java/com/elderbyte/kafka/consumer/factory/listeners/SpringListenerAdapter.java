@@ -8,7 +8,10 @@ import org.springframework.kafka.listener.MessageListener;
 
 public class SpringListenerAdapter {
 
-    public static  <K,V> GenericMessageListener<?> buildListenerAdapter(KafkaListenerConfiguration<K,V> config, ManagedProcessor<K,V> managedProcessor){
+    public static  <K,V> GenericMessageListener<?> buildListenerAdapter(
+            KafkaListenerConfiguration<K,V> config,
+            ManagedProcessor<K,V> managedProcessor
+    ){
 
         boolean batch = config.isBatch();
 
@@ -19,7 +22,9 @@ public class SpringListenerAdapter {
         }
     }
 
-    private static  <K,V> BatchMessageListener<byte[], byte[]> buildBatchListener(ManagedProcessor<K,V> managedProcessor, boolean manualAck){
+    private static  <K,V> BatchMessageListener<byte[], byte[]> buildBatchListener(
+            ManagedProcessor<K,V> managedProcessor, boolean manualAck
+    ){
         if(manualAck){
             return new ManagedAckBatchRawListener<>(managedProcessor);
         }else{

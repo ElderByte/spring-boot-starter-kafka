@@ -84,7 +84,8 @@ public class ManagedListenerBuilderImpl implements ManagedListenerBuilder {
 
         return new KafkaMessageListenerContainer<>(
                 consumerFactoryByteByte(kafkaConfig),
-                containerProps);
+                containerProps
+        );
     }
 
     private ConsumerFactory<byte[], byte[]> consumerFactoryByteByte(Map<String, Object> config) {
