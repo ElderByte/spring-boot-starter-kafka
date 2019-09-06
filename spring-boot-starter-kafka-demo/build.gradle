@@ -16,12 +16,6 @@ apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 
 
-compileJava {
-	sourceCompatibility = 10
-	targetCompatibility = 10
-	options.encoding = "UTF-8"
-}
-
 repositories {
 	mavenCentral()
 	maven { url "https://repo.spring.io/snapshot" }

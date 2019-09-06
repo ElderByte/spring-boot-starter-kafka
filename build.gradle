@@ -19,5 +19,24 @@ allprojects {
 subprojects {
     ext {
         springBootVersion = '2.1.6.RELEASE'
+        starterVersion = '5.19.0'
+    }
+
+    tasks.withType(Javadoc) {
+        // Avoid failing builds because of java-doc errors
+        options.addStringOption('Xdoclint:none', '-quiet')
+        options.addStringOption('encoding','UTF-8')
+    }
+
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+        sourceCompatibility = 11
+        targetCompatibility = 11
+    }
+
+    tasks.withType(Test) {
+        testLogging {
+            exceptionFormat = 'full'
+        }
     }
 }

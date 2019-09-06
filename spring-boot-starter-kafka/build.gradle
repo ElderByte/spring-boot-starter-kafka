@@ -17,12 +17,6 @@ apply plugin: 'io.spring.dependency-management'
 apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.bintray'
 
-compileJava {
-	sourceCompatibility = 11
-	targetCompatibility = 11
-	options.encoding = "UTF-8"
-}
-
 repositories {
 	mavenCentral()
 	maven { url "https://repo.spring.io/snapshot" }
@@ -42,6 +36,10 @@ dependencies {
 
 	// Kafka Client
 	compile('org.springframework.kafka:spring-kafka')
+
+
+	compile("com.elderbyte.starter:starter:${starterVersion}")
+
 
 	// Test
 
