@@ -46,9 +46,8 @@ public class KafkaListenerFactoryTest {
                 .stringKey()
                 .jsonValue(Object.class)
                 .autoOffsetReset(AutoOffsetReset.latest)
-                .startProcessBatch(records -> {
-                    List<ConsumerRecord<String, Object>> myRecords = records;
-                });
-
+                .buildBatch(records -> {
+                    var myRecords = records;
+                }).start();
     }
 }
