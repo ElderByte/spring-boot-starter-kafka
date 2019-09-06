@@ -1,6 +1,14 @@
 package com.elderbyte.kafka.producer;
 
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.header.internals.RecordHeader;
+import org.springframework.lang.Nullable;
+
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+
+import static java.util.stream.Collectors.toList;
 
 public class KafkaMessage<K,V> {
 
@@ -22,18 +30,26 @@ public class KafkaMessage<K,V> {
     }
 
     public static <K,V> KafkaMessage<K,V> tombstone(K key){
+        return tombstone(key, null);
+    }
+    
+    public static <K,V> KafkaMessage<K,V> tombstone(K key, Map<String, String> headers){
 
         if(key == null) throw new IllegalArgumentException("key must not be null!");
 
-        return new KafkaMessage<>(key, null, null, null);
+        return new KafkaMessage<>(key, null, null, null, headers);
     }
 
     public static <K,V> KafkaMessage<K,V> build(K key, V value){
+        return build(key, value, null);
+    }
+
+    public static <K,V> KafkaMessage<K,V> build(K key, V value, Map<String, String> headers){
 
         if(key == null) throw new IllegalArgumentException("key must not be null!");
         if(value == null) throw new IllegalArgumentException("value must not be null");
 
-        return new KafkaMessage<>(key, value, null, null);
+        return new KafkaMessage<>(key, value, null, null, headers);
     }
 
     public static <K,V> KafkaMessage<K,V> build(K key, V value, int partition){
@@ -41,7 +57,7 @@ public class KafkaMessage<K,V> {
         if(key == null) throw new IllegalArgumentException("key must not be null!");
         if(value == null) throw new IllegalArgumentException("value must not be null");
 
-        return new KafkaMessage<>(key, value, partition, null);
+        return new KafkaMessage<>(key, value, partition, null, null);
     }
 
     public static <K,V> KafkaMessage<K,V> build(K key, V value, long timestamp){
@@ -49,15 +65,19 @@ public class KafkaMessage<K,V> {
         if(key == null) throw new IllegalArgumentException("key must not be null!");
         if(value == null) throw new IllegalArgumentException("value must not be null");
 
-        return new KafkaMessage<>(key, value, null, timestamp);
+        return new KafkaMessage<>(key, value, null, timestamp, null);
     }
 
     public static <K,V> KafkaMessage<K,V> build(K key, V value, int partition, long timestamp){
+        return build(key, value, partition, timestamp, null);
+    }
+
+    public static <K,V> KafkaMessage<K,V> build(K key, V value, int partition, long timestamp, Map<String, String> headers){
 
         if(key == null) throw new IllegalArgumentException("key must not be null!");
         if(value == null) throw new IllegalArgumentException("value must not be null");
 
-        return new KafkaMessage<>(key, value, partition, timestamp);
+        return new KafkaMessage<>(key, value, partition, timestamp, headers);
     }
 
 
@@ -71,8 +91,7 @@ public class KafkaMessage<K,V> {
     private final V value;
     private final Integer partition;
     private final Long timestamp;
-
-    // TODO Support Headers
+    private final Map<String, String> headers = new HashMap<>();
 
     /***************************************************************************
      *                                                                         *
@@ -80,11 +99,16 @@ public class KafkaMessage<K,V> {
      *                                                                         *
      **************************************************************************/
 
-    private KafkaMessage(K key, V value, Integer partition, Long timestamp) {
+    private KafkaMessage(K key, V value, Integer partition, Long timestamp, @Nullable Map<String, String> headers) {
         this.key = key;
         this.value = value;
         this.partition = partition;
         this.timestamp = timestamp;
+
+        if(headers != null){
+            this.headers.putAll(headers);
+        }
+
     }
 
     /***************************************************************************
@@ -107,6 +131,10 @@ public class KafkaMessage<K,V> {
 
     public Long getTimestamp() {
         return timestamp;
+    }
+
+    public Map<String, String> getHeaders() {
+        return headers;
     }
 
     /***************************************************************************
@@ -135,7 +163,12 @@ public class KafkaMessage<K,V> {
                 this.getPartition(),
                 this.getTimestamp(),
                 this.getKey(),
-                this.getValue()
+                this.getValue(),
+                headers.entrySet().stream()
+                        .map(es -> new RecordHeader(es.getKey(), es.getValue().getBytes(StandardCharsets.UTF_8)))
+                        .collect(toList())
         );
     }
+
+
 }
