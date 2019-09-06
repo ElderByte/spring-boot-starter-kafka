@@ -19,6 +19,13 @@ public class KafkaMessage<K,V> {
      **************************************************************************/
 
     /**
+     * Build a kafka message from an annotated message object.
+     */
+    public KafkaMessage<String, V> fromMessage(V messageObject){
+        return AnnotationKafkaMessageBuilder.build(messageObject);
+    }
+
+    /**
      * Builds a message which might be a value or tombstone.
      * @param key The message key. Must not be null.
      * @param value The message value which might be null. (tombstone)
@@ -32,7 +39,7 @@ public class KafkaMessage<K,V> {
     public static <K,V> KafkaMessage<K,V> tombstone(K key){
         return tombstone(key, null);
     }
-    
+
     public static <K,V> KafkaMessage<K,V> tombstone(K key, Map<String, String> headers){
 
         if(key == null) throw new IllegalArgumentException("key must not be null!");
