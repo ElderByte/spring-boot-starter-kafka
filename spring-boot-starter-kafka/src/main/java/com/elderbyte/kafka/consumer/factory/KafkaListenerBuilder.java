@@ -2,7 +2,9 @@ package com.elderbyte.kafka.consumer.factory;
 
 import com.elderbyte.kafka.consumer.configuration.AutoOffsetReset;
 import com.elderbyte.kafka.consumer.processing.Processor;
+import com.elderbyte.kafka.messages.MessageBatch;
 import com.elderbyte.kafka.metrics.MetricsContext;
+import com.elderbyte.kafka.records.RecordBatch;
 import com.elderbyte.kafka.serialisation.SpringKafkaJsonDeserializer;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -12,6 +14,7 @@ import org.springframework.kafka.listener.ConsumerAwareRebalanceListener;
 import org.springframework.kafka.listener.MessageListenerContainer;
 
 import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * Provides the ability to build a kafka listener configuration
@@ -132,4 +135,69 @@ public interface KafkaListenerBuilder<K,V> {
      * Build a kafka batch listener from this builder configuration.
      */
     MessageListenerContainer buildBatch(Processor<List<ConsumerRecord<K, V>>> processor);
+
+    /**
+     * Build a kafka managed batch listener from this builder configuration.
+     *
+     * The record-batch class manages update/delete optimisations and order.
+     *
+     */
+    default MessageListenerContainer buildBatchManaged(Processor<RecordBatch<K, V>> recordBatchProcessor) {
+        return buildBatch(
+                records -> recordBatchProcessor.proccess(RecordBatch.from(records))
+        );
+    }
+
+
+    /**
+     * Build a kafka managed batch listener from this builder configuration.
+     *
+     * Tombstone events are transformed to deleted messages, supporting metadata
+     * based values on the message.
+     *
+     * @param tombstoneClazz The Deleted message type
+     * @param updatedCallback A callback when a updated message has arrived.
+     * @param deletedCallback A callback when a deleted [tombstone] message has arrived.
+     * @param <T>
+     * @return
+     */
+    default <T> MessageListenerContainer buildMessageHandler(
+            Class<T> tombstoneClazz,
+            Processor<V> updatedCallback,
+            Processor<T> deletedCallback
+            ){
+        return build(
+                record -> {
+                    if(record.value() == null){
+                        deletedCallback.proccess(
+                                MessageAnnotationProcessor.buildMessageTombstone(record, tombstoneClazz)
+                        );
+                    }else{
+                        updatedCallback.proccess(
+                                MessageAnnotationProcessor.buildMessage(record)
+                        );
+                    }
+                }
+        );
+    }
+
+    /**
+     * Build a kafka managed batch listener from this builder configuration.
+     * The message-batch class manages update/delete optimisations and order.
+     *
+     * Tombstone events are transformed to deleted messages, supporting metadata
+     * based values on the message.
+     *
+     * @param tombstoneClazz The Deleted message type
+     * @param messageBatchCallback a message batch callback
+     */
+    default <T> MessageListenerContainer buildBatchMessageHandler(
+            Class<T> tombstoneClazz,
+            Processor<MessageBatch<K, V, T>> messageBatchCallback
+    ){
+        return buildBatchManaged(
+               recordBatch -> messageBatchCallback.proccess(MessageBatch.from(recordBatch, tombstoneClazz))
+        );
+    }
+
 }
