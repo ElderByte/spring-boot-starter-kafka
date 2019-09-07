@@ -1,6 +1,7 @@
 package com.elderbyte.kafka.messages;
 
 import com.elderbyte.commons.exceptions.ArgumentNullException;
+import com.elderbyte.commons.utils.NumberUtil;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.lang.reflect.Field;
@@ -147,6 +148,9 @@ public class MessageBlueprint {
         try {
             if(field.getType() == String.class){
                 field.set(message, headerValue);
+            }else if(NumberUtil.isNumeric(field.getType())) {
+                var number = NumberUtil.parseNumber(headerValue,  (Class<Number>)field.getType());
+                field.set(message, number);
             }else{
                 throw new InvalidMessageException("Field " +
                         " "+field.getName()+" was of unsupported type "+field.getType()+" ! ");
