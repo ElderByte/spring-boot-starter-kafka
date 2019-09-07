@@ -8,12 +8,38 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import static java.util.stream.Collectors.toList;
+
 /**
  * Provides the ability to send messages / records to a kafka broker.
  * @param <K> The message key
  * @param <V> The message content
  */
 public interface KafkaProducer<K,V> {
+
+    /***************************************************************************
+     *                                                                         *
+     * Message Producer API                                                    *
+     *                                                                         *
+     **************************************************************************/
+
+    default CompletableFuture<SendResult<String, V>> sendMessage(String topic, V messageBody) {
+        var message = KafkaMessage.fromMessage(messageBody);
+        return send(topic, (KafkaMessage) message);
+    }
+
+    default List<CompletableFuture<SendResult<String, V>>> sendAllMessages(String topic, Collection<V> messageBodys) {
+        var messages = messageBodys.stream()
+                .map(KafkaMessage::fromMessage)
+                .collect(toList());
+        return sendAll(topic, (Collection) messages);
+    }
+
+    /***************************************************************************
+     *                                                                         *
+     * Kafka Producer API                                                      *
+     *                                                                         *
+     **************************************************************************/
 
     /**
      * Send the data to the provided topic with the provided key and no partition.

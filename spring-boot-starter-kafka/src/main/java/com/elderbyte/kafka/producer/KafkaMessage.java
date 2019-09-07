@@ -3,7 +3,6 @@ package com.elderbyte.kafka.producer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.Header;
-import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.apache.kafka.common.record.TimestampType;
@@ -27,7 +26,7 @@ public class KafkaMessage<K,V> {
     /**
      * Build a kafka message from an annotated message object.
      */
-    public KafkaMessage<String, V> fromMessage(V messageObject){
+    public static <V> KafkaMessage<String, V> fromMessage(V messageObject){
         return AnnotationKafkaMessageBuilder.build(messageObject);
     }
 
