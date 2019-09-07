@@ -1,16 +1,16 @@
 package com.elderbyte.kafka.producer;
 
+import com.elderbyte.kafka.messages.InvalidMessageException;
 import com.elderbyte.messaging.annotations.MessageKey;
 import com.elderbyte.messaging.annotations.MessageMetadata;
 import com.elderbyte.messaging.annotations.Tombstone;
-import org.apache.kafka.common.protocol.types.Field;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
 public class AnnotationKafkaMessageBuilderTest {
 
-    private static class MessageBlob {
+    public static class MessageBlob {
         @MessageKey
         public String id;
 
@@ -21,12 +21,10 @@ public class AnnotationKafkaMessageBuilderTest {
         public int age;
 
         public String ignore;
-
-
     }
 
     @Tombstone
-    private static class MessageBlobTomb {
+    public static class MessageBlobTomb {
         @MessageKey
         public String id;
 
@@ -37,18 +35,36 @@ public class AnnotationKafkaMessageBuilderTest {
         public int age;
 
         public String ignore;
+    }
 
+    public static class MessageBlobNoKey {
+
+        public String id;
+
+        @MessageMetadata
+        public String test;
+
+        @MessageMetadata(key = "yes.yes")
+        public int age;
+
+        public String ignore;
     }
 
 
-    @Test(expected = IllegalStateException.class)
+    @Test(expected = InvalidMessageException.class)
     public void build_key_null_fail() {
         var obj = new MessageBlob();
         AnnotationKafkaMessageBuilder.build(obj);
     }
 
+    @Test(expected = InvalidMessageException.class)
+    public void build_missing_key() {
+        var obj = new MessageBlobNoKey();
+        AnnotationKafkaMessageBuilder.build(obj);
+    }
+
     @Test
-    public void build_() {
+    public void build_good() {
         var obj = new MessageBlob();
         obj.id = "jup";
         var msg = AnnotationKafkaMessageBuilder.build(obj);

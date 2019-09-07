@@ -1,5 +1,6 @@
 package com.elderbyte.kafka.messages;
 
+import com.elderbyte.commons.exceptions.ArgumentNullException;
 import com.elderbyte.messaging.annotations.MessageKey;
 import com.elderbyte.messaging.annotations.MessageMetadata;
 import com.elderbyte.messaging.annotations.Tombstone;
@@ -34,6 +35,7 @@ public class MessageBlueprintFactory {
      **************************************************************************/
 
     public static MessageBlueprint lookupOrCreate(Class<?> messageClazz){
+        if(messageClazz == null) throw new ArgumentNullException("messageClazz");
         return blueprintCache.computeIfAbsent(messageClazz, MessageBlueprintFactory::fromMessageClass);
     }
 
@@ -44,7 +46,7 @@ public class MessageBlueprintFactory {
      **************************************************************************/
 
 
-    private static MessageBlueprint fromMessageClass(Class<?> messageClazz){
+    private static MessageBlueprint fromMessageClass(Class<?> messageClazz) throws InvalidMessageException {
 
         var isTombstone = messageClazz.getAnnotation(Tombstone.class) != null;
 
@@ -59,7 +61,7 @@ public class MessageBlueprintFactory {
 
             if(messageKey != null){
                 if(keyField != null){
-                    throw new IllegalArgumentException("@MessageKey can only be specified once on a message," +
+                    throw new InvalidMessageException("@MessageKey can only be specified once on a message," +
                             " but was on field " + keyField.getName() + " and on field " + field.getName());
                 }
                 keyField = field;
@@ -71,6 +73,11 @@ public class MessageBlueprintFactory {
                 );
             }
         }
+
+        if(keyField == null){
+            throw new InvalidMessageException("The given class is not a valid message definition since no @MessageKey key is defined!");
+        }
+
         return new MessageBlueprint(isTombstone, keyField, metadataFields);
     }
 

@@ -42,7 +42,7 @@ public class MessageBlueprint {
     public <V> String getKey(V message) {
         var value = getFieldAsString(keyField, message);
         if(value == null){
-            throw new IllegalStateException("The key of a message must not be null!");
+            throw new InvalidMessageException("The key of a message must not be null!");
         }
         return value;
     }
@@ -98,7 +98,7 @@ public class MessageBlueprint {
             }
             return null;
         } catch (IllegalAccessException e) {
-            throw new IllegalStateException("Failed to access value of key field: "+keyField.getName(), e);
+            throw new InvalidMessageException("Failed to access value of key field: "+keyField.getName(), e);
         }
     }
 
@@ -111,11 +111,11 @@ public class MessageBlueprint {
             if(field.getType() == String.class){
                 field.set(message, headerValue);
             }else{
-                throw new IllegalStateException("Only strings are supported as targets but field" +
+                throw new InvalidMessageException("Only strings are supported as targets but field" +
                         " "+field.getName()+" was of type "+field.getType()+" ! ");
             }
         } catch (IllegalAccessException e) {
-            throw new IllegalStateException("Failed to access value of key field: "+keyField.getName(), e);
+            throw new InvalidMessageException("Failed to access value of key field: "+keyField.getName(), e);
         }
     }
 
