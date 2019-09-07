@@ -19,7 +19,7 @@ allprojects {
 subprojects {
     ext {
         springBootVersion = '2.1.6.RELEASE'
-        starterVersion = '5.19.0'
+        starterVersion = '5.19.1'
     }
 
     tasks.withType(Javadoc) {
