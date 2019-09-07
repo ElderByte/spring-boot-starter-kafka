@@ -9,7 +9,7 @@ buildscript {
 }
 
 allprojects {
-    version =  '2.1.6.E30'
+    version =  '2.1.8.E31'
     group = 'com.elderbyte.spring.boot'
 
     //Always show stacktrace
@@ -18,8 +18,8 @@ allprojects {
 
 subprojects {
     ext {
-        springBootVersion = '2.1.6.RELEASE'
-        starterVersion = '5.19.1'
+        springBootVersion = '2.1.8.RELEASE'
+        starterVersion = '5.19.2'
     }
 
     tasks.withType(Javadoc) {

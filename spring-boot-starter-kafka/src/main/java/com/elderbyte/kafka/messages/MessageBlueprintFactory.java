@@ -51,6 +51,7 @@ public class MessageBlueprintFactory {
         var isTombstone = messageClazz.getAnnotation(Tombstone.class) != null;
 
         Field keyField = null;
+        boolean populateKey = true;
         var metadataFields = new ArrayList<MetadataField>();
 
         var fields = messageClazz.getFields();
@@ -65,6 +66,7 @@ public class MessageBlueprintFactory {
                             " but was on field " + keyField.getName() + " and on field " + field.getName());
                 }
                 keyField = field;
+                populateKey = messageKey.populate();
             }
 
             if(isTombstone || messageMeta != null){
@@ -78,7 +80,7 @@ public class MessageBlueprintFactory {
             throw new InvalidMessageException("The given class is not a valid message definition since no @MessageKey key is defined!");
         }
 
-        return new MessageBlueprint(isTombstone, keyField, metadataFields);
+        return new MessageBlueprint(isTombstone, keyField, populateKey, metadataFields);
     }
 
 

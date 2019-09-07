@@ -21,6 +21,7 @@ public class MessageBlueprint {
 
     private final boolean tombstone;
     private final Field keyField;
+    private final boolean populateKeyField;
 
     /**
      * Header-Key : Field
@@ -37,6 +38,7 @@ public class MessageBlueprint {
     public MessageBlueprint(
             boolean tomstone,
             Field keyField,
+            boolean populateKeyField,
             Collection<MetadataField> metadataFields
     ) {
 
@@ -45,6 +47,7 @@ public class MessageBlueprint {
 
         this.tombstone = tomstone;
         this.keyField = keyField;
+        this.populateKeyField = populateKeyField;
         this.metadataFields = metadataFields.stream()
                 .collect(toMap(MetadataField::getMetadataKey, mf -> mf));
     }
@@ -100,8 +103,10 @@ public class MessageBlueprint {
 
     public <V, K, M> M updateFromRecord(M message, ConsumerRecord<K, V> record) {
 
-        if(getKey(message) == null && record.key() != null){
-            setFieldString(keyField, message, record.key().toString());
+        if(populateKeyField){
+            if(getKey(message) == null && record.key() != null){
+                setFieldString(keyField, message, record.key().toString());
+            }
         }
 
         var headers = record.headers();
