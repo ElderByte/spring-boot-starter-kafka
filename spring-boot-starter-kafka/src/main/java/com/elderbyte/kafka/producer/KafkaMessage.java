@@ -1,11 +1,17 @@
 package com.elderbyte.kafka.producer;
 
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.header.Header;
+import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.header.internals.RecordHeader;
+import org.apache.kafka.common.header.internals.RecordHeaders;
+import org.apache.kafka.common.record.TimestampType;
 import org.springframework.lang.Nullable;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static java.util.stream.Collectors.toList;
@@ -165,17 +171,57 @@ public class KafkaMessage<K,V> {
      * @param topic The topic for the record.
      */
     public ProducerRecord<K,V> toRecord(String topic){
-        return new ProducerRecord<>(
+        return new ProducerRecord<K, V>(
                 topic,
                 this.getPartition(),
                 this.getTimestamp(),
                 this.getKey(),
                 this.getValue(),
-                headers.entrySet().stream()
-                        .map(es -> new RecordHeader(es.getKey(), es.getValue().getBytes(StandardCharsets.UTF_8)))
-                        .collect(toList())
+                recordHeaders()
+        );
+    }
+
+    /**
+     * Convert this message to a consumer record
+     * @param topic
+     * @param offset
+     * @return
+     */
+    public ConsumerRecord<K,V> toConsumerRecord(String topic, long offset){
+        return toConsumerRecord(topic, offset, null, 0, 0);
+    }
+
+    /**
+     * Convert this message to a consumer record
+     * @param topic The topic for the record.
+     */
+    public ConsumerRecord<K,V> toConsumerRecord(String topic, long offset, Long checksum, int serializedKeySize, int serializedValueSize){
+
+        return new ConsumerRecord<>(
+                topic,
+                this.getPartition() != null ? this.getPartition() : 0,
+                offset,
+                this.getTimestamp() != null ? this.getTimestamp() : 0,
+                TimestampType.CREATE_TIME,
+                checksum,
+                serializedKeySize,
+                serializedValueSize,
+                this.getKey(),
+                this.getValue(),
+                new RecordHeaders(recordHeaders().toArray(new Header[0]))
         );
     }
 
 
+    /***************************************************************************
+     *                                                                         *
+     * Private methods                                                         *
+     *                                                                         *
+     **************************************************************************/
+
+    private List<Header> recordHeaders(){
+        return headers.entrySet().stream()
+                .map(es -> new RecordHeader(es.getKey(), es.getValue().getBytes(StandardCharsets.UTF_8)))
+                .collect(toList());
+    }
 }

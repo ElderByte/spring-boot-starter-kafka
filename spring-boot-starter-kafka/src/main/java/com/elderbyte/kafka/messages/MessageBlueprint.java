@@ -104,7 +104,7 @@ public class MessageBlueprint {
     public <V, K, M> M updateFromRecord(M message, ConsumerRecord<K, V> record) {
 
         if(populateKeyField){
-            if(getKey(message) == null && record.key() != null){
+            if(record.key() != null){
                 setFieldString(keyField, message, record.key().toString());
             }
         }
@@ -138,9 +138,13 @@ public class MessageBlueprint {
     private void writeAllHeadersToMap(Headers headers, Object message, Field mapField){
 
         var headerMap = new HashMap<String, String>();
-        headers.forEach(h -> {
-            headerMap.put(h.key(), new String(h.value(), StandardCharsets.UTF_8));
-        });
+
+        if(headers != null){
+            headers.forEach(h -> {
+                headerMap.put(h.key(), new String(h.value(), StandardCharsets.UTF_8));
+            });
+        }
+
         try {
             mapField.set(message, headerMap);
         } catch (IllegalAccessException e) {
