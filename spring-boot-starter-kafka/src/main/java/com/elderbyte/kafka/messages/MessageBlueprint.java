@@ -3,6 +3,7 @@ package com.elderbyte.kafka.messages;
 import com.elderbyte.commons.exceptions.ArgumentNullException;
 import com.elderbyte.commons.utils.NumberUtil;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.header.Headers;
 
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
@@ -11,7 +12,6 @@ import java.util.*;
 import static java.util.stream.Collectors.toMap;
 
 public class MessageBlueprint {
-
 
     /***************************************************************************
      *                                                                         *
@@ -109,11 +109,14 @@ public class MessageBlueprint {
         metadataFields.forEach((k,field) -> {
             if(field.isPopulate()){
 
-                // Support Map<String,String> with all headers
-
-                var header = headers.lastHeader(k);
-                if(header != null){
-                    setField(field.getField(), message, header.value());
+                if(Map.class.isAssignableFrom(field.getField().getType())){
+                    writeAllHeadersToMap(headers, message, field.getField());
+                }else{
+                    // Assume standard field
+                    var header = headers.lastHeader(k);
+                    if(header != null){
+                        setField(field.getField(), message, header.value());
+                    }
                 }
             }
         });
@@ -121,12 +124,24 @@ public class MessageBlueprint {
         return message;
     }
 
-
     /***************************************************************************
      *                                                                         *
      * Private methods                                                         *
      *                                                                         *
      **************************************************************************/
+
+    private void writeAllHeadersToMap(Headers headers, Object message, Field mapField){
+
+        var headerMap = new HashMap<String, String>();
+        headers.forEach(h -> {
+            headerMap.put(h.key(), new String(h.value(), StandardCharsets.UTF_8));
+        });
+        try {
+            mapField.set(message, headerMap);
+        } catch (IllegalAccessException e) {
+            throw new InvalidMessageException("Failed to write value of header map field: "+mapField.getName(), e);
+        }
+    }
 
     private <V> String getFieldAsString(Field field, V message){
         try {
@@ -144,12 +159,13 @@ public class MessageBlueprint {
         setFieldString(field, message, new String(headerValue, StandardCharsets.UTF_8));
     }
 
+    @SuppressWarnings("unchecked")
     private <V> void setFieldString(Field field, V message, String headerValue){
         try {
             if(field.getType() == String.class){
                 field.set(message, headerValue);
             }else if(NumberUtil.isNumeric(field.getType())) {
-                var number = NumberUtil.parseNumber(headerValue,  (Class<Number>)field.getType());
+                 var number = NumberUtil.parseNumber(headerValue,  (Class<Number>)field.getType());
                 field.set(message, number);
             }else{
                 throw new InvalidMessageException("Field " +
