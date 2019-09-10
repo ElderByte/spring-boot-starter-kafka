@@ -99,6 +99,14 @@ public class MessageBatch<K, M, MT> {
         );
     }
 
+    @Override
+    public String toString() {
+        return "MessageBatch{" +
+                "batch=" + batch +
+                ", tombstoneClazz=" + tombstoneClazz +
+                '}';
+    }
+
     /***************************************************************************
      *                                                                         *
      * Private methods                                                         *

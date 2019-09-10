@@ -4,6 +4,9 @@ import com.elderbyte.kafka.consumer.processing.Processor;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.util.*;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 public class RecordBatch<K, V> {
 
@@ -46,6 +49,12 @@ public class RecordBatch<K, V> {
 
     public List<ConsumerRecord<K, V>> getRecords(){
         return records;
+    }
+
+    public List<ConsumerRecord<K, V>> getDeletions() {
+        return getRecords().stream()
+                .filter(r -> r.value() == null)
+                .collect(toList());
     }
 
     /***************************************************************************
@@ -142,6 +151,16 @@ public class RecordBatch<K, V> {
 
     public List<ConsumerRecord<K, V>> compacted(){
         return compact(this.records);
+    }
+
+    @Override
+    public String toString() {
+        var deletions = getDeletions().size();
+        return "RecordBatch{" +
+                "records=" + records.size() +
+                ", deletions=" + deletions +
+                ", updates=" + (records.size() - deletions) +
+                '}';
     }
 
     /***************************************************************************
