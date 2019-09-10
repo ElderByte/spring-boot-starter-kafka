@@ -9,7 +9,7 @@ buildscript {
 }
 
 allprojects {
-    version =  '2.1.8.E31'
+    version =  '2.1.8.E32'
     group = 'com.elderbyte.spring.boot'
 
     //Always show stacktrace
