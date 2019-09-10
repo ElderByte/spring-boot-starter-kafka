@@ -4,7 +4,6 @@ import com.elderbyte.kafka.consumer.processing.Processor;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 

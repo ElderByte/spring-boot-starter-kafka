@@ -39,6 +39,54 @@ public class RecordBatchTest {
     }
 
     @Test
+    public void compactedUpdateOrDelete_single_update() {
+
+        var batch = new RecordBatch<>(Arrays.asList(
+                record("A", "1")
+        ));
+
+        var updated = new ArrayList<List<ConsumerRecord<String, String>>>();
+        var deleted = new ArrayList<List<ConsumerRecord<String, String>>>();
+
+        batch.compactedUpdateOrDelete(
+                updated::add,
+                deleted::add
+        );
+
+        // Check the single update is provided
+        assertEquals("Expected only a single update batch!", 1, updated.size());
+        assertEquals("Expected only a single item in the update batch!",1, updated.get(0).size());
+        assertEquals("A", updated.get(0).get(0).key());
+
+        // Ensure no delete is recorded
+        assertEquals("Expected no delete batch!", 0, deleted.size());
+    }
+
+    @Test
+    public void compactedUpdateOrDelete_single_delete() {
+
+        var batch = new RecordBatch<>(Arrays.asList(
+                record("A", null)
+        ));
+
+        var updated = new ArrayList<List<ConsumerRecord<String, String>>>();
+        var deleted = new ArrayList<List<ConsumerRecord<String, String>>>();
+
+        batch.compactedUpdateOrDelete(
+                updated::add,
+                deleted::add
+        );
+
+        // Check the single update is provided
+        assertEquals("Expected only a single delete batch!", 1, deleted.size());
+        assertEquals("Expected only a single item in the delete batch!",1, deleted.get(0).size());
+        assertEquals("A", deleted.get(0).get(0).key());
+
+        // Ensure no delete is recorded
+        assertEquals("Expected no update batch!", 0, updated.size());
+    }
+
+    @Test
     public void compactedUpdateOrDelete() {
 
         var batch = new RecordBatch<>(Arrays.asList(
@@ -150,6 +198,55 @@ public class RecordBatchTest {
 
         assertEquals("C", c.get(0).key());
         assertEquals(1, c.size());
+    }
+
+
+    @Test
+    public void linearUpdateOrDelete_single_update() {
+
+        var batch = new RecordBatch<>(Arrays.asList(
+                record("A", "1")
+        ));
+
+        var updated = new ArrayList<List<ConsumerRecord<String, String>>>();
+        var deleted = new ArrayList<List<ConsumerRecord<String, String>>>();
+
+        batch.linearUpdateOrDelete(
+                updated::add,
+                deleted::add
+        );
+
+        // Check the single update is provided
+        assertEquals("Expected only a single update batch!", 1, updated.size());
+        assertEquals("Expected only a single item in the update batch!",1, updated.get(0).size());
+        assertEquals("A", updated.get(0).get(0).key());
+
+        // Ensure no delete is recorded
+        assertEquals("Expected no delete batch!", 0, deleted.size());
+    }
+
+    @Test
+    public void linearUpdateOrDelete_single_delete() {
+
+        var batch = new RecordBatch<>(Arrays.asList(
+                record("A", null)
+        ));
+
+        var updated = new ArrayList<List<ConsumerRecord<String, String>>>();
+        var deleted = new ArrayList<List<ConsumerRecord<String, String>>>();
+
+        batch.linearUpdateOrDelete(
+                updated::add,
+                deleted::add
+        );
+
+        // Check the single update is provided
+        assertEquals("Expected only a single delete batch!", 1, deleted.size());
+        assertEquals("Expected only a single item in the delete batch!",1, deleted.get(0).size());
+        assertEquals("A", deleted.get(0).get(0).key());
+
+        // Ensure no delete is recorded
+        assertEquals("Expected no update batch!", 0, updated.size());
     }
 
 
