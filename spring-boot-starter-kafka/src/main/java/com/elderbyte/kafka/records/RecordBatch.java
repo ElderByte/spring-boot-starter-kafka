@@ -90,8 +90,14 @@ public class RecordBatch<K, V> {
                 }
             });
 
-            deletedProcessor.proccess(deleted);
-            updatedProcessor.proccess(updated);
+            if(!deleted.isEmpty()){
+                deletedProcessor.proccess(deleted);
+            }
+
+            if(!updated.isEmpty()){
+                updatedProcessor.proccess(updated);
+            }
+
         }catch (Exception e){
             throw new RuntimeException("Failed to handle record batch!", e);
         }
