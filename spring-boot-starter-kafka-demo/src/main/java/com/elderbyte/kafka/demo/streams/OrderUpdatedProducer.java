@@ -132,20 +132,29 @@ public class OrderUpdatedProducer {
     }
 
     private KTable<String, List<OrderItem>> orderItemUpdateKStream(){
-        return builder().stream(
+
+        var compactedItemRows = builder().stream(
                 CdcOrderItemEvent.TOPIC,
                 Consumed.with(
                         Serdes.String(),
                         ElderJsonSerde.from(mapper, new TypeReference<CdcEvent<CdcOrderItemEvent>>() {}))
-        ).map((k,v) -> {
-            var conv = convert(v.updated);
-            return new KeyValue<>(v.updated.orderNumber, conv);
-        }).groupByKey(Serialized.with(Serdes.String(), ElderJsonSerde.from(mapper, OrderItem.class)))
-            .aggregate(
-                    ArrayList::new,
-                    (k,v, agg) -> { agg.add(v); return agg; },
-                    Materialized.with(Serdes.String(), ElderJsonSerde.from(mapper, new TypeReference<List<OrderItem>>() {}))
-            );
+        )
+        .map((k,v) -> {
+            return new KeyValue<>(v.updated.id, v.updated);
+        })
+        .groupByKey(Serialized.with(Serdes.Long(), ElderJsonSerde.from(mapper, CdcOrderItemEvent.class)))
+        .reduce(
+                (current, previous) -> current
+        );
+        
+        return compactedItemRows.toStream()
+                .map((k, v) -> new KeyValue<>(v.orderNumber, convert(v)))
+                .groupByKey(Serialized.with(Serdes.String(), ElderJsonSerde.from(mapper, OrderItem.class)))
+                .aggregate(
+                        ArrayList::new,
+                        (k,v, agg) -> { agg.add(v); return agg; },
+                        Materialized.with(Serdes.String(), ElderJsonSerde.from(mapper, new TypeReference<List<OrderItem>>() {}))
+                );
     }
 
     private StreamsBuilder builder(){

@@ -65,10 +65,10 @@ public class CdcMockProducer {
 
     private Collection<CdcEvent<CdcOrderItemEvent>> mockCdcOrderItemEvents(){
         return Arrays.asList(
-                mockCdcOrderItemEvent("A", "item-a-1", 17),
-                mockCdcOrderItemEvent("A", "item-a-2", 170),
-                mockCdcOrderItemEvent("A", "item-a-3", 170),
-                mockCdcOrderItemEvent("A", "item-a-1", 88) // Update
+                mockCdcOrderItemEvent(1, "A", "item-a-1", 17),
+                mockCdcOrderItemEvent(2, "A", "item-a-2", 170),
+                mockCdcOrderItemEvent(3, "A", "item-a-3", 170),
+                mockCdcOrderItemEvent(1, "A", "item-a-1", 88) // Update
         );
     }
 
@@ -91,13 +91,15 @@ public class CdcMockProducer {
     }
 
     private CdcEvent<CdcOrderItemEvent> mockCdcOrderItemEvent(
+            int id,
             String number,
             String item,
             int quantity){
-        return mockCdcOrderItemEvent(number, item, quantity, false);
+        return mockCdcOrderItemEvent(id, number, item, quantity, false);
     }
 
     private CdcEvent<CdcOrderItemEvent> mockCdcOrderItemEvent(
+            int id,
             String number,
             String item,
             int quantity,
@@ -106,7 +108,7 @@ public class CdcMockProducer {
         return new CdcEvent<>(
                 orderItemEventId.incrementAndGet(),
                 null,
-                new CdcOrderItemEvent(number, item, quantity),
+                new CdcOrderItemEvent(id, number, item, quantity),
                 deleted
         );
     }

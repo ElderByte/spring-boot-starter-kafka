@@ -4,6 +4,8 @@ public class CdcOrderItemEvent {
 
     public static final String TOPIC = "_demo.cdc.orders.item";
 
+    public long id;
+
     public String orderNumber;
 
     public String item;
@@ -12,7 +14,8 @@ public class CdcOrderItemEvent {
 
     public CdcOrderItemEvent(){}
 
-    public CdcOrderItemEvent(String orderNumber, String item, int quantity){
+    public CdcOrderItemEvent(int id, String orderNumber, String item, int quantity){
+        this.id = id;
         this.orderNumber = orderNumber;
         this.item = item;
         this.quantity = quantity;
