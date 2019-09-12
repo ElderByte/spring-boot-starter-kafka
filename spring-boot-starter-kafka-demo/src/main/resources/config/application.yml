@@ -18,8 +18,12 @@ kafka:
       - name: _demo.cdc.orders.order
         partitions: 1
         cleanUpPolicy: delete
-        retention: 24h
+        retention: 1h
       - name: _demo.cdc.orders.item
         partitions: 1
         cleanUpPolicy: delete
+        retention: 1h
+      - name: demo.store.orders.order
+        partitions: 1
+        cleanUpPolicy: compact
         retention: 24h

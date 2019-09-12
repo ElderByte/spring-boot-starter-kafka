@@ -5,6 +5,9 @@ import java.util.List;
 
 public class OrderUpdated {
 
+    public static final String TOPIC = "demo.store.orders.order";
+
+
     public String number;
 
     public String description;
