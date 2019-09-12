@@ -1,7 +1,7 @@
 package com.elderbyte.kafka;
 
 import com.elderbyte.kafka.admin.DefaultKafkaAdminConfiguration;
-import com.elderbyte.kafka.config.KafkaClientConfig;
+import com.elderbyte.kafka.config.KafkaClientProperties;
 import com.elderbyte.kafka.consumer.DefaultJsonConsumerConfiguration;
 import com.elderbyte.kafka.consumer.factory.KafkaListenerFactoryConfiguration;
 import com.elderbyte.kafka.consumer.processing.ManagedProcessorFactoryConfiguration;
@@ -26,8 +26,8 @@ public class KafkaStarterAutoConfiguration {
 
 
     @Bean
-    public KafkaClientConfig kafkaClientConfig(){
-        return new KafkaClientConfig();
+    public KafkaClientProperties kafkaClientConfig(){
+        return new KafkaClientProperties();
     }
 
     @Configuration

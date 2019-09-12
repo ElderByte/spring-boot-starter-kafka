@@ -1,6 +1,6 @@
 package com.elderbyte.kafka.consumer.factory;
 
-import com.elderbyte.kafka.config.KafkaClientConfig;
+import com.elderbyte.kafka.config.KafkaClientProperties;
 import com.elderbyte.kafka.metrics.MetricsReporter;
 import com.elderbyte.kafka.metrics.MetricsReporterLocal;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Configuration;
 public class KafkaListenerFactoryConfiguration {
 
     @Bean
-    public ManagedListenerBuilder managedListenerBuilder(KafkaClientConfig globalConfig, MetricsReporter reporter){
+    public ManagedListenerBuilder managedListenerBuilder(KafkaClientProperties globalConfig, MetricsReporter reporter){
         return new ManagedListenerBuilderImpl(globalConfig, reporter);
     }
 

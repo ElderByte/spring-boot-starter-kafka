@@ -1,6 +1,6 @@
 package com.elderbyte.kafka.producer;
 
-import com.elderbyte.kafka.config.KafkaClientConfig;
+import com.elderbyte.kafka.config.KafkaClientProperties;
 import com.elderbyte.kafka.serialisation.SpringKafkaJsonSerializer;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -26,7 +26,7 @@ public class DefaultJsonKafkaTemplateConfiguration {
      **************************************************************************/
 
     @Autowired
-    private KafkaClientConfig config;
+    private KafkaClientProperties config;
 
     @Autowired
     private SpringKafkaJsonSerializer springKafkaJsonSerializer;
@@ -47,7 +47,10 @@ public class DefaultJsonKafkaTemplateConfiguration {
     @Bean("kafkaTemplateTransactional")
     public KafkaTemplate<String, Object> kafkaTemplateTransactional() {
         var factory = producerFactory();
-        config.getProducerTransactionId().ifPresent(tid -> factory.setTransactionIdPrefix(tid));
+        var prodTid = config.getProducer().getTransaction().getId();
+        if(prodTid != null){
+            factory.setTransactionIdPrefix(prodTid);
+        }
         return new KafkaTemplate<>(factory);
     }
 
@@ -66,7 +69,7 @@ public class DefaultJsonKafkaTemplateConfiguration {
 
     private Map<String, Object> producerConfigs() {
         var props = new HashMap<String, Object>();
-        props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, config.getKafkaServers());
+        props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, config.getServers());
         // See https://kafka.apache.org/documentation/#producerconfigs for more properties
         return props;
     }

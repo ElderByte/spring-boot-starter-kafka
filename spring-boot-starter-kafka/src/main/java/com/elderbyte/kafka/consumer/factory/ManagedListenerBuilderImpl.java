@@ -1,6 +1,6 @@
 package com.elderbyte.kafka.consumer.factory;
 
-import com.elderbyte.kafka.config.KafkaClientConfig;
+import com.elderbyte.kafka.config.KafkaClientProperties;
 import com.elderbyte.kafka.consumer.factory.listeners.SpringListenerAdapter;
 import com.elderbyte.kafka.consumer.processing.ManagedProcessorImpl;
 import com.elderbyte.kafka.metrics.MetricsReporter;
@@ -28,7 +28,7 @@ public class ManagedListenerBuilderImpl implements ManagedListenerBuilder {
      *                                                                         *
      **************************************************************************/
 
-    private final KafkaClientConfig globalConfig;
+    private final KafkaClientProperties globalConfig;
     private final MetricsReporter reporter;
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -40,7 +40,7 @@ public class ManagedListenerBuilderImpl implements ManagedListenerBuilder {
      **************************************************************************/
 
     @Autowired
-    public ManagedListenerBuilderImpl(KafkaClientConfig globalConfig, MetricsReporter reporter){
+    public ManagedListenerBuilderImpl(KafkaClientProperties globalConfig, MetricsReporter reporter){
         this.globalConfig = globalConfig;
         this.reporter = reporter;
     }
@@ -54,7 +54,7 @@ public class ManagedListenerBuilderImpl implements ManagedListenerBuilder {
     @Override
     public <K,V> MessageListenerContainer buildListenerContainer(KafkaListenerConfiguration<K,V> configuration){
 
-        if(globalConfig.isKafkaEnabled()){
+        if(globalConfig.isEnabled()){
             var managedProcessor = new ManagedProcessorImpl<>(configuration, reporter);
             var listener = SpringListenerAdapter.buildListenerAdapter(configuration, managedProcessor);
             return buildListenerInternal(configuration, listener);
@@ -97,8 +97,12 @@ public class ManagedListenerBuilderImpl implements ManagedListenerBuilder {
 
     private Map<String, Object> defaultConfig() {
         var props = new HashMap<String, Object>();
-        props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, globalConfig.getKafkaServers());
-        globalConfig.getConsumerMaxPollRecords().ifPresent(max ->  props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, max));
+        props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, globalConfig.getServers());
+
+        var maxPollRecords = globalConfig.getConsumer().getMaxPollRecords();
+        if(maxPollRecords != null){
+            props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, maxPollRecords);
+        }
         return props;
     }
 }

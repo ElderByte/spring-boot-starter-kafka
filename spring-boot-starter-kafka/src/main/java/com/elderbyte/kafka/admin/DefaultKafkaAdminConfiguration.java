@@ -1,6 +1,6 @@
 package com.elderbyte.kafka.admin;
 
-import com.elderbyte.kafka.config.KafkaClientConfig;
+import com.elderbyte.kafka.config.KafkaClientProperties;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -22,7 +22,7 @@ public class DefaultKafkaAdminConfiguration {
      **************************************************************************/
 
     @Autowired
-    private KafkaClientConfig config;
+    private KafkaClientProperties config;
 
     /***************************************************************************
      *                                                                         *
@@ -48,7 +48,7 @@ public class DefaultKafkaAdminConfiguration {
 
     private Map<String, Object> adminConfig(){
         var configs = new HashMap<String, Object>();
-        configs.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, config.getKafkaServers());
+        configs.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, config.getServers());
         return configs;
     }
 

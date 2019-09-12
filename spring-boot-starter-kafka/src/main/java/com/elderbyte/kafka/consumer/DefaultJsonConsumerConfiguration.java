@@ -1,6 +1,6 @@
 package com.elderbyte.kafka.consumer;
 
-import com.elderbyte.kafka.config.KafkaClientConfig;
+import com.elderbyte.kafka.config.KafkaClientProperties;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.KafkaListenerContainerFactory;
 import org.springframework.kafka.core.*;
@@ -30,7 +29,7 @@ public class DefaultJsonConsumerConfiguration {
      **************************************************************************/
 
     @Autowired
-    private KafkaClientConfig config;
+    private KafkaClientProperties config;
 
     /***************************************************************************
      *                                                                         *
@@ -77,10 +76,15 @@ public class DefaultJsonConsumerConfiguration {
     @Bean
     public Map<String, Object> consumerConfigs() {
         Map<String, Object> props = new HashMap<>();
-        props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, config.getKafkaServers());
-        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, config.isConsumerAutoCommit());
-        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, config.getConsumerAutoOffsetReset());
-        config.getConsumerMaxPollRecords().ifPresent(max ->  props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, max));
+        props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, config.getServers());
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, config.getConsumer().isAutoCommit());
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, config.getConsumer().getAutoOffsetReset());
+
+        var maxPollRecords = config.getConsumer().getMaxPollRecords();
+        if(maxPollRecords != null){
+            props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, maxPollRecords);
+        }
+
         return props;
     }
 
@@ -93,11 +97,19 @@ public class DefaultJsonConsumerConfiguration {
     private ConcurrentKafkaListenerContainerFactory<String, String> buildStringContainerFactory(ConsumerFactory<String, String> consumerFactory){
         var factory = new ConcurrentKafkaListenerContainerFactory<String, String>();
         factory.setConsumerFactory(consumerFactory);
-        config.getConsumerConcurrency().ifPresent(c -> factory.setConcurrency(c));
-        config.getConsumerPollTimeout().ifPresent(t -> factory.getContainerProperties().setPollTimeout(t));
+
+        var consumer = config.getConsumer();
+
+        if(consumer.getConcurrency() != null){
+            factory.setConcurrency(consumer.getConcurrency());
+        }
+
+        if(consumer.getPollTimeout() != null){
+            factory.getContainerProperties().setPollTimeout(consumer.getPollTimeout());
+        }
 
         factory.getContainerProperties().setAckMode(
-                config.isConsumerAutoCommit()
+                config.getConsumer().isAutoCommit()
                         ? ContainerProperties.AckMode.BATCH
                         : ContainerProperties.AckMode.MANUAL
         );
