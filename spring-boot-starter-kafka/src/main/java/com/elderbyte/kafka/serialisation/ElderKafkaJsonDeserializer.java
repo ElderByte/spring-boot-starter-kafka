@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * Generic JSON deserializer.
  */
-public class SpringKafkaJsonDeserializer<V> implements Deserializer<V> {
+public class ElderKafkaJsonDeserializer<V> implements Deserializer<V> {
 
 
   /***************************************************************************
@@ -34,20 +34,20 @@ public class SpringKafkaJsonDeserializer<V> implements Deserializer<V> {
    **************************************************************************/
 
 
-  public SpringKafkaJsonDeserializer(Class<V> clazz) {
+  public ElderKafkaJsonDeserializer(Class<V> clazz) {
     this(clazz, DefaultJsonMapper.buildDefaultMapper());
   }
 
 
-  public SpringKafkaJsonDeserializer(Class<V> clazz, ObjectMapper mapper) {
+  public ElderKafkaJsonDeserializer(Class<V> clazz, ObjectMapper mapper) {
     this(clazz, null, mapper);
   }
 
-  public SpringKafkaJsonDeserializer(TypeReference<V> typeReference, ObjectMapper mapper) {
+  public ElderKafkaJsonDeserializer(TypeReference<V> typeReference, ObjectMapper mapper) {
     this(null, typeReference, mapper);
   }
 
-  private SpringKafkaJsonDeserializer(
+  private ElderKafkaJsonDeserializer(
           Class<V> clazz,
           TypeReference<V> typeReference,
           ObjectMapper mapper) {

@@ -24,6 +24,8 @@ public class CdcEvent<T> {
      *                                                                         *
      **************************************************************************/
 
+    protected CdcEvent() {}
+
     /**
      * Creates a new CdcEvent
      */
@@ -34,4 +36,13 @@ public class CdcEvent<T> {
         this.delete = delete;
     }
 
+    @Override
+    public String toString() {
+        return "CdcEvent{" +
+                "id=" + id +
+                ", previous=" + previous +
+                ", updated=" + updated +
+                ", delete=" + delete +
+                '}';
+    }
 }

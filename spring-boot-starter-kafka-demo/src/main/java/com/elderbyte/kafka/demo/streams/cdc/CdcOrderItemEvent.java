@@ -10,6 +10,7 @@ public class CdcOrderItemEvent {
 
     public int quantity;
 
+    public CdcOrderItemEvent(){}
 
     public CdcOrderItemEvent(String orderNumber, String item, int quantity){
         this.orderNumber = orderNumber;

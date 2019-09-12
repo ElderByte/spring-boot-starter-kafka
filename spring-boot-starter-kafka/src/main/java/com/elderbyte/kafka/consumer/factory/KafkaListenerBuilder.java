@@ -5,7 +5,6 @@ import com.elderbyte.kafka.consumer.processing.Processor;
 import com.elderbyte.kafka.messages.MessageBatch;
 import com.elderbyte.kafka.metrics.MetricsContext;
 import com.elderbyte.kafka.records.RecordBatch;
-import com.elderbyte.kafka.serialisation.SpringKafkaJsonDeserializer;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.annotation.InterfaceStability;
@@ -14,7 +13,6 @@ import org.springframework.kafka.listener.ConsumerAwareRebalanceListener;
 import org.springframework.kafka.listener.MessageListenerContainer;
 
 import java.util.List;
-import java.util.concurrent.Callable;
 
 /**
  * Provides the ability to build a kafka listener configuration

@@ -16,4 +16,12 @@ public class CdcOrderEvent {
       this.number = number;
       this.description = description;
    }
+
+   @Override
+   public String toString() {
+      return "CdcOrderEvent{" +
+              "number='" + number + '\'' +
+              ", description='" + description + '\'' +
+              '}';
+   }
 }

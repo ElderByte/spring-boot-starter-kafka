@@ -7,7 +7,8 @@ import com.elderbyte.kafka.consumer.factory.KafkaListenerFactoryConfiguration;
 import com.elderbyte.kafka.consumer.processing.ManagedProcessorFactoryConfiguration;
 import com.elderbyte.kafka.producer.DefaultJsonKafkaTemplateConfiguration;
 import com.elderbyte.kafka.producer.KafkaProducerConfiguration;
-import com.elderbyte.kafka.serialisation.SpringKafkaJsonSerializer;
+import com.elderbyte.kafka.serialisation.ElderKafkaJsonSerializer;
+import com.elderbyte.kafka.streams.ElderKafkaStreamsConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -34,7 +35,8 @@ public class KafkaStarterAutoConfiguration {
     @Import( {
             DefaultKafkaAdminConfiguration.class,
             DefaultJsonKafkaTemplateConfiguration.class,
-            DefaultJsonConsumerConfiguration.class
+            DefaultJsonConsumerConfiguration.class,
+            ElderKafkaStreamsConfiguration.class
     })
     public static class InnerKafkaConfiguration {
 
@@ -42,8 +44,8 @@ public class KafkaStarterAutoConfiguration {
         private ObjectMapper mapper;
 
         @Bean
-        public SpringKafkaJsonSerializer springKafkaJsonSerializer(){
-            return new SpringKafkaJsonSerializer(mapper);
+        public ElderKafkaJsonSerializer springKafkaJsonSerializer(){
+            return new ElderKafkaJsonSerializer(mapper);
         }
     }
 

@@ -1,7 +1,7 @@
 package com.elderbyte.kafka.producer;
 
 import com.elderbyte.kafka.config.KafkaClientProperties;
-import com.elderbyte.kafka.serialisation.SpringKafkaJsonSerializer;
+import com.elderbyte.kafka.serialisation.ElderKafkaJsonSerializer;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +29,7 @@ public class DefaultJsonKafkaTemplateConfiguration {
     private KafkaClientProperties config;
 
     @Autowired
-    private SpringKafkaJsonSerializer springKafkaJsonSerializer;
+    private ElderKafkaJsonSerializer elderKafkaJsonSerializer;
 
     /***************************************************************************
      *                                                                         *
@@ -63,7 +63,7 @@ public class DefaultJsonKafkaTemplateConfiguration {
     private DefaultKafkaProducerFactory<String, Object> producerFactory() {
         var factory = new DefaultKafkaProducerFactory<String, Object>(producerConfigs());
         factory.setKeySerializer(new StringSerializer());
-        factory.setValueSerializer(springKafkaJsonSerializer);
+        factory.setValueSerializer(elderKafkaJsonSerializer);
         return factory;
     }
 
