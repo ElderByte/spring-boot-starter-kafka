@@ -1,5 +1,6 @@
 package com.elderbyte.kafka.topics;
 
+import com.elderbyte.commons.exceptions.ArgumentNullException;
 import com.elderbyte.commons.utils.Stopwatch;
 import com.elderbyte.kafka.admin.AdminClientFactory;
 import com.elderbyte.kafka.config.KafkaClientProperties;
@@ -10,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 
-import javax.annotation.PostConstruct;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -21,7 +21,7 @@ import static java.util.stream.Collectors.toList;
 /**
  * Holds all Kafka Topic configurations.
  */
-public class KafkaNewTopicCreator {
+public class ElderKafkaNewTopicCreatorImpl implements ElderKafkaNewTopicCreator, InitializingBean {
 
     /***************************************************************************
      *                                                                         *
@@ -29,7 +29,7 @@ public class KafkaNewTopicCreator {
      *                                                                         *
      **************************************************************************/
 
-    private static final Logger log = LoggerFactory.getLogger(KafkaNewTopicCreator.class);
+    private static final Logger log = LoggerFactory.getLogger(ElderKafkaNewTopicCreatorImpl.class);
 
     private final AdminClientFactory adminClientFactory;
     private final KafkaClientProperties kafkaConfig;
@@ -40,16 +40,21 @@ public class KafkaNewTopicCreator {
      *                                                                         *
      **************************************************************************/
 
-    public KafkaNewTopicCreator(
+    public ElderKafkaNewTopicCreatorImpl(
             KafkaClientProperties kafkaConfig,
             AdminClientFactory adminClientFactory
     ){
+
+        if(kafkaConfig == null) throw new ArgumentNullException("kafkaConfig");
+        if(adminClientFactory == null) throw new ArgumentNullException("adminClientFactory");
+
         this.kafkaConfig = kafkaConfig;
         this.adminClientFactory = adminClientFactory;
     }
 
-    @PostConstruct
-    public void init() {
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
         try{
             createTopics(kafkaConfig.getTopics());
         }catch (Exception e){

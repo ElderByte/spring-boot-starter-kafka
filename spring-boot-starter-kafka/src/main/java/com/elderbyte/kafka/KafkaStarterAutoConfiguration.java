@@ -1,5 +1,6 @@
 package com.elderbyte.kafka;
 
+import com.elderbyte.kafka.admin.AdminClientFactory;
 import com.elderbyte.kafka.admin.DefaultKafkaAdminConfiguration;
 import com.elderbyte.kafka.config.KafkaClientProperties;
 import com.elderbyte.kafka.consumer.DefaultJsonConsumerConfiguration;
@@ -9,6 +10,8 @@ import com.elderbyte.kafka.producer.DefaultJsonKafkaTemplateConfiguration;
 import com.elderbyte.kafka.producer.KafkaProducerConfiguration;
 import com.elderbyte.kafka.serialisation.ElderKafkaJsonSerializer;
 import com.elderbyte.kafka.streams.ElderKafkaStreamsConfiguration;
+import com.elderbyte.kafka.topics.ElderKafkaNewTopicCreator;
+import com.elderbyte.kafka.topics.ElderKafkaNewTopicCreatorImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -46,6 +49,20 @@ public class KafkaStarterAutoConfiguration {
         @Bean
         public ElderKafkaJsonSerializer springKafkaJsonSerializer(){
             return new ElderKafkaJsonSerializer(mapper);
+        }
+
+        @ConditionalOnProperty(value = "kafka.client.admin.enabled", matchIfMissing = true)
+        @Bean("elderKafkaNewTopicCreator")
+        public ElderKafkaNewTopicCreator elderKafkaNewTopicCreator(
+                @Autowired KafkaClientProperties properties,
+                @Autowired AdminClientFactory factory){
+            return new ElderKafkaNewTopicCreatorImpl(properties, factory);
+        }
+
+        @ConditionalOnProperty(value = "kafka.client.admin.enabled", havingValue = "false")
+        @Bean("elderKafkaNewTopicCreator")
+        public ElderKafkaNewTopicCreator elderKafkaNewTopicCreatorMock(){
+            return new ElderKafkaNewTopicCreator() {};
         }
     }
 
