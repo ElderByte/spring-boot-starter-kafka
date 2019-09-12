@@ -4,6 +4,8 @@ import com.elderbyte.kafka.demo.streams.cdc.CdcEvent;
 import com.elderbyte.kafka.demo.streams.cdc.CdcOrderEvent;
 import com.elderbyte.kafka.demo.streams.cdc.CdcOrderItemEvent;
 import com.elderbyte.kafka.producer.KafkaProducerTx;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -20,10 +22,10 @@ public class CdcMockProducer {
      *                                                                         *
      **************************************************************************/
 
-    private AtomicInteger orderEventId = new AtomicInteger(0);
-    private AtomicInteger orderItemEventId = new AtomicInteger(0);
+    private static final Logger log = LoggerFactory.getLogger(CdcMockProducer.class);
 
-
+    private final AtomicInteger orderEventId = new AtomicInteger(0);
+    private final AtomicInteger orderItemEventId = new AtomicInteger(0);
     private final KafkaProducerTx<String, Object> kafkaProducer;
 
     /***************************************************************************
@@ -35,14 +37,16 @@ public class CdcMockProducer {
     /**
      * Creates a new CdcMockProducer
      */
-    public CdcMockProducer(KafkaProducerTx<String, Object> kafkaProducer) {
+    public CdcMockProducer(
+            KafkaProducerTx<String, Object> kafkaProducer
+    ) {
         this.kafkaProducer = kafkaProducer;
     }
 
     @PostConstruct
     public void init(){
-        this.kafkaProducer.sendAllMessagesTransactionally(CdcOrderEvent.TOPIC, mockCdcOrderEvents());
-        this.kafkaProducer.sendAllMessagesTransactionally(CdcOrderItemEvent.TOPIC, mockCdcOrderItemEvents());
+        sendAllMessages(CdcOrderEvent.TOPIC, mockCdcOrderEvents());
+        sendAllMessages(CdcOrderItemEvent.TOPIC, mockCdcOrderItemEvents());
     }
 
     /***************************************************************************
@@ -105,6 +109,11 @@ public class CdcMockProducer {
                 new CdcOrderItemEvent(number, item, quantity),
                 deleted
         );
+    }
+
+    private void sendAllMessages(String topic, Collection<? extends CdcEvent<?>> messages){
+        log.info("Sending " + messages.size() + " messages to topic " + topic);
+        this.kafkaProducer.sendAllMessagesTransactionally(topic, messages);
     }
 
 }

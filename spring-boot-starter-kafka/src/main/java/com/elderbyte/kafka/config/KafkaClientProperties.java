@@ -1,6 +1,10 @@
 package com.elderbyte.kafka.config;
 
+import com.elderbyte.kafka.topics.TopicProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @ConfigurationProperties("kafka.client")
 public class KafkaClientProperties {
@@ -16,6 +20,7 @@ public class KafkaClientProperties {
 
     private ConsumerProperties consumer = new ConsumerProperties();
     private ProducerProperties producer = new ProducerProperties();
+    private List<TopicProperties> topics = new ArrayList<>();
 
     /***************************************************************************
      *                                                                         *
@@ -55,11 +60,21 @@ public class KafkaClientProperties {
         this.producer = producer;
     }
 
+    public List<TopicProperties> getTopics() {
+        return topics;
+    }
+
+    public void setTopics(List<TopicProperties> topics) {
+        this.topics = topics;
+    }
+
     /***************************************************************************
      *                                                                         *
      *  Inner Classes                                                          *
      *                                                                         *
      **************************************************************************/
+
+
 
     public static class ProducerProperties {
 

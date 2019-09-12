@@ -14,4 +14,12 @@ kafka:
     consumer:
       enabled: true
       pollTimeout: 3000
-
+    topics:
+      - name: _demo.cdc.orders.order
+        partitions: 1
+        cleanUpPolicy: delete
+        retention: 24h
+      - name: _demo.cdc.orders.item
+        partitions: 1
+        cleanUpPolicy: delete
+        retention: 24h

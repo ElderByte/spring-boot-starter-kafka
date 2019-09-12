@@ -1,6 +1,7 @@
 package com.elderbyte.kafka.admin;
 
 import com.elderbyte.kafka.config.KafkaClientProperties;
+import com.elderbyte.kafka.topics.KafkaNewTopicCreator;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -38,6 +39,13 @@ public class DefaultKafkaAdminConfiguration {
     @Bean
     public AdminClientFactory adminClientFactory(){
         return new AdminClientFactory(adminConfig());
+    }
+
+    @Bean
+    public KafkaNewTopicCreator kafkaNewTopicCreator(
+            @Autowired KafkaClientProperties properties,
+            @Autowired AdminClientFactory factory){
+        return new KafkaNewTopicCreator(properties, factory);
     }
 
     /***************************************************************************

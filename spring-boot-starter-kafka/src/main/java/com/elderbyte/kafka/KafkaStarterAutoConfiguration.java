@@ -24,9 +24,8 @@ import org.springframework.context.annotation.Import;
 })
 public class KafkaStarterAutoConfiguration {
 
-
     @Bean
-    public KafkaClientProperties kafkaClientConfig(){
+    public KafkaClientProperties kafkaClientProperties(){
         return new KafkaClientProperties();
     }
 
