@@ -20,6 +20,5 @@ public class DemoService implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-       // this.distributedHashMap = distributedHashMapKafkaService.distributedMapJson("test-group", "test-topic", AppDataDto.class);
     }
 }
