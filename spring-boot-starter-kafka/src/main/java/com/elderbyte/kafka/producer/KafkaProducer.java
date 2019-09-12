@@ -28,7 +28,7 @@ public interface KafkaProducer<K,V> {
         return send(topic, (KafkaMessage) message);
     }
 
-    default List<CompletableFuture<SendResult<String, V>>> sendAllMessages(String topic, Collection<V> messageBodys) {
+    default List<CompletableFuture<SendResult<String, V>>> sendAllMessages(String topic, Collection<? extends V> messageBodys) {
         var messages = messageBodys.stream()
                 .map(KafkaMessage::fromMessage)
                 .collect(toList());

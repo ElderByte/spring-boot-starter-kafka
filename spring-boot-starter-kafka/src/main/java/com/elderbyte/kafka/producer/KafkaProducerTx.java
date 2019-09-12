@@ -17,7 +17,7 @@ public interface KafkaProducerTx<K,V> extends KafkaProducer<K,V> {
 
     List<CompletableFuture<SendResult<K, V>>> sendAllTransactionally(String topic, Collection<KafkaMessage<K, V>> messages);
 
-    default List<CompletableFuture<SendResult<String, V>>> sendAllMessagesTransactionally(String topic, Collection<V> messageBodys) {
+    default List<CompletableFuture<SendResult<String, V>>> sendAllMessagesTransactionally(String topic, Collection<? extends V> messageBodys) {
         var messages = messageBodys.stream()
                 .map(KafkaMessage::fromMessage)
                 .collect(toList());
