@@ -86,10 +86,13 @@ public class CdcMockProducer {
 
     private Collection<CdcEvent<CdcOrderItemEvent>> mockCdcOrderItemEvents(){
         return Arrays.asList(
-                mockCdcOrderItemEvent(1, "A", "item-a-1", 1),
-                mockCdcOrderItemEvent(2, "A", "item-a-2", 10),
-                mockCdcOrderItemEvent(3, "A", "item-a-3", 20),
-                mockCdcOrderItemEvent(1, "A", "item-a-1", 2) // Update
+                mockCdcOrderItemEvent(1, "A", "ita-1", 1),
+                mockCdcOrderItemEvent(2, "A", "ita-2", 10),
+                mockCdcOrderItemEvent(3, "A", "ita-3", 20),
+
+                mockCdcOrderItemEvent(1, "A", "ita-1", 2) ,// Update
+                mockCdcOrderItemEvent(3, "A", "ita-3 deleted", 0, true), // Delete
+                mockCdcOrderItemEvent(2, "A", "ita-2 N", 11, false) // Update
         );
     }
 
