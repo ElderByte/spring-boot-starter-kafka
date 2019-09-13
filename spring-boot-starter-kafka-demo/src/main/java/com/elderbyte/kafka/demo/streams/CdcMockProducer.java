@@ -78,7 +78,9 @@ public class CdcMockProducer {
         return Arrays.asList(
                 mockCdcOrderEvent("A", "A order"),
                 mockCdcOrderEvent("B", "B order"),
-                mockCdcOrderEvent("C", "C order")
+                mockCdcOrderEvent("C", "C order"),
+                mockCdcOrderEvent("B", "B order deleted", true),
+                mockCdcOrderEvent("D", "D order")
         );
     }
 

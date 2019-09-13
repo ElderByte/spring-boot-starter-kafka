@@ -121,7 +121,13 @@ public class OrderUpdatedProducer {
         return builder.streamAsTable(
                 "orders",
                 cdcOrders,
-                (k,v) -> KeyValue.pair(v.updated.number, convert(v.updated)),
+                (k,v) -> {
+                    if(!v.delete){
+                        return KeyValue.pair(v.updated.number, convert(v.updated));
+                    }else{
+                        return KeyValue.pair(v.updated.number, null);
+                    }
+                },
                 OrderUpdated.class
         );
     }
@@ -133,7 +139,13 @@ public class OrderUpdatedProducer {
         var orderItems = builder.streamAsTable(
                 "order-items",
                             cdcOrderItems,
-                            (k,v) -> KeyValue.pair(v.updated.id + "", v.updated),
+                            (k,v) -> {
+                                if(!v.delete){
+                                    return KeyValue.pair(v.updated.id + "", v.updated);
+                                }else{
+                                    return KeyValue.pair(v.updated.id + "", null);
+                                }
+                            },
                             CdcOrderItemEvent.class
                 );
 
