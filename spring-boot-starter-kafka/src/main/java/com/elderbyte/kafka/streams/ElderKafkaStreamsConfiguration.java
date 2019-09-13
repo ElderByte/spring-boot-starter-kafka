@@ -10,6 +10,7 @@ import org.springframework.kafka.config.KafkaStreamsConfiguration;
 import org.springframework.kafka.config.StreamsBuilderFactoryBean;
 import org.springframework.kafka.core.CleanupConfig;
 
+import java.time.Duration;
 import java.util.HashMap;
 
 @Configuration
@@ -35,7 +36,8 @@ public class ElderKafkaStreamsConfiguration {
         config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, properties.getServers());
         config.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.StringSerde.class);
         config.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.StringSerde.class);
-
+        config.put(StreamsConfig.TOPOLOGY_OPTIMIZATION, StreamsConfig.OPTIMIZE);
+        config.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, Duration.ofSeconds(1).toMillis());
 
         return new KafkaStreamsConfiguration(config);
     }

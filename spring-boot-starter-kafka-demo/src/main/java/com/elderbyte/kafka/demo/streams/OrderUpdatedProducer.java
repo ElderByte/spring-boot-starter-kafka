@@ -67,22 +67,31 @@ public class OrderUpdatedProducer {
         var orderUpdateKStr = orderUpdateKStream();
 
         // Join additional info to order update
-        orderUpdateKStr.leftJoin(
+
+        orderUpdateKStr
+            .leftJoin(
                 orderItemsKTable,
                 (order, items) -> {
                     if(items != null){
                         order.items = new ArrayList<>(items);
                     }
                     return order;
-                },
-                Joined.valueSerde(ElderJsonSerde.from(mapper, OrderUpdated.class))
-        )
-                .peek(
-                        (key, value) -> {
-                            log.info("Peek: " + key + ", value: " + value);
-                        }
-                )
-                .to(OrderUpdated.TOPIC, Produced.valueSerde(ElderJsonSerde.from(mapper, OrderUpdated.class)));
+                }
+            )
+            .toStream()
+            .peek(
+                    (key, value) -> {
+                        log.info("Peek: " + key + ", value: " + value);
+                    }
+            )
+            .to(OrderUpdated.TOPIC, Produced.valueSerde(ElderJsonSerde.from(mapper, OrderUpdated.class)));
+
+
+        streamsBuilderFactory.start();
+
+
+        // Visualize the topology output @see https://zz85.github.io/kafka-streams-viz/
+
     }
     /***************************************************************************
      *                                                                         *
@@ -96,16 +105,22 @@ public class OrderUpdatedProducer {
      *                                                                         *
      **************************************************************************/
 
-    private KStream<String, OrderUpdated> orderUpdateKStream(){
+    private KTable<String, OrderUpdated> orderUpdateKStream(){
         return builder().stream(
                 CdcOrderEvent.TOPIC,
                 Consumed.with(
                         Serdes.String(),
                         ElderJsonSerde.from(mapper, new TypeReference<CdcEvent<CdcOrderEvent>>() {}))
-        ).map((k,v) -> {
-            var conv = convert(v.updated);
-            return new KeyValue<>(conv.number, conv);
-        });
+        )
+        .map((k,v) -> {
+            return new KeyValue<>(v.updated.number, convert(v.updated));
+        })
+        .groupByKey(serializedJson(OrderUpdated.class))
+        .reduce(
+                (old, current) -> current, // TODO Handle deletes from current.deleted flag
+                materializedJson("orders", OrderUpdated.class)
+                        .withLoggingDisabled() // Good bad ?
+        );
     }
 
     private KTable<String, Set<OrderItem>> orderItemUpdateKStream(){
@@ -117,12 +132,13 @@ public class OrderUpdatedProducer {
                         ElderJsonSerde.from(mapper, new TypeReference<CdcEvent<CdcOrderItemEvent>>() {}))
         )
         .map((k,v) -> {
-            return new KeyValue<>(v.updated.id, v.updated); // TODO Handle deletes
+            return new KeyValue<>(v.updated.id, v.updated);
         })
         .groupByKey(serializedJson(Serdes.Long(), CdcOrderItemEvent.class))
         .reduce(
-                (old, current) -> current,
-                materializedJson("order-item-rows", Serdes.Long(), CdcOrderItemEvent.class)
+                (old, current) -> current, // TODO Handle deletes from current.deleted flag
+                materializedJson("order-items", Serdes.Long(), CdcOrderItemEvent.class)
+                        .withLoggingDisabled() // Good bad ?
         );
 
         return compactedItemRowsTbl.groupBy(
@@ -133,7 +149,7 @@ public class OrderUpdatedProducer {
                 HashSet::new,
                 (k,v, agg) -> { agg.add(v); return agg; }, // Adder
                 (k,v, agg) -> { agg.remove(v); return agg; }, // Remover
-                materializedJson("order-item-aggregated",  new TypeReference<Set<OrderItem>>() {})
+                materializedJson("order-items-agg",  new TypeReference<Set<OrderItem>>() {})
         );
     }
 

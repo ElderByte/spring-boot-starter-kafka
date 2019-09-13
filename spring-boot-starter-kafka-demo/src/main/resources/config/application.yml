@@ -4,6 +4,7 @@ logging:
     level:
         root: WARN
         com.elderbyte: ${LOG_LEVEL:INFO}
+        org.springframework.kafka.config: DEBUG # Display KStream Topology
 
 kafka:
   client:
