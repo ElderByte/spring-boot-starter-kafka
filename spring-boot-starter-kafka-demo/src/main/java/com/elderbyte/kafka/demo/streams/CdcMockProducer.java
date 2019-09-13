@@ -6,6 +6,7 @@ import com.elderbyte.kafka.demo.streams.cdc.CdcOrderItemEvent;
 import com.elderbyte.kafka.producer.KafkaProducerTx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -26,6 +27,9 @@ public class CdcMockProducer {
 
     private final AtomicInteger orderEventId = new AtomicInteger(0);
     private final AtomicInteger orderItemEventId = new AtomicInteger(0);
+
+    private final AtomicInteger quantityCnt = new AtomicInteger(2);
+    private final AtomicInteger orderCnt = new AtomicInteger(0);
     private final KafkaProducerTx<String, Object> kafkaProducer;
 
     /***************************************************************************
@@ -49,6 +53,21 @@ public class CdcMockProducer {
         sendAllMessages(CdcOrderItemEvent.TOPIC, mockCdcOrderItemEvents());
     }
 
+
+    @Scheduled(fixedDelay = 5000)
+    public void emitItemUpdate(){
+        sendAllMessages(CdcOrderItemEvent.TOPIC, Arrays.asList(
+                mockCdcOrderItemEvent(1, "A", "item-a-1", quantityCnt.incrementAndGet())
+        ));
+    }
+
+    @Scheduled(fixedDelay = 10000)
+    public void emitOrderUpdate(){
+        sendAllMessages(CdcOrderEvent.TOPIC, Arrays.asList(
+                mockCdcOrderEvent("A", "A order " + orderCnt.incrementAndGet())
+        ));
+    }
+
     /***************************************************************************
      *                                                                         *
      * Private methods                                                         *
@@ -65,10 +84,10 @@ public class CdcMockProducer {
 
     private Collection<CdcEvent<CdcOrderItemEvent>> mockCdcOrderItemEvents(){
         return Arrays.asList(
-                mockCdcOrderItemEvent(1, "A", "item-a-1", 17),
-                mockCdcOrderItemEvent(2, "A", "item-a-2", 170),
-                mockCdcOrderItemEvent(3, "A", "item-a-3", 170),
-                mockCdcOrderItemEvent(1, "A", "item-a-1", 88) // Update
+                mockCdcOrderItemEvent(1, "A", "item-a-1", 1),
+                mockCdcOrderItemEvent(2, "A", "item-a-2", 10),
+                mockCdcOrderItemEvent(3, "A", "item-a-3", 20),
+                mockCdcOrderItemEvent(1, "A", "item-a-1", 2) // Update
         );
     }
 

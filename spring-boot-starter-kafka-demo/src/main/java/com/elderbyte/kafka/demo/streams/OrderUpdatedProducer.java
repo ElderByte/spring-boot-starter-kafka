@@ -20,9 +20,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.kafka.config.StreamsBuilderFactoryBean;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Service
 public class OrderUpdatedProducer {
@@ -59,28 +59,21 @@ public class OrderUpdatedProducer {
 
         streamsBuilderFactory.setStateListener((state, old) -> log.info("State: " + state));
 
-        var orderUpdateKStr = orderUpdateKStream();
 
-        /*
-        .groupBy((k,v) -> v.number).
-         */
-
-        /*
-        orderUpdateKStr.peek((key, value) -> {
-            log.info("Peek: " + key + ", value: " + value);
-        });*/
-
+        // Setup KTable with additional info for order-update
         var orderItemsKTable = orderItemUpdateKStream();
 
+        // Setup Order Update stream
+        var orderUpdateKStr = orderUpdateKStream();
 
+        // Join additional info to order update
         orderUpdateKStr.leftJoin(
                 orderItemsKTable,
                 (order, items) -> {
                     if(items != null){
-                        order.items = items;
+                        order.items = new ArrayList<>(items);
                     }
                     return order;
-
                 },
                 Joined.valueSerde(ElderJsonSerde.from(mapper, OrderUpdated.class))
         )
@@ -90,29 +83,10 @@ public class OrderUpdatedProducer {
                         }
                 )
                 .to(OrderUpdated.TOPIC, Produced.valueSerde(ElderJsonSerde.from(mapper, OrderUpdated.class)));
-
-
     }
     /***************************************************************************
      *                                                                         *
      * Life Cycle                                                              *
-     *                                                                         *
-     **************************************************************************/
-
-    @PostConstruct
-    public void init(){
-
-    }
-
-    /***************************************************************************
-     *                                                                         *
-     * Properties                                                              *
-     *                                                                         *
-     **************************************************************************/
-
-    /***************************************************************************
-     *                                                                         *
-     * Public API                                                              *
      *                                                                         *
      **************************************************************************/
 
@@ -134,36 +108,33 @@ public class OrderUpdatedProducer {
         });
     }
 
-    private KTable<String, List<OrderItem>> orderItemUpdateKStream(){
+    private KTable<String, Set<OrderItem>> orderItemUpdateKStream(){
 
-        var compactedItemRows = builder().stream(
+        var compactedItemRowsTbl = builder().stream(
                 CdcOrderItemEvent.TOPIC,
                 Consumed.with(
                         Serdes.String(),
                         ElderJsonSerde.from(mapper, new TypeReference<CdcEvent<CdcOrderItemEvent>>() {}))
         )
         .map((k,v) -> {
-            return new KeyValue<>(v.updated.id, v.updated);
+            return new KeyValue<>(v.updated.id, v.updated); // TODO Handle deletes
         })
         .groupByKey(serializedJson(Serdes.Long(), CdcOrderItemEvent.class))
         .reduce(
-                (current, previous) -> current,
+                (old, current) -> current,
                 materializedJson("order-item-rows", Serdes.Long(), CdcOrderItemEvent.class)
         );
 
-        return compactedItemRows.toStream()
-                .peek(
-                        (key, value) -> {
-                            log.info("compactedItemRows - Peek: " + key + ", value: " + value);
-                        }
-                )
-                .map((k, v) -> new KeyValue<>(v.orderNumber, convert(v)))
-                .groupByKey(serializedJson(OrderItem.class))
-                .aggregate(
-                        ArrayList::new,
-                        (k,v, agg) -> { agg.add(v); return agg; },
-                        materializedJson("order-item-aggregated", new TypeReference<List<OrderItem>>() {})
-                );
+        return compactedItemRowsTbl.groupBy(
+                (k, v) -> new KeyValue<>(v.orderNumber, convert(v)),
+                serializedJson(OrderItem.class)
+        )
+        .aggregate(
+                HashSet::new,
+                (k,v, agg) -> { agg.add(v); return agg; }, // Adder
+                (k,v, agg) -> { agg.remove(v); return agg; }, // Remover
+                materializedJson("order-item-aggregated",  new TypeReference<Set<OrderItem>>() {})
+        );
     }
 
 

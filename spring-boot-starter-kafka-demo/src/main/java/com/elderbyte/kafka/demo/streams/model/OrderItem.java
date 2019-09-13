@@ -1,6 +1,9 @@
 package com.elderbyte.kafka.demo.streams.model;
 
+import java.util.Objects;
+
 public class OrderItem {
+
     public String item;
     public int quantity;
 
@@ -10,5 +13,19 @@ public class OrderItem {
                 "item='" + item + '\'' +
                 ", quantity=" + quantity +
                 '}';
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        OrderItem orderItem = (OrderItem) o;
+        return item.equals(orderItem.item);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(item);
     }
 }
