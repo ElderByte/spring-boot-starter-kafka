@@ -11,7 +11,6 @@ import com.elderbyte.kafka.streams.factory.KafkaStreamsContextBuilderFactory;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContext;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.*;
 import org.slf4j.Logger;
@@ -21,7 +20,6 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Set;
 
 @Service
@@ -87,8 +85,9 @@ public class OrderUpdatedProducer {
             )
             .to(OrderUpdated.TOPIC, Produced.valueSerde(ElderJsonSerde.from(mapper, OrderUpdated.class)));
 
-
         streamsContext = builder.build();
+
+        log.info("Topology:\n"+ streamsContext.getTopology().describe());
 
         // Visualize the topology output @see https://zz85.github.io/kafka-streams-viz/
 
@@ -116,51 +115,36 @@ public class OrderUpdatedProducer {
      **************************************************************************/
 
     private KTable<String, OrderUpdated> orderUpdateKStream(){
-        return builder.streamsBuilder().stream(
-                CdcOrderEvent.TOPIC,
-                Consumed.with(
-                        Serdes.String(),
-                        ElderJsonSerde.from(mapper, new TypeReference<CdcEvent<CdcOrderEvent>>() {}))
-        )
-        .map((k,v) -> {
-            return new KeyValue<>(v.updated.number, convert(v.updated));
-        })
-        .groupByKey(builder.serializedJson(OrderUpdated.class))
-        .reduce(
-                (old, current) -> current, // TODO Handle deletes from current.deleted flag
-                builder.materializedJson("orders", OrderUpdated.class)
-                        .withLoggingDisabled() // Good bad ?
+
+        var cdcOrders = builder.streamOfJson(CdcOrderEvent.TOPIC, new TypeReference<CdcEvent<CdcOrderEvent>>() {});
+
+        return builder.cdcRecipes().cdcStreamAsTable(
+                "orders",
+                cdcOrders,
+                (k,v) -> KeyValue.pair(v.updated.number, convert(v.updated)),
+                OrderUpdated.class
         );
     }
 
     private KTable<String, Set<OrderItem>> orderItemUpdateKStream(){
 
-        var compactedItemRowsTbl = builder.streamsBuilder().stream(
-                CdcOrderItemEvent.TOPIC,
-                Consumed.with(
-                        Serdes.String(),
-                        ElderJsonSerde.from(mapper, new TypeReference<CdcEvent<CdcOrderItemEvent>>() {}))
-        )
-        .map((k,v) -> {
-            return new KeyValue<>(v.updated.id, v.updated);
-        })
-        .groupByKey(builder.serializedJson(Serdes.Long(), CdcOrderItemEvent.class))
-        .reduce(
-                (old, current) -> current, // TODO Handle deletes from current.deleted flag
-                builder.materializedJson("order-items", Serdes.Long(), CdcOrderItemEvent.class)
-                        .withLoggingDisabled() // Good bad ?
-        );
+        var cdcOrderItems = builder.streamOfJson(CdcOrderItemEvent.TOPIC, new TypeReference<CdcEvent<CdcOrderItemEvent>>() {});
 
-        return compactedItemRowsTbl.groupBy(
-                (k, v) -> new KeyValue<>(v.orderNumber, convert(v)),
-                builder.serializedJson(OrderItem.class)
-        )
-        .aggregate(
-                HashSet::new,
-                (k,v, agg) -> { agg.add(v); return agg; }, // Adder
-                (k,v, agg) -> { agg.remove(v); return agg; }, // Remover
-                builder.materializedJson("order-items-agg",  new TypeReference<Set<OrderItem>>() {})
-        );
+        var orderItems = builder.cdcRecipes().cdcStreamAsTable(
+                "order-items",
+                            cdcOrderItems,
+                            (k,v) -> KeyValue.pair(v.updated.id + "", v.updated),
+                            CdcOrderItemEvent.class
+                );
+
+        return builder.cdcRecipes()
+                .aggregateSet(
+                        "order-items-agg",
+                        orderItems,
+                        (k, v) -> new KeyValue<>(v.orderNumber, convert(v)),
+                        OrderItem.class,
+                        new TypeReference<Set<OrderItem>>() {}
+                );
     }
 
 

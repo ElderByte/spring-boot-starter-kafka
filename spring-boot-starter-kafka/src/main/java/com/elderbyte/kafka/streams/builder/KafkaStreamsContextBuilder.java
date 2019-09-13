@@ -1,12 +1,12 @@
 package com.elderbyte.kafka.streams.builder;
 
-import com.elderbyte.kafka.streams.ElderJsonSerde;
+import com.elderbyte.kafka.streams.builder.cdc.CdcRecipesBuilder;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContext;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.kafka.common.serialization.Serde;
-import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Serialized;
 import org.apache.kafka.streams.state.KeyValueStore;
@@ -20,7 +20,15 @@ public interface KafkaStreamsContextBuilder {
      *                                                                         *
      **************************************************************************/
 
+    <V> KStream<String, V> streamOfJson(String topic, Class<V> clazz);
+    <V> KStream<String, V> streamOfJson(String topic, TypeReference<V> clazz);
+
+
     StreamsBuilder streamsBuilder();
+
+    default CdcRecipesBuilder cdcRecipes(){
+        return new CdcRecipesBuilder(this);
+    }
 
     /***************************************************************************
      *                                                                         *

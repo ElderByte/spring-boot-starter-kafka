@@ -10,6 +10,8 @@ import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.kstream.Consumed;
+import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Serialized;
 import org.apache.kafka.streams.state.KeyValueStore;
@@ -61,11 +63,6 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
         this.streamsBuilder = new StreamsBuilder();
     }
 
-    /***************************************************************************
-     *                                                                         *
-     * Properties                                                              *
-     *                                                                         *
-     **************************************************************************/
 
     /***************************************************************************
      *                                                                         *
@@ -77,6 +74,17 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
     public StreamsBuilder streamsBuilder() {
         return this.streamsBuilder;
     }
+
+    @Override
+    public <V> KStream<String, V> streamOfJson(String topic, Class<V> clazz) {
+        return streamOfJson(topic,  ElderJsonSerde.from(mapper, clazz));
+    }
+
+    @Override
+    public <V> KStream<String, V> streamOfJson(String topic, TypeReference<V> clazz) {
+        return streamOfJson(topic,  ElderJsonSerde.from(mapper, clazz));
+    }
+
 
     /***************************************************************************
      *                                                                         *
@@ -124,6 +132,22 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
                 streamsConfig,
                 cleanupConfig,
                 streams -> { }
+        );
+    }
+
+    /***************************************************************************
+     *                                                                         *
+     * Private methods                                                         *
+     *                                                                         *
+     **************************************************************************/
+
+    private  <V> KStream<String, V> streamOfJson(String topic, ElderJsonSerde<V> serde) {
+        return streamsBuilder().stream(
+                topic,
+                Consumed.with(
+                        Serdes.String(),
+                        serde
+                )
         );
     }
 }
