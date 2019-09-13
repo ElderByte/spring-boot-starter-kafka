@@ -3,6 +3,7 @@ package com.elderbyte.kafka.streams.factory;
 import com.elderbyte.kafka.config.KafkaClientProperties;
 import com.elderbyte.kafka.streams.builder.KafkaStreamsContextBuilder;
 import com.elderbyte.kafka.streams.builder.KafkaStreamsContextBuilderImpl;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsConfig;
 import org.springframework.beans.factory.DisposableBean;
@@ -21,6 +22,7 @@ public class KafkaStreamsContextFactoryImpl implements KafkaStreamsContextBuilde
      **************************************************************************/
 
     private final KafkaClientProperties properties;
+    private final ObjectMapper mapper;
 
     /***************************************************************************
      *                                                                         *
@@ -32,9 +34,11 @@ public class KafkaStreamsContextFactoryImpl implements KafkaStreamsContextBuilde
      * Creates a new KafkaStreamsBuilderFactory
      */
     public KafkaStreamsContextFactoryImpl(
-            KafkaClientProperties properties
+            KafkaClientProperties properties,
+            ObjectMapper mapper
     ) {
         this.properties = properties;
+        this.mapper = mapper;
     }
 
     /***************************************************************************
@@ -46,9 +50,9 @@ public class KafkaStreamsContextFactoryImpl implements KafkaStreamsContextBuilde
     @Override
     public KafkaStreamsContextBuilder newStreamsBuilder(String appName) {
         return new KafkaStreamsContextBuilderImpl(
+                mapper,
                 kafkaStreamsConfiguration(appName),
                 new CleanupConfig(false, true)
-
         );
     }
 
