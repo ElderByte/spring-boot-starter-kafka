@@ -30,11 +30,13 @@ public class ElderKafkaStreamsConfiguration {
     @Bean
     public KafkaStreamsConfiguration kafkaStreamsConfiguration(){
         var config = new HashMap<String, Object>();
-        config.put(StreamsConfig.APPLICATION_ID_CONFIG, "app-id"); // TODO
-        config.put(StreamsConfig.CLIENT_ID_CONFIG, "app-id"); // TODO
+        config.put(StreamsConfig.APPLICATION_ID_CONFIG, "_KSTREAM-app1"); // TODO
+        config.put(StreamsConfig.CLIENT_ID_CONFIG, "_KSTREAM-app1"); // TODO
         config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, properties.getServers());
         config.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.StringSerde.class);
         config.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.StringSerde.class);
+
+
         return new KafkaStreamsConfiguration(config);
     }
 

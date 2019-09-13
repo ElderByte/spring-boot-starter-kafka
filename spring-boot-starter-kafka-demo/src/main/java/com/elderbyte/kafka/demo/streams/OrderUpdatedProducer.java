@@ -8,10 +8,13 @@ import com.elderbyte.kafka.demo.streams.model.OrderUpdated;
 import com.elderbyte.kafka.streams.ElderJsonSerde;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.*;
+import org.apache.kafka.streams.state.KeyValueStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.config.StreamsBuilderFactoryBean;
@@ -142,19 +145,53 @@ public class OrderUpdatedProducer {
         .map((k,v) -> {
             return new KeyValue<>(v.updated.id, v.updated);
         })
-        .groupByKey(Serialized.with(Serdes.Long(), ElderJsonSerde.from(mapper, CdcOrderItemEvent.class)))
+        .groupByKey(serializedJson(Serdes.Long(), CdcOrderItemEvent.class))
         .reduce(
-                (current, previous) -> current
+                (current, previous) -> current,
+                materializedJson("order-item-rows", Serdes.Long(), CdcOrderItemEvent.class)
         );
-        
+
         return compactedItemRows.toStream()
+                .peek(
+                        (key, value) -> {
+                            log.info("compactedItemRows - Peek: " + key + ", value: " + value);
+                        }
+                )
                 .map((k, v) -> new KeyValue<>(v.orderNumber, convert(v)))
-                .groupByKey(Serialized.with(Serdes.String(), ElderJsonSerde.from(mapper, OrderItem.class)))
+                .groupByKey(serializedJson(OrderItem.class))
                 .aggregate(
                         ArrayList::new,
                         (k,v, agg) -> { agg.add(v); return agg; },
-                        Materialized.with(Serdes.String(), ElderJsonSerde.from(mapper, new TypeReference<List<OrderItem>>() {}))
+                        materializedJson("order-item-aggregated", new TypeReference<List<OrderItem>>() {})
                 );
+    }
+
+
+    private <K,V> Serialized<K, V> serializedJson(Serde<K> keySerde, Class<V> valueClazz){
+        return Serialized.with(keySerde, ElderJsonSerde.from(mapper, valueClazz));
+    }
+
+    private <V> Serialized<String, V> serializedJson(Class<V> valueClazz){
+        return serializedJson(Serdes.String(), valueClazz);
+    }
+
+
+    private <V> Materialized<String, V, KeyValueStore<Bytes, byte[]>> materializedJson(String storeName, TypeReference<V> clazz){
+        return Materialized.<String, V, KeyValueStore<Bytes, byte[]>>as(storeName)
+                .withKeySerde(Serdes.String())
+                .withValueSerde(ElderJsonSerde.from(mapper, clazz));
+    }
+
+    private <V> Materialized<String, V, KeyValueStore<Bytes, byte[]>> materializedJson(String storeName, Class<V> valueClazz){
+        return Materialized.<String, V, KeyValueStore<Bytes, byte[]>>as(storeName)
+                .withKeySerde(Serdes.String())
+                .withValueSerde(ElderJsonSerde.from(mapper, valueClazz));
+    }
+
+    private <K,V> Materialized<K, V, KeyValueStore<Bytes, byte[]>> materializedJson(String storeName, Serde<K> keySerde, Class<V> valueClazz){
+        return Materialized.<K, V, KeyValueStore<Bytes, byte[]>>as(storeName)
+                .withKeySerde(keySerde)
+                .withValueSerde(ElderJsonSerde.from(mapper, valueClazz));
     }
 
     private StreamsBuilder builder(){
