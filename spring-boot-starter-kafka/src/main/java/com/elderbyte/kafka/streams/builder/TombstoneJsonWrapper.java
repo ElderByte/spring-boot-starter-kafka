@@ -1,0 +1,60 @@
+package com.elderbyte.kafka.streams.builder;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.lang.Nullable;
+
+import java.util.Optional;
+
+public class TombstoneJsonWrapper<V> {
+
+    /***************************************************************************
+     *                                                                         *
+     * Static Builder                                                          *
+     *                                                                         *
+     **************************************************************************/
+
+    public static <T> TombstoneJsonWrapper<T> ofNullable(ObjectMapper mapper, @Nullable T value){
+        return new TombstoneJsonWrapper<>(
+                value == null ? null : mapper.valueToTree(value)
+        );
+    }
+
+    /***************************************************************************
+     *                                                                         *
+     * Fields                                                                  *
+     *                                                                         *
+     **************************************************************************/
+
+    public JsonNode value;
+
+    /***************************************************************************
+     *                                                                         *
+     * Constructor                                                             *
+     *                                                                         *
+     **************************************************************************/
+
+    public TombstoneJsonWrapper(){}
+
+    public TombstoneJsonWrapper(JsonNode value){
+        this.value = value;
+    }
+
+    /***************************************************************************
+     *                                                                         *
+     * Public API                                                              *
+     *                                                                         *
+     **************************************************************************/
+
+
+    public <T> Optional<T> getValue(ObjectMapper mapper, Class<T> clazz){
+        return Optional.ofNullable(value)
+                        .flatMap(v -> {
+                            if(value.isNull() || value.isMissingNode()){
+                                return Optional.empty();
+                            }else{
+                                return Optional.of(mapper.convertValue(value, clazz));
+                            }
+                        });
+    }
+}

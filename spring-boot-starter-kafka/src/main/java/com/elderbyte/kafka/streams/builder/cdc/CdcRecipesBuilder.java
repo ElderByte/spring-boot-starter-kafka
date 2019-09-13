@@ -1,9 +1,9 @@
 package com.elderbyte.kafka.streams.builder.cdc;
 
 import com.elderbyte.kafka.streams.builder.KafkaStreamsContextBuilder;
+import com.elderbyte.kafka.streams.builder.TombstoneJsonWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.KeyValueMapper;
 
@@ -37,22 +37,6 @@ public class CdcRecipesBuilder {
      *                                                                         *
      **************************************************************************/
 
-
-    public <CDCEvent, Entity> KTable<String, Entity> cdcStreamAsTable(
-            String storeName,
-            KStream<String, CDCEvent> cdcEventStream,
-            KeyValueMapper<String, CDCEvent, KeyValue<String,Entity>> kvm,
-            Class<Entity> clazz
-    ){
-        return cdcEventStream
-        .map(kvm::apply)
-        .groupByKey(builder.serializedJson(clazz))
-        .reduce(
-                (old, current) -> current, // TODO Handle deletes from current.deleted flag
-                builder.materializedJson(storeName, clazz)
-                        .withLoggingDisabled() // Good bad ?
-        );
-    }
 
     public <InK,InV, OutV> KTable<String, Set<OutV>> aggregateSet(
             String storeName,

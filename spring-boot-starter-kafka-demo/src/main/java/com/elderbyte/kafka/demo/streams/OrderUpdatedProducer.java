@@ -118,7 +118,7 @@ public class OrderUpdatedProducer {
 
         var cdcOrders = builder.streamOfJson(CdcOrderEvent.TOPIC, new TypeReference<CdcEvent<CdcOrderEvent>>() {});
 
-        return builder.cdcRecipes().cdcStreamAsTable(
+        return builder.streamAsTable(
                 "orders",
                 cdcOrders,
                 (k,v) -> KeyValue.pair(v.updated.number, convert(v.updated)),
@@ -130,7 +130,7 @@ public class OrderUpdatedProducer {
 
         var cdcOrderItems = builder.streamOfJson(CdcOrderItemEvent.TOPIC, new TypeReference<CdcEvent<CdcOrderItemEvent>>() {});
 
-        var orderItems = builder.cdcRecipes().cdcStreamAsTable(
+        var orderItems = builder.streamAsTable(
                 "order-items",
                             cdcOrderItems,
                             (k,v) -> KeyValue.pair(v.updated.id + "", v.updated),
