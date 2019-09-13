@@ -6,20 +6,23 @@ import com.elderbyte.kafka.demo.streams.cdc.CdcOrderItemEvent;
 import com.elderbyte.kafka.demo.streams.model.OrderItem;
 import com.elderbyte.kafka.demo.streams.model.OrderUpdated;
 import com.elderbyte.kafka.streams.ElderJsonSerde;
+import com.elderbyte.kafka.streams.builder.KafkaStreamsContextBuilder;
+import com.elderbyte.kafka.streams.factory.KafkaStreamsContextBuilderFactory;
+import com.elderbyte.kafka.streams.managed.KafkaStreamsContext;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.kafka.config.StreamsBuilderFactoryBean;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -36,7 +39,9 @@ public class OrderUpdatedProducer {
     private static final Logger log = LoggerFactory.getLogger(OrderUpdatedProducer.class);
 
     private final ObjectMapper mapper;
-    private final StreamsBuilderFactoryBean streamsBuilderFactory;
+    private final KafkaStreamsContextBuilder builder;
+
+    private final KafkaStreamsContext streamsContext;
 
     /***************************************************************************
      *                                                                         *
@@ -51,13 +56,12 @@ public class OrderUpdatedProducer {
      */
     public OrderUpdatedProducer(
             ObjectMapper mapper,
-            StreamsBuilderFactoryBean streamsBuilderFactory
+            KafkaStreamsContextBuilderFactory streamsBuilderFactory
     ) {
 
+        this.builder = streamsBuilderFactory
+                                .newStreamsBuilder("demo");
         this.mapper = mapper;
-        this.streamsBuilderFactory = streamsBuilderFactory;
-
-        streamsBuilderFactory.setStateListener((state, old) -> log.info("State: " + state));
 
 
         // Setup KTable with additional info for order-update
@@ -87,8 +91,7 @@ public class OrderUpdatedProducer {
             .to(OrderUpdated.TOPIC, Produced.valueSerde(ElderJsonSerde.from(mapper, OrderUpdated.class)));
 
 
-        streamsBuilderFactory.start();
-
+        streamsContext = builder.build();
 
         // Visualize the topology output @see https://zz85.github.io/kafka-streams-viz/
 
@@ -99,6 +102,16 @@ public class OrderUpdatedProducer {
      *                                                                         *
      **************************************************************************/
 
+    @PostConstruct
+    public void init(){
+        streamsContext.start();
+    }
+
+    @PreDestroy
+    public void destroy(){
+        streamsContext.stop();
+    }
+
     /***************************************************************************
      *                                                                         *
      * Private methods                                                         *
@@ -106,7 +119,7 @@ public class OrderUpdatedProducer {
      **************************************************************************/
 
     private KTable<String, OrderUpdated> orderUpdateKStream(){
-        return builder().stream(
+        return builder.streamsBuilder().stream(
                 CdcOrderEvent.TOPIC,
                 Consumed.with(
                         Serdes.String(),
@@ -125,7 +138,7 @@ public class OrderUpdatedProducer {
 
     private KTable<String, Set<OrderItem>> orderItemUpdateKStream(){
 
-        var compactedItemRowsTbl = builder().stream(
+        var compactedItemRowsTbl = builder.streamsBuilder().stream(
                 CdcOrderItemEvent.TOPIC,
                 Consumed.with(
                         Serdes.String(),
@@ -179,14 +192,6 @@ public class OrderUpdatedProducer {
         return Materialized.<K, V, KeyValueStore<Bytes, byte[]>>as(storeName)
                 .withKeySerde(keySerde)
                 .withValueSerde(ElderJsonSerde.from(mapper, valueClazz));
-    }
-
-    private StreamsBuilder builder(){
-        try {
-            return streamsBuilderFactory.getObject();
-        } catch (Exception e) {
-            throw new RuntimeException("", e);
-        }
     }
 
     private OrderUpdated convert(CdcOrderEvent orderEvent){
