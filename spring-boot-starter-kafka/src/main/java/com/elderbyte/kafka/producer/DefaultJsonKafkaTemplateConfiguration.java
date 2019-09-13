@@ -40,7 +40,6 @@ public class DefaultJsonKafkaTemplateConfiguration {
 
     @Bean
     @Primary
-    @DependsOn("elderKafkaNewTopicCreator")
     public KafkaTemplate<String, Object> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }

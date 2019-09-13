@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Primary;
 import org.springframework.kafka.core.KafkaTemplate;
 
@@ -46,6 +47,7 @@ public class KafkaProducerConfiguration {
          **************************************************************************/
 
         @Bean
+        @DependsOn("elderKafkaNewTopicCreator")
         @Primary
         public KafkaProducer<String, Object> kafkaProducer(){
             return new KafkaProducerImpl<>(kafkaOperations);
@@ -84,6 +86,7 @@ public class KafkaProducerConfiguration {
          **************************************************************************/
 
         @Bean
+        @DependsOn("elderKafkaNewTopicCreator")
         @Primary
         public KafkaProducer<String, Object> kafkaProducer(){
             return new KafkaProducerMock<>();
