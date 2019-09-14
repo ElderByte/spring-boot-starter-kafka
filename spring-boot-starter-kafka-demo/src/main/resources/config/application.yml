@@ -15,6 +15,13 @@ kafka:
     consumer:
       enabled: true
       pollTimeout: 3000
+    streams:
+      commitInterval: 1s
+      processingGuarantee: at_least_once
+      replicationFactor: 1
+      producerAcks: 1
+      optimizeTopology: all
+      stateDir: ./kstream-data
     topics:
       - name: _demo.cdc.orders.order
         partitions: 1

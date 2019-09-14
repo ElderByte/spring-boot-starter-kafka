@@ -85,35 +85,18 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
         return streamOfJson(topic,  ElderJsonSerde.from(mapper, clazz));
     }
 
-    /*
-    @Override
-    public <V> KTable<String, V> tableJson(
-            String storeName,
-            final KStream<String, Optional<V>> stream,
-            Class<V> valueClazz
-    ) {
-        return table(
-                storeName,
-                stream,
-                ElderJsonSerde.from(mapper, valueClazz)
-        );
-    }
-
-    @Override
-    public <V> KTable<String, V> tableJson(
-            String storeName,
-            final KStream<String, Optional<V>> stream,
-            TypeReference<V> valueClazz
-    ) {
-        return table(
-                storeName,
-                stream,
-                ElderJsonSerde.from(mapper, valueClazz)
-        );
-    }*/
-
-    //@Override
-
+    /**
+     * Interprets the given KSTREAM as KTABLE, supporting key/value transformation.
+     * Null values are translated into tombstone events.
+     *
+     * @param storeName
+     * @param cdcEventStream
+     * @param kvm
+     * @param clazz
+     * @param <CDCEvent>
+     * @param <Entity>
+     * @return
+     */
     public <CDCEvent, Entity> KTable<String, Entity> streamAsTable(
             String storeName,
             KStream<String, CDCEvent> cdcEventStream,
@@ -130,14 +113,6 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
                 events,
                 clazz
         );
-
-          /*
-        .groupByKey(builder.serializedJson(clazz))
-        .reduce(
-                (old, current) -> current, // TODO Handle deletes from current.deleted flag
-                builder.materializedJson(storeName, clazz)
-                        .withLoggingDisabled() // Good bad ?
-        );*/
     }
 
     private  <V> KTable<String, V> tableJson(
@@ -191,6 +166,15 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
 
     public <K,V> Materialized<K, V, KeyValueStore<Bytes, byte[]>> materializedJson(String storeName, Serde<K> keySerde, Class<V> valueClazz){
         return materialized(storeName, keySerde, ElderJsonSerde.from(mapper, valueClazz));
+    }
+
+
+    public <V> Produced<String, V> producedJson(Class<V> valueClazz) {
+        return Produced.with(Serdes.String(), ElderJsonSerde.from(mapper, valueClazz));
+    }
+
+    public <K, V> Produced<K, V> producedJson(Serde<K> keySerde, Class<V> valueClazz) {
+        return Produced.with(keySerde, ElderJsonSerde.from(mapper, valueClazz));
     }
 
     public <K,V> Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized(String storeName, Serde<K> keySerde, Serde<V> valueSerde){

@@ -27,3 +27,6 @@ nbdist/
 .DS_Store
 derby.log
 gradle.properties
+
+# Ignore the local KSTREAM state store / rocksdb
+kstream-data/

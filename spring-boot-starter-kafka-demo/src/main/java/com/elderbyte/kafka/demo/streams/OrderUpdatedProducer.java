@@ -5,12 +5,10 @@ import com.elderbyte.kafka.demo.streams.cdc.CdcOrderEvent;
 import com.elderbyte.kafka.demo.streams.cdc.CdcOrderItemEvent;
 import com.elderbyte.kafka.demo.streams.model.OrderItem;
 import com.elderbyte.kafka.demo.streams.model.OrderUpdated;
-import com.elderbyte.kafka.streams.ElderJsonSerde;
 import com.elderbyte.kafka.streams.builder.KafkaStreamsContextBuilder;
 import com.elderbyte.kafka.streams.factory.KafkaStreamsContextBuilderFactory;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContext;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.*;
 import org.slf4j.Logger;
@@ -33,9 +31,7 @@ public class OrderUpdatedProducer {
 
     private static final Logger log = LoggerFactory.getLogger(OrderUpdatedProducer.class);
 
-    private final ObjectMapper mapper;
     private final KafkaStreamsContextBuilder builder;
-
     private final KafkaStreamsContext streamsContext;
 
     /***************************************************************************
@@ -50,48 +46,25 @@ public class OrderUpdatedProducer {
      * Creates a new OrderUpdatedProducer
      */
     public OrderUpdatedProducer(
-            ObjectMapper mapper,
             KafkaStreamsContextBuilderFactory streamsBuilderFactory
     ) {
 
         this.builder = streamsBuilderFactory
                                 .newStreamsBuilder("demo");
-        this.mapper = mapper;
 
-
-        // Setup KTable with additional info for order-update
-        var orderItemsKTable = orderItemUpdateKStream();
-
-        // Setup Order Update stream
-        var orderUpdateKStr = orderUpdateKStream();
-
-        // Join additional info to order update
-
-        orderUpdateKStr
-            .leftJoin(
-                orderItemsKTable,
-                (order, items) -> {
-                    if(items != null){
-                        order.items = new ArrayList<>(items);
-                    }
-                    return order;
-                }
-            )
-            .toStream()
+        orderUpdatedJoined().toStream()
             .peek(
                     (key, value) -> {
                         log.info("Peek: " + key + ", value: " + value);
                     }
             )
-            .to(OrderUpdated.TOPIC, Produced.valueSerde(ElderJsonSerde.from(mapper, OrderUpdated.class)));
+            .to(OrderUpdated.TOPIC, builder.producedJson(OrderUpdated.class));
 
         streamsContext = builder.build();
-
-        log.info("Topology:\n"+ streamsContext.getTopology().describe());
-
-        // Visualize the topology output @see https://zz85.github.io/kafka-streams-viz/
-
     }
+
+
+
     /***************************************************************************
      *                                                                         *
      * Life Cycle                                                              *
@@ -100,6 +73,10 @@ public class OrderUpdatedProducer {
 
     @PostConstruct
     public void init(){
+
+        log.info("Starting Topology:\n"+ streamsContext.getTopology().describe());
+        // Visualize the topology output @see https://zz85.github.io/kafka-streams-viz/
+
         streamsContext.start();
     }
 
@@ -113,6 +90,19 @@ public class OrderUpdatedProducer {
      * Private methods                                                         *
      *                                                                         *
      **************************************************************************/
+
+    private KTable<String, OrderUpdated> orderUpdatedJoined(){
+        return orderUpdateKStream()
+                .leftJoin(
+                        orderItemUpdateKStream(),
+                        (order, items) -> {
+                            if(items != null){
+                                order.items = new ArrayList<>(items);
+                            }
+                            return order;
+                        }
+                );
+    }
 
     private KTable<String, OrderUpdated> orderUpdateKStream(){
 

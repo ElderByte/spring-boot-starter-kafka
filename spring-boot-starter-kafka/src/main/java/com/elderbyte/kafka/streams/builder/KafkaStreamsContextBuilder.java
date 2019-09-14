@@ -1,16 +1,16 @@
 package com.elderbyte.kafka.streams.builder;
 
+import com.elderbyte.kafka.streams.ElderJsonSerde;
 import com.elderbyte.kafka.streams.builder.cdc.CdcRecipesBuilder;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContext;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.kafka.common.serialization.Serde;
+import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
-
-import java.util.Optional;
 
 
 public interface KafkaStreamsContextBuilder {
@@ -24,24 +24,6 @@ public interface KafkaStreamsContextBuilder {
     <V> KStream<String, V> streamOfJson(String topic, Class<V> clazz);
     <V> KStream<String, V> streamOfJson(String topic, TypeReference<V> clazz);
 
-    /*
-    <V> KTable<String, V> table(
-            String storeName,
-            KStream<String, Optional<V>> stream,
-            Serde<V> valueSerde
-    );
-
-    <V> KTable<String, V> tableJson(
-            String storeName,
-            final KStream<String, Optional<V>> stream,
-            Class<V> valueClazz
-    );
-
-    <V> KTable<String, V> tableJson(
-            String storeName,
-            final KStream<String, Optional<V>> stream,
-            TypeReference<V> valueClazz
-    );*/
 
     <CDCEvent, Entity> KTable<String, Entity> streamAsTable(
             String storeName,
@@ -80,5 +62,8 @@ public interface KafkaStreamsContextBuilder {
 
     <K,V> Materialized<K, V, KeyValueStore<Bytes, byte[]>> materializedJson(String storeName, Serde<K> keySerde, Class<V> valueClazz);
 
+    <V> Produced<String, V> producedJson(Class<V> valueClazz);
+
+    <K, V> Produced<K, V> producedJson(Serde<K> keySerde, Class<V> valueClazz);
 
 }

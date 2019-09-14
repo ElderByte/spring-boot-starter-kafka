@@ -1,8 +1,10 @@
 package com.elderbyte.kafka.config;
 
 import com.elderbyte.kafka.topics.TopicProperties;
+import org.apache.kafka.streams.StreamsConfig;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +22,7 @@ public class KafkaClientProperties {
 
     private ConsumerProperties consumer = new ConsumerProperties();
     private ProducerProperties producer = new ProducerProperties();
+    private StreamsProperties streams = new StreamsProperties();
     private List<TopicProperties> topics = new ArrayList<>();
 
     /***************************************************************************
@@ -68,13 +71,77 @@ public class KafkaClientProperties {
         this.topics = topics;
     }
 
+    public StreamsProperties getStreams() {
+        return streams;
+    }
+
+    public void setStreams(StreamsProperties streams) {
+        this.streams = streams;
+    }
+
     /***************************************************************************
      *                                                                         *
      *  Inner Classes                                                          *
      *                                                                         *
      **************************************************************************/
 
+    public static class StreamsProperties {
 
+        private Duration commitInterval = Duration.ofSeconds(10);
+        private String processingGuarantee = StreamsConfig.AT_LEAST_ONCE; // exactly_once
+        private int replicationFactor = 1; // Set to 3 for HA
+        private String producerAcks = "1"; // all for HA
+        private String stateDir = null;
+        private String optimizeTopology = StreamsConfig.OPTIMIZE; // default none
+
+        public Duration getCommitInterval() {
+            return commitInterval;
+        }
+
+        public void setCommitInterval(Duration commitInterval) {
+            this.commitInterval = commitInterval;
+        }
+
+        public String getProcessingGuarantee() {
+            return processingGuarantee;
+        }
+
+        public void setProcessingGuarantee(String processingGuarantee) {
+            this.processingGuarantee = processingGuarantee;
+        }
+
+        public int getReplicationFactor() {
+            return replicationFactor;
+        }
+
+        public void setReplicationFactor(int replicationFactor) {
+            this.replicationFactor = replicationFactor;
+        }
+
+        public String getProducerAcks() {
+            return producerAcks;
+        }
+
+        public void setProducerAcks(String producerAcks) {
+            this.producerAcks = producerAcks;
+        }
+
+        public String getStateDir() {
+            return stateDir;
+        }
+
+        public void setStateDir(String stateDir) {
+            this.stateDir = stateDir;
+        }
+
+        public String getOptimizeTopology() {
+            return optimizeTopology;
+        }
+
+        public void setOptimizeTopology(String optimizeTopology) {
+            this.optimizeTopology = optimizeTopology;
+        }
+    }
 
     public static class ProducerProperties {
 
