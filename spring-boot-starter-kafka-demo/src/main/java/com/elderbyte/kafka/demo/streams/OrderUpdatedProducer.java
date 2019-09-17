@@ -56,13 +56,32 @@ public class OrderUpdatedProducer {
         this.builder = streamsBuilderFactory
                                 .newStreamsBuilder("demo");
 
-        orderUpdatedJoined().toStream()
-            .peek(
-                    (key, value) -> {
-                        log.info("Peek: " + key + ", value: " + value);
-                    }
-            )
-            .to(OrderUpdatedMessage.TOPIC, builder.producedJson(OrderUpdatedMessage.class));
+
+        orderUpdateKTable()
+                .toStream()
+                .to("_demo.store.orders.order-header", builder.producedJson(OrderUpdatedMessage.class));
+
+                //.through("_demo.store.orders.order-header", builder.producedJson(OrderUpdatedMessage.class))
+
+        this.builder.tableFromJsonTopic("_demo.store.orders.order-header", OrderUpdatedMessage.class, "order-header")
+                .join(
+                        orderItemUpdateKTable(),
+                        (order, items) -> {
+                            if(items != null){
+                                order.items = new ArrayList<>(items);
+                            }
+                            return order;
+                        },
+                        builder.materializedJson("order-join", OrderUpdatedMessage.class)
+                        //builder.joinedJson(OrderUpdatedMessage.class, new TypeReference<Set<OrderItem>>() {})
+                )
+                .toStream()
+                .peek(
+                        (key, value) -> {
+                            log.info("Peek: " + key + ", value: " + value);
+                        }
+                ).to(OrderUpdatedMessage.TOPIC, builder.producedJson(OrderUpdatedMessage.class));
+
 
         streamsContext = builder.build();
     }
@@ -95,22 +114,11 @@ public class OrderUpdatedProducer {
      *                                                                         *
      **************************************************************************/
 
-    private KTable<String, OrderUpdatedMessage> orderUpdatedJoined(){
-        return orderUpdateKStream()
-                .leftJoin(
-                        orderItemUpdateKStream(),
-                        (order, items) -> {
-                            if(items != null){
-                                order.items = new ArrayList<>(items);
-                            }
-                            return order;
-                        }
-                );
-    }
 
-    private KTable<String, OrderUpdatedMessage> orderUpdateKStream(){
 
-        var cdcOrders = builder.streamOfJson(CdcOrderEvent.TOPIC, new TypeReference<CdcEvent<CdcOrderEvent>>() {});
+    private KTable<String, OrderUpdatedMessage> orderUpdateKTable(){
+
+        var cdcOrders = builder.streamFromJsonTopic(CdcOrderEvent.TOPIC, new TypeReference<CdcEvent<CdcOrderEvent>>() {});
 
         return builder.mapStreamToMessagesTable(
                 "orders",
@@ -126,9 +134,9 @@ public class OrderUpdatedProducer {
         );
     }
 
-    private KTable<String, Set<OrderItem>> orderItemUpdateKStream(){
+    private KTable<String, Set<OrderItem>> orderItemUpdateKTable(){
 
-        var cdcOrderItems = builder.streamOfJson(CdcOrderItemEvent.TOPIC, new TypeReference<CdcEvent<CdcOrderItemEvent>>() {});
+        var cdcOrderItems = builder.streamFromJsonTopic(CdcOrderItemEvent.TOPIC, new TypeReference<CdcEvent<CdcOrderItemEvent>>() {});
 
         var orderItems = builder.mapStreamToTable(
                 "order-items",
@@ -147,7 +155,7 @@ public class OrderUpdatedProducer {
                 .aggregateSet(
                         "order-items-agg",
                         orderItems,
-                        (k, v) -> new KeyValue<>(v.orderNumber, convert(v)),
+                        (k, v) -> new KeyValue<>(v.orderNumber, itemUpdated(v)),
                         OrderItem.class,
                         new TypeReference<Set<OrderItem>>() {}
                 );
@@ -171,7 +179,7 @@ public class OrderUpdatedProducer {
         return order;
     }
 
-    private OrderItem convert(CdcOrderItemEvent itemEvent){
+    private OrderItem itemUpdated(CdcOrderItemEvent itemEvent){
         var item = new OrderItem();
         item.item = itemEvent.item;
         item.quantity = itemEvent.quantity;

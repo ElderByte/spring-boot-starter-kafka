@@ -18,7 +18,7 @@ allprojects {
 
 subprojects {
     ext {
-        springBootVersion = '2.1.8.RELEASE'
+        springBootVersion = '2.2.0.M6'
         starterVersion = '5.19.2'
     }
 

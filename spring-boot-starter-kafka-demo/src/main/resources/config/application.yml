@@ -31,6 +31,10 @@ kafka:
         partitions: 1
         cleanUpPolicy: delete
         retention: 1h
+      - name: _demo.store.orders.order-header
+        partitions: 1
+        cleanUpPolicy: compact
+        retention: 24h
       - name: demo.store.orders.order
         partitions: 1
         cleanUpPolicy: compact

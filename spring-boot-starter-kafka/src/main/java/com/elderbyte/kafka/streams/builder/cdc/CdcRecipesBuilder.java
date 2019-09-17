@@ -47,7 +47,7 @@ public class CdcRecipesBuilder {
     ){
         return compactedTable.groupBy(
                 kvm::apply,
-                builder.serializedJson(clazz)
+                builder.groupedJson(clazz)
         )
                 .aggregate(
                         HashSet::new,

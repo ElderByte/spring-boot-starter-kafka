@@ -6,7 +6,6 @@ import com.elderbyte.kafka.streams.ElderJsonSerde;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContext;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContextImpl;
 import com.elderbyte.kafka.streams.support.Transformers;
-import com.elderbyte.kafka.streams.support.WithHeaderMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.common.serialization.Serde;
@@ -79,14 +78,35 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
     }
 
     @Override
-    public <V> KStream<String, V> streamOfJson(String topic, Class<V> clazz) {
-        return streamOfJson(topic,  ElderJsonSerde.from(mapper, clazz));
+    public <V> KStream<String, V> streamFromJsonTopic(String topic, Class<V> clazz) {
+        return streamFromJsonTopic(topic,  ElderJsonSerde.from(mapper, clazz));
     }
 
     @Override
-    public <V> KStream<String, V> streamOfJson(String topic, TypeReference<V> clazz) {
-        return streamOfJson(topic,  ElderJsonSerde.from(mapper, clazz));
+    public <V> KStream<String, V> streamFromJsonTopic(String topic, TypeReference<V> clazz) {
+        return streamFromJsonTopic(topic,  ElderJsonSerde.from(mapper, clazz));
     }
+
+    @Override
+    public <V> KTable<String, V> tableFromJsonTopic(String topic, Class<V> clazz, String storeName) {
+        return tableFromJsonTopic(topic,  ElderJsonSerde.from(mapper, clazz), storeName);
+    }
+
+    @Override
+    public <V> KTable<String, V> tableFromJsonTopic(String topic, TypeReference<V> clazz, String storeName) {
+        return tableFromJsonTopic(topic,  ElderJsonSerde.from(mapper, clazz), storeName);
+    }
+
+    @Override
+    public <V> GlobalKTable<String, V> globalTableFromJsonTopic(String topic, Class<V> clazz, String storeName) {
+        return globalTableFromJsonTopic(topic,  ElderJsonSerde.from(mapper, clazz), storeName);
+    }
+
+    @Override
+    public <V> GlobalKTable<String, V> globalTableFromJsonTopic(String topic, TypeReference<V> clazz, String storeName) {
+        return globalTableFromJsonTopic(topic,  ElderJsonSerde.from(mapper, clazz), storeName);
+    }
+
 
     @Override
     public <V, U, D> KTable<String, U> mapStreamToMessagesTable(
@@ -130,6 +150,21 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
         );
     }
 
+    private  <V> KTable<String, V> tableJson(
+            String storeName,
+            KStream<String, TombstoneJsonWrapper<V>> stream,
+            Class<V> valueClazz
+    ) {
+        return stream
+                .groupByKey(
+                        groupedJson(new TypeReference<TombstoneJsonWrapper<V>>() {})
+                )
+                .aggregate(
+                    () -> null,
+                    (k, value, oldValue) -> value.getValue(mapper,valueClazz).orElse(null),
+                    materialized(storeName, Serdes.String(), ElderJsonSerde.from(mapper, valueClazz))
+                );
+    }
 
     /**
      * Interprets the given KSTREAM as KTABLE, supporting key/value transformation.
@@ -153,31 +188,6 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
         );
     }
 
-    private <K,V> WithHeaderMapper<K, V, V> headerMapper(){
-        return (k, v, headers) -> {
-            if(headers != null){
-                headers.add("greetings", "wubalubadubdub".getBytes(StandardCharsets.UTF_8));
-            }
-            return v;
-        };
-    }
-
-    private  <V> KTable<String, V> tableJson(
-            String storeName,
-            KStream<String, TombstoneJsonWrapper<V>> stream,
-            Class<V> valueClazz
-    ) {
-        return stream
-                .groupByKey(
-                        serializedJson(new TypeReference<TombstoneJsonWrapper<V>>() {})
-                )
-                .aggregate(
-                    () -> null,
-                    (k, value, oldValue) -> value.getValue(mapper,valueClazz).orElse(null),
-                    materialized(storeName, Serdes.String(), ElderJsonSerde.from(mapper, valueClazz))
-                );
-    }
-
 
     /***************************************************************************
      *                                                                         *
@@ -185,26 +195,69 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
      *                                                                         *
      **************************************************************************/
 
-    public <K,V> Serialized<K, V> serializedJson(Serde<K> keySerde, Class<V> valueClazz){
-        return Serialized.with(keySerde, ElderJsonSerde.from(mapper, valueClazz));
+    public <K,V> Grouped<K, V> groupedJson(Serde<K> keySerde, Class<V> valueClazz){
+        return Grouped.with(keySerde, ElderJsonSerde.from(mapper, valueClazz));
     }
 
-    public <K,V> Serialized<K, V> serializedJson(Serde<K> keySerde, TypeReference<V> valueClazz){
-        return Serialized.with(keySerde, ElderJsonSerde.from(mapper, valueClazz));
+    public <K,V> Grouped<K, V> groupedJson(Serde<K> keySerde, TypeReference<V> valueClazz){
+        return Grouped.with(keySerde, ElderJsonSerde.from(mapper, valueClazz));
     }
 
-    public <V> Serialized<String, V> serializedJson(Class<V> valueClazz){
-        return serializedJson(Serdes.String(), valueClazz);
+    public <V> Grouped<String, V> groupedJson(Class<V> valueClazz){
+        return groupedJson(Serdes.String(), valueClazz);
     }
 
-    public <V> Serialized<String, V> serializedJson(TypeReference<V> valueClazz){
-        return serializedJson(Serdes.String(), valueClazz);
+    public <V> Grouped<String, V> groupedJson(TypeReference<V> valueClazz){
+        return groupedJson(Serdes.String(), valueClazz);
+    }
+
+    public <V, VO> Joined<String, V, VO> joinedJson(
+            Class<V> valueClazz,
+            Class<VO> otherValueClazz
+    ){
+        return joinedJson(Serdes.String(), valueClazz, otherValueClazz);
+    }
+
+    public <K,V, VO> Joined<K, V, VO> joinedJson(
+            Serde<K> keySerde,
+            Class<V> valueClazz,
+            Class<VO> otherValueClazz
+    ){
+        return Joined.with(
+                keySerde,
+                ElderJsonSerde.from(mapper, valueClazz),
+                ElderJsonSerde.from(mapper, otherValueClazz)
+        );
+    }
+
+    public<V, VO> Joined<String, V, VO> joinedJson(
+            Class<V> valueClazz,
+            TypeReference<VO> otherValueClazz
+    ) {
+        return joinedJson(Serdes.String(), valueClazz, otherValueClazz);
+    }
+
+    public <K,V, VO> Joined<K, V, VO> joinedJson(
+            Serde<K> keySerde,
+            Class<V> valueClazz,
+            TypeReference<VO> otherValueClazz
+    ) {
+        return Joined.with(
+                keySerde,
+                ElderJsonSerde.from(mapper, valueClazz),
+                ElderJsonSerde.from(mapper, otherValueClazz)
+        );
+    }
+
+
+    public  <V> Materialized<String, V, KeyValueStore<Bytes, byte[]>> materializedJson(String storeName, ElderJsonSerde<V> serde){
+        return Materialized.<String, V, KeyValueStore<Bytes, byte[]>>as(storeName)
+                .withKeySerde(Serdes.String())
+                .withValueSerde(serde);
     }
 
     public  <V> Materialized<String, V, KeyValueStore<Bytes, byte[]>> materializedJson(String storeName, TypeReference<V> clazz){
-        return Materialized.<String, V, KeyValueStore<Bytes, byte[]>>as(storeName)
-                .withKeySerde(Serdes.String())
-                .withValueSerde(ElderJsonSerde.from(mapper, clazz));
+        return materializedJson(storeName, ElderJsonSerde.from(mapper, clazz));
     }
 
     public <V> Materialized<String, V, KeyValueStore<Bytes, byte[]>> materializedJson(String storeName, Class<V> valueClazz){
@@ -255,13 +308,29 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
      *                                                                         *
      **************************************************************************/
 
-    private  <V> KStream<String, V> streamOfJson(String topic, ElderJsonSerde<V> serde) {
+    private  <V> KStream<String, V> streamFromJsonTopic(String topic, ElderJsonSerde<V> serde) {
         return streamsBuilder().stream(
                 topic,
                 Consumed.with(
                         Serdes.String(),
                         serde
                 )
+        );
+    }
+
+    private  <V> KTable<String, V> tableFromJsonTopic(String topic, ElderJsonSerde<V> serde, String storeName) {
+        return streamsBuilder().table(
+                topic,
+                materializedJson(storeName, serde)
+                        .withLoggingDisabled()
+        );
+    }
+
+    private  <V> GlobalKTable<String, V> globalTableFromJsonTopic(String topic, ElderJsonSerde<V> valueSerde, String storeName) {
+        return streamsBuilder().globalTable(
+                topic,
+                materializedJson(storeName, valueSerde)
+                        .withLoggingDisabled()
         );
     }
 }

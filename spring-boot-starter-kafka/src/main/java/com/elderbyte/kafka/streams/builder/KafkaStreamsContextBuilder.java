@@ -5,7 +5,6 @@ import com.elderbyte.kafka.streams.builder.cdc.CdcRecipesBuilder;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContext;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.kafka.common.serialization.Serde;
-import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
@@ -24,12 +23,21 @@ public interface KafkaStreamsContextBuilder {
     /**
      * Creates a KStream from a json topic.
      */
-    <V> KStream<String, V> streamOfJson(String topic, Class<V> clazz);
+    <V> KStream<String, V> streamFromJsonTopic(String topic, Class<V> clazz);
 
     /**
      * Creates a KStream from a json topic.
      */
-    <V> KStream<String, V> streamOfJson(String topic, TypeReference<V> clazz);
+    <V> KStream<String, V> streamFromJsonTopic(String topic, TypeReference<V> clazz);
+
+    <V> KTable<String, V> tableFromJsonTopic(String topic, Class<V> clazz, String storeName);
+
+    <V> KTable<String, V> tableFromJsonTopic(String topic, TypeReference<V> clazz, String storeName);
+
+
+    <V> GlobalKTable<String, V> globalTableFromJsonTopic(String topic, Class<V> clazz, String storeName);
+
+    <V> GlobalKTable<String, V> globalTableFromJsonTopic(String topic, TypeReference<V> clazz, String storeName);
 
     /**
      * Maps the given KStream values to a KTable.
@@ -71,9 +79,31 @@ public interface KafkaStreamsContextBuilder {
      *                                                                         *
      **************************************************************************/
 
-    <K,V> Serialized<K, V> serializedJson(Serde<K> keySerde, Class<V> valueClazz);
+    <K,V> Grouped<K, V> groupedJson(Serde<K> keySerde, Class<V> valueClazz);
 
-    <V> Serialized<String, V> serializedJson(Class<V> valueClazz);
+    <V> Grouped<String, V> groupedJson(Class<V> valueClazz);
+
+    <V, VO> Joined<String, V, VO> joinedJson(
+            Class<V> valueClazz,
+            Class<VO> otherValueClazz
+    );
+
+    <K,V, VO> Joined<K, V, VO> joinedJson(
+            Serde<K> keySerde,
+            Class<V> valueClazz,
+            Class<VO> otherValueClazz
+    );
+
+    <V, VO> Joined<String, V, VO> joinedJson(
+            Class<V> valueClazz,
+            TypeReference<VO> otherValueClazz
+    );
+
+    <K,V, VO> Joined<K, V, VO> joinedJson(
+            Serde<K> keySerde,
+            Class<V> valueClazz,
+            TypeReference<VO> otherValueClazz
+    );
 
      <V> Materialized<String, V, KeyValueStore<Bytes, byte[]>> materializedJson(String storeName, TypeReference<V> clazz);
 

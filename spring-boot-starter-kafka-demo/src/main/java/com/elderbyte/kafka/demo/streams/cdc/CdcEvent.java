@@ -2,6 +2,7 @@ package com.elderbyte.kafka.demo.streams.cdc;
 
 import com.elderbyte.messaging.annotations.MessageKey;
 import com.elderbyte.messaging.annotations.MessageMetadata;
+import org.apache.kafka.common.protocol.types.Field;
 
 public class CdcEvent<T> {
 
@@ -17,8 +18,10 @@ public class CdcEvent<T> {
     public T previous;
     public T updated;
 
-    @MessageMetadata
     public boolean delete = false;
+
+    @MessageMetadata(key = "cdc.greetings")
+    public String greetings;
 
     /***************************************************************************
      *                                                                         *
@@ -31,11 +34,18 @@ public class CdcEvent<T> {
     /**
      * Creates a new CdcEvent
      */
-    public CdcEvent(int id, T previous, T updated, boolean delete) {
+    public CdcEvent(
+            int id,
+            T previous,
+            T updated,
+            boolean delete,
+            String greetings
+    ) {
         this.id = id;
         this.previous = previous;
         this.updated = updated;
         this.delete = delete;
+        this.greetings = greetings;
     }
 
     @Override
