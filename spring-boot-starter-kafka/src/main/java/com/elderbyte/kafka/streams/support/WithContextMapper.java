@@ -1,13 +1,8 @@
 package com.elderbyte.kafka.streams.support;
 
-import org.apache.kafka.streams.kstream.ValueTransformerWithKey;
 import org.apache.kafka.streams.processor.ProcessorContext;
 
-public interface ValueContextMapper<K, V, VR> {
-
-    static <K, V,VR> ValueTransformerWithKey<K, V, VR> valueTransformer(ValueContextMapper<K, V, VR> mapper){
-        return new ValueTransformerAdapter<>(mapper);
-    }
+public interface WithContextMapper<K, V, VR> {
 
     /**
      * Map the given value to a new value.

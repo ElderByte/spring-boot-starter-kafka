@@ -115,7 +115,7 @@ public class MessageBlueprint {
             if(field.isPopulate()){
 
                 if(Map.class.isAssignableFrom(field.getField().getType())){
-                    writeAllHeadersToMap(headers, message, field.getField());
+                    readAllHeadersToMap(headers, message, field.getField());
                 }else{
                     // Assume standard field
                     var header = headers.lastHeader(k);
@@ -135,7 +135,7 @@ public class MessageBlueprint {
      *                                                                         *
      **************************************************************************/
 
-    private void writeAllHeadersToMap(Headers headers, Object message, Field mapField){
+    private void readAllHeadersToMap(Headers headers, Object message, Field mapField){
 
         var headerMap = new HashMap<String, String>();
 

@@ -1,10 +1,12 @@
 package com.elderbyte.kafka.streams.builder;
 
 import com.elderbyte.commons.exceptions.ArgumentNullException;
+import com.elderbyte.kafka.messages.MessageBlueprintFactory;
 import com.elderbyte.kafka.streams.ElderJsonSerde;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContext;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContextImpl;
-import com.elderbyte.kafka.streams.support.ValueHeaderMapper;
+import com.elderbyte.kafka.streams.support.Transformers;
+import com.elderbyte.kafka.streams.support.WithHeaderMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.common.serialization.Serde;
@@ -86,6 +88,47 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
         return streamOfJson(topic,  ElderJsonSerde.from(mapper, clazz));
     }
 
+    @Override
+    public <V, U, D> KTable<String, U> mapStreamToMessagesTable(
+            String storeName,
+            KStream<String, V> inputStream,
+            KeyValueMapper<String, V, UpdateOrDelete<U, D>> kvm,
+            Class<U> clazz
+    ){
+        var events = inputStream
+                .transform(() -> Transformers.transformerWithHeader(
+                            (k, v, headers) -> {
+
+                                var messageHolder = kvm.apply(k, v);
+
+                                var message = messageHolder.getMessage();
+
+                                var messageSupport = MessageBlueprintFactory.lookupOrCreate(message.getClass());
+
+                                var messageKey = messageSupport.getKey(message);
+
+                                if(headers != null){
+                                    var messageHeaders = messageSupport.getHeaders(message);
+
+                                    messageHeaders.forEach((hKey, hVal) -> {
+                                        headers.add(hKey, hVal.getBytes(StandardCharsets.UTF_8));
+                                    });
+                                }
+
+                                return KeyValue.pair(
+                                        messageKey,
+                                        TombstoneJsonWrapper.from(mapper, messageHolder)
+                                );
+                            }
+                        )
+                );
+
+        return tableJson(
+                storeName,
+                events,
+                clazz
+        );
+    }
 
 
     /**
@@ -100,7 +143,7 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
     ){
         var events = inputStream
                 .map(kvm)
-                //.transformValues(() -> ValueHeaderMapper.valueTransformer(headerMapper()))
+                //.transformValues(() -> Transformers.valueTransformerWithHeader(headerMapper()))
                 .mapValues((v) -> TombstoneJsonWrapper.ofNullable(mapper, v));
 
         return tableJson(
@@ -110,7 +153,7 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
         );
     }
 
-    private <K,V> ValueHeaderMapper<K, V, V> headerMapper(){
+    private <K,V> WithHeaderMapper<K, V, V> headerMapper(){
         return (k, v, headers) -> {
             if(headers != null){
                 headers.add("greetings", "wubalubadubdub".getBytes(StandardCharsets.UTF_8));

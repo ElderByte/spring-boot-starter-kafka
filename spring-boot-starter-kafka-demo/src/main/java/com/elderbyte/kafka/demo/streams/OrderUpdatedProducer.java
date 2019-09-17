@@ -3,9 +3,11 @@ package com.elderbyte.kafka.demo.streams;
 import com.elderbyte.kafka.demo.streams.cdc.CdcEvent;
 import com.elderbyte.kafka.demo.streams.cdc.CdcOrderEvent;
 import com.elderbyte.kafka.demo.streams.cdc.CdcOrderItemEvent;
+import com.elderbyte.kafka.demo.streams.model.OrderDeletedMessage;
 import com.elderbyte.kafka.demo.streams.model.OrderItem;
 import com.elderbyte.kafka.demo.streams.model.OrderUpdatedMessage;
 import com.elderbyte.kafka.streams.builder.KafkaStreamsContextBuilder;
+import com.elderbyte.kafka.streams.builder.UpdateOrDelete;
 import com.elderbyte.kafka.streams.factory.KafkaStreamsContextBuilderFactory;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContext;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -110,14 +112,14 @@ public class OrderUpdatedProducer {
 
         var cdcOrders = builder.streamOfJson(CdcOrderEvent.TOPIC, new TypeReference<CdcEvent<CdcOrderEvent>>() {});
 
-        return builder.mapStreamToTable(
+        return builder.mapStreamToMessagesTable(
                 "orders",
                 cdcOrders,
                 (k,v) -> {
                     if(!v.delete){
-                        return KeyValue.pair(v.updated.number, convert(v.updated));
+                        return UpdateOrDelete.update(orderUpdated(v.updated));
                     }else{
-                        return KeyValue.pair(v.updated.number, null);
+                        return UpdateOrDelete.delete(orderDeleted(v.updated));
                     }
                 },
                 OrderUpdatedMessage.class
@@ -152,13 +154,20 @@ public class OrderUpdatedProducer {
     }
 
 
-    private OrderUpdatedMessage convert(CdcOrderEvent orderEvent){
+    private OrderUpdatedMessage orderUpdated(CdcOrderEvent orderEvent){
         var order = new OrderUpdatedMessage(
                 orderEvent.number,
                 orderEvent.tenant,
                 orderEvent.description
         );
-        order.number = orderEvent.number;
+        return order;
+    }
+
+    private OrderDeletedMessage orderDeleted(CdcOrderEvent orderEvent){
+        var order = new OrderDeletedMessage(
+                orderEvent.number,
+                orderEvent.tenant
+        );
         return order;
     }
 

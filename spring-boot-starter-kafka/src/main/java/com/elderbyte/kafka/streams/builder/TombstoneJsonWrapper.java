@@ -14,6 +14,22 @@ public class TombstoneJsonWrapper<V> {
      *                                                                         *
      **************************************************************************/
 
+    public static <T, D> TombstoneJsonWrapper<T> from(ObjectMapper mapper, UpdateOrDelete<T,D> updateOrDelete){
+        TombstoneJsonWrapper<T> tombstoneWrapper;
+        if(updateOrDelete.isDelete()){
+            tombstoneWrapper = TombstoneJsonWrapper.tombstone();
+        }else{
+            tombstoneWrapper = TombstoneJsonWrapper.ofNullable(mapper, updateOrDelete.getUpdated());
+        }
+        return tombstoneWrapper;
+    }
+
+    public static <T> TombstoneJsonWrapper<T> tombstone(){
+        return new TombstoneJsonWrapper<>(
+                null
+        );
+    }
+
     public static <T> TombstoneJsonWrapper<T> ofNullable(ObjectMapper mapper, @Nullable T value){
         return new TombstoneJsonWrapper<>(
                 value == null ? null : mapper.valueToTree(value)
@@ -36,7 +52,7 @@ public class TombstoneJsonWrapper<V> {
 
     public TombstoneJsonWrapper(){}
 
-    public TombstoneJsonWrapper(JsonNode value){
+    public TombstoneJsonWrapper(@Nullable JsonNode value){
         this.value = value;
     }
 

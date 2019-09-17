@@ -31,6 +31,15 @@ public interface KafkaStreamsContextBuilder {
      */
     <V> KStream<String, V> streamOfJson(String topic, TypeReference<V> clazz);
 
+    /**
+     * Maps the given KStream values to a KTable.
+     */
+    <V, U, D> KTable<String, U> mapStreamToMessagesTable(
+            String storeName,
+            KStream<String, V> inputStream,
+            KeyValueMapper<String, V, UpdateOrDelete<U, D>> kvm,
+            Class<U> clazz
+    );
 
     /**
      * Maps the given KStream values to a KTable.
