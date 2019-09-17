@@ -4,6 +4,7 @@ import com.elderbyte.commons.exceptions.ArgumentNullException;
 import com.elderbyte.kafka.streams.ElderJsonSerde;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContext;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContextImpl;
+import com.elderbyte.kafka.streams.support.ValueHeaderMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.common.serialization.Serde;
@@ -18,7 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.kafka.config.KafkaStreamsConfiguration;
 import org.springframework.kafka.core.CleanupConfig;
 
-import java.util.Optional;
+import java.nio.charset.StandardCharsets;
 
 /**
  *
@@ -85,27 +86,21 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
         return streamOfJson(topic,  ElderJsonSerde.from(mapper, clazz));
     }
 
+
+
     /**
      * Interprets the given KSTREAM as KTABLE, supporting key/value transformation.
      * Null values are translated into tombstone events.
-     *
-     * @param storeName
-     * @param cdcEventStream
-     * @param kvm
-     * @param clazz
-     * @param <CDCEvent>
-     * @param <Entity>
-     * @return
      */
-    public <CDCEvent, Entity> KTable<String, Entity> streamAsTable(
+    public <V, VR> KTable<String, VR> mapStreamToTable(
             String storeName,
-            KStream<String, CDCEvent> cdcEventStream,
-            KeyValueMapper<String, CDCEvent, KeyValue<String,Entity>> kvm,
-            Class<Entity> clazz
+            KStream<String, V> inputStream,
+            KeyValueMapper<String, V, KeyValue<String,VR>> kvm,
+            Class<VR> clazz
     ){
-
-        var events = cdcEventStream
-                .map(kvm::apply)
+        var events = inputStream
+                .map(kvm)
+                //.transformValues(() -> ValueHeaderMapper.valueTransformer(headerMapper()))
                 .mapValues((v) -> TombstoneJsonWrapper.ofNullable(mapper, v));
 
         return tableJson(
@@ -113,6 +108,15 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
                 events,
                 clazz
         );
+    }
+
+    private <K,V> ValueHeaderMapper<K, V, V> headerMapper(){
+        return (k, v, headers) -> {
+            if(headers != null){
+                headers.add("greetings", "wubalubadubdub".getBytes(StandardCharsets.UTF_8));
+            }
+            return v;
+        };
     }
 
     private  <V> KTable<String, V> tableJson(

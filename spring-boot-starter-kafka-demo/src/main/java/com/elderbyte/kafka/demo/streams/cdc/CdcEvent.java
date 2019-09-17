@@ -1,6 +1,7 @@
 package com.elderbyte.kafka.demo.streams.cdc;
 
 import com.elderbyte.messaging.annotations.MessageKey;
+import com.elderbyte.messaging.annotations.MessageMetadata;
 
 public class CdcEvent<T> {
 
@@ -16,6 +17,7 @@ public class CdcEvent<T> {
     public T previous;
     public T updated;
 
+    @MessageMetadata
     public boolean delete = false;
 
     /***************************************************************************

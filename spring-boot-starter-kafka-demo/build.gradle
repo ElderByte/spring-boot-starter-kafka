@@ -33,4 +33,5 @@ dependencies {
 
 	// Kafka Client
 	compile('org.springframework.kafka:spring-kafka')
+	compile('org.apache.kafka:kafka-streams')
 }

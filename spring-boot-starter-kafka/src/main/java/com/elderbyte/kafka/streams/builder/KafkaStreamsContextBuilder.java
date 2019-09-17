@@ -21,15 +21,25 @@ public interface KafkaStreamsContextBuilder {
      *                                                                         *
      **************************************************************************/
 
+    /**
+     * Creates a KStream from a json topic.
+     */
     <V> KStream<String, V> streamOfJson(String topic, Class<V> clazz);
+
+    /**
+     * Creates a KStream from a json topic.
+     */
     <V> KStream<String, V> streamOfJson(String topic, TypeReference<V> clazz);
 
 
-    <CDCEvent, Entity> KTable<String, Entity> streamAsTable(
+    /**
+     * Maps the given KStream values to a KTable.
+     */
+    <V, VR> KTable<String, VR> mapStreamToTable(
             String storeName,
-            KStream<String, CDCEvent> cdcEventStream,
-            KeyValueMapper<String, CDCEvent, KeyValue<String,Entity>> kvm,
-            Class<Entity> clazz
+            KStream<String, V> cdcEventStream,
+            KeyValueMapper<String, V, KeyValue<String,VR>> kvm,
+            Class<VR> clazz
     );
 
     StreamsBuilder streamsBuilder();

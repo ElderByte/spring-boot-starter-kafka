@@ -4,7 +4,7 @@ import com.elderbyte.kafka.demo.streams.cdc.CdcEvent;
 import com.elderbyte.kafka.demo.streams.cdc.CdcOrderEvent;
 import com.elderbyte.kafka.demo.streams.cdc.CdcOrderItemEvent;
 import com.elderbyte.kafka.demo.streams.model.OrderItem;
-import com.elderbyte.kafka.demo.streams.model.OrderUpdated;
+import com.elderbyte.kafka.demo.streams.model.OrderUpdatedMessage;
 import com.elderbyte.kafka.streams.builder.KafkaStreamsContextBuilder;
 import com.elderbyte.kafka.streams.factory.KafkaStreamsContextBuilderFactory;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContext;
@@ -49,6 +49,8 @@ public class OrderUpdatedProducer {
             KafkaStreamsContextBuilderFactory streamsBuilderFactory
     ) {
 
+
+
         this.builder = streamsBuilderFactory
                                 .newStreamsBuilder("demo");
 
@@ -58,7 +60,7 @@ public class OrderUpdatedProducer {
                         log.info("Peek: " + key + ", value: " + value);
                     }
             )
-            .to(OrderUpdated.TOPIC, builder.producedJson(OrderUpdated.class));
+            .to(OrderUpdatedMessage.TOPIC, builder.producedJson(OrderUpdatedMessage.class));
 
         streamsContext = builder.build();
     }
@@ -91,7 +93,7 @@ public class OrderUpdatedProducer {
      *                                                                         *
      **************************************************************************/
 
-    private KTable<String, OrderUpdated> orderUpdatedJoined(){
+    private KTable<String, OrderUpdatedMessage> orderUpdatedJoined(){
         return orderUpdateKStream()
                 .leftJoin(
                         orderItemUpdateKStream(),
@@ -104,11 +106,11 @@ public class OrderUpdatedProducer {
                 );
     }
 
-    private KTable<String, OrderUpdated> orderUpdateKStream(){
+    private KTable<String, OrderUpdatedMessage> orderUpdateKStream(){
 
         var cdcOrders = builder.streamOfJson(CdcOrderEvent.TOPIC, new TypeReference<CdcEvent<CdcOrderEvent>>() {});
 
-        return builder.streamAsTable(
+        return builder.mapStreamToTable(
                 "orders",
                 cdcOrders,
                 (k,v) -> {
@@ -118,7 +120,7 @@ public class OrderUpdatedProducer {
                         return KeyValue.pair(v.updated.number, null);
                     }
                 },
-                OrderUpdated.class
+                OrderUpdatedMessage.class
         );
     }
 
@@ -126,7 +128,7 @@ public class OrderUpdatedProducer {
 
         var cdcOrderItems = builder.streamOfJson(CdcOrderItemEvent.TOPIC, new TypeReference<CdcEvent<CdcOrderItemEvent>>() {});
 
-        var orderItems = builder.streamAsTable(
+        var orderItems = builder.mapStreamToTable(
                 "order-items",
                             cdcOrderItems,
                             (k,v) -> {
@@ -150,10 +152,13 @@ public class OrderUpdatedProducer {
     }
 
 
-    private OrderUpdated convert(CdcOrderEvent orderEvent){
-        var order = new OrderUpdated();
+    private OrderUpdatedMessage convert(CdcOrderEvent orderEvent){
+        var order = new OrderUpdatedMessage(
+                orderEvent.number,
+                orderEvent.tenant,
+                orderEvent.description
+        );
         order.number = orderEvent.number;
-        order.description = orderEvent.description;
         return order;
     }
 
