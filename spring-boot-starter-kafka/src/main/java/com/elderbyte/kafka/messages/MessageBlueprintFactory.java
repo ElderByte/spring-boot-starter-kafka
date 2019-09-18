@@ -2,7 +2,7 @@ package com.elderbyte.kafka.messages;
 
 import com.elderbyte.commons.exceptions.ArgumentNullException;
 import com.elderbyte.messaging.annotations.MessageKey;
-import com.elderbyte.messaging.annotations.MessageMetadata;
+import com.elderbyte.messaging.annotations.MessageHeader;
 import com.elderbyte.messaging.annotations.Tombstone;
 
 import java.lang.reflect.Field;
@@ -51,14 +51,14 @@ public class MessageBlueprintFactory {
         var isTombstone = messageClazz.getAnnotation(Tombstone.class) != null;
 
         Field keyField = null;
-        boolean populateKey = true;
+        boolean readKey = true;
         var metadataFields = new ArrayList<MetadataField>();
 
         var fields = messageClazz.getFields();
         for(int i=0; i < fields.length; i++){
             var field = fields[i];
             var messageKey = field.getAnnotation(MessageKey.class);
-            var messageMeta = field.getAnnotation(MessageMetadata.class);
+            var messageHeader = field.getAnnotation(MessageHeader.class);
 
             if(messageKey != null){
                 if(keyField != null){
@@ -66,12 +66,12 @@ public class MessageBlueprintFactory {
                             " but was on field " + keyField.getName() + " and on field " + field.getName());
                 }
                 keyField = field;
-                populateKey = messageKey.populate();
+                readKey = messageKey.read();
             }
 
-            if(isTombstone || messageMeta != null){
+            if(isTombstone || messageHeader != null){
                 metadataFields.add(
-                        MetadataField.from(field, messageMeta)
+                        MetadataField.from(field, messageHeader)
                 );
             }
         }
@@ -80,7 +80,7 @@ public class MessageBlueprintFactory {
             throw new InvalidMessageException("The given class is not a valid message definition since no @MessageKey key is defined!");
         }
 
-        return new MessageBlueprint(isTombstone, keyField, populateKey, metadataFields);
+        return new MessageBlueprint(isTombstone, keyField, readKey, metadataFields);
     }
 
 

@@ -1,8 +1,7 @@
 package com.elderbyte.kafka.demo.streams.cdc;
 
+import com.elderbyte.messaging.annotations.MessageHeader;
 import com.elderbyte.messaging.annotations.MessageKey;
-import com.elderbyte.messaging.annotations.MessageMetadata;
-import org.apache.kafka.common.protocol.types.Field;
 
 public class CdcEvent<T> {
 
@@ -20,7 +19,7 @@ public class CdcEvent<T> {
 
     public boolean delete = false;
 
-    @MessageMetadata(key = "cdc.greetings")
+    @MessageHeader("cdc.greetings")
     public String greetings;
 
     /***************************************************************************

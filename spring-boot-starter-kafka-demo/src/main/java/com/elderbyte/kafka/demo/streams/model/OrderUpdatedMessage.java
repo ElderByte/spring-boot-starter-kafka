@@ -1,7 +1,7 @@
 package com.elderbyte.kafka.demo.streams.model;
 
+import com.elderbyte.messaging.annotations.MessageHeader;
 import com.elderbyte.messaging.annotations.MessageKey;
-import com.elderbyte.messaging.annotations.MessageMetadata;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +13,7 @@ public class OrderUpdatedMessage {
     @MessageKey
     public String number;
 
-    @MessageMetadata
+    @MessageHeader
     public String company;
 
     public String description;

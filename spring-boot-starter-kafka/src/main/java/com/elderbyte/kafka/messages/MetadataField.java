@@ -1,7 +1,7 @@
 package com.elderbyte.kafka.messages;
 
 import com.elderbyte.commons.exceptions.ArgumentNullException;
-import com.elderbyte.messaging.annotations.MessageMetadata;
+import com.elderbyte.messaging.annotations.MessageHeader;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
@@ -9,16 +9,16 @@ import java.lang.reflect.Field;
 
 public class MetadataField {
 
-    public static MetadataField from(Field field, @Nullable MessageMetadata metadataAttr){
+    public static MetadataField from(Field field, @Nullable MessageHeader messageHeaderAttr){
 
         String metadataKey;
         var writeToMetadata = true;
         var populate = true;
 
-        if(metadataAttr != null && StringUtils.hasText(metadataAttr.key())){
-            metadataKey = metadataAttr.key();
-            writeToMetadata = metadataAttr.writeToMetadata();
-            populate = metadataAttr.populate();
+        if(messageHeaderAttr != null && StringUtils.hasText(messageHeaderAttr.key())){
+            metadataKey = messageHeaderAttr.key();
+            writeToMetadata = messageHeaderAttr.write();
+            populate = messageHeaderAttr.read();
         }else{
             metadataKey = field.getName();
         }
