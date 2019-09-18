@@ -51,29 +51,35 @@ public class OrderUpdatedProducer {
             KafkaStreamsContextBuilderFactory streamsBuilderFactory
     ) {
 
-
+        // TODO OffsetOutOfRangeException: Offsets out of range with no configured reset policy for partitions: {_demo.store.orders.order-items-0=2}
 
         this.builder = streamsBuilderFactory
                                 .newStreamsBuilder("demo");
 
 
+        join_with__table_tables();
+        // join_with_global();
+        // join_stream_tables();
+
+        streamsContext = builder.build();
+    }
+
+
+    private void join_with__table_tables(){
+
+
         orderUpdateKTable()
-                .toStream()
-                .to("_demo.store.orders.order-header", builder.producedJson(OrderUpdatedMessage.class));
-
-                //.through("_demo.store.orders.order-header", builder.producedJson(OrderUpdatedMessage.class))
-
-        this.builder.tableFromJsonTopic("_demo.store.orders.order-header", OrderUpdatedMessage.class, "order-header")
-                .join(
+                .leftJoin(
                         orderItemUpdateKTable(),
                         (order, items) -> {
+                            // Support header join behaviour
                             if(items != null){
                                 order.items = new ArrayList<>(items);
                             }
                             return order;
-                        },
-                        builder.materializedJson("order-join", OrderUpdatedMessage.class)
-                        //builder.joinedJson(OrderUpdatedMessage.class, new TypeReference<Set<OrderItem>>() {})
+                        }
+                        // builder.materializedJson("order-join", OrderUpdatedMessage.class)
+                        // builder.joinedJson(OrderUpdatedMessage.class, new TypeReference<Set<OrderItem>>() {})
                 )
                 .toStream()
                 .peek(
@@ -81,9 +87,64 @@ public class OrderUpdatedProducer {
                             log.info("Peek: " + key + ", value: " + value);
                         }
                 ).to(OrderUpdatedMessage.TOPIC, builder.producedJson(OrderUpdatedMessage.class));
+    }
+
+    private void join_stream_tables(){
 
 
-        streamsContext = builder.build();
+        orderUpdateKTable()
+                .toStream()
+                .through("_demo.store.orders.order-header", builder.producedJson(OrderUpdatedMessage.class))
+                .leftJoin(
+                        orderItemUpdateKTable(),
+                        (order, items) -> {
+                            if(items != null){
+                                order.items = new ArrayList<>(items);
+                            }
+                            return order;
+                        }
+                        // builder.materializedJson("order-join", OrderUpdatedMessage.class)
+                        // builder.joinedJson(OrderUpdatedMessage.class, new TypeReference<Set<OrderItem>>() {})
+                )
+                .peek(
+                        (key, value) -> {
+                            log.info("Peek: " + key + ", value: " + value);
+                        }
+                ).to(OrderUpdatedMessage.TOPIC, builder.producedJson(OrderUpdatedMessage.class));
+    }
+
+    private void join_with_global(){
+        final String TOPIC_STORE_ITEMS = "_demo.store.orders.order-items";
+
+        orderItemUpdateKTable()
+                .toStream()
+                .to(TOPIC_STORE_ITEMS, builder.producedJson(new TypeReference<Set<OrderItem>>() {}));
+
+
+        var orderItemsLookup = builder.globalTableFromJsonTopic(TOPIC_STORE_ITEMS, new TypeReference<Set<OrderItem>>() {}, "order-items-lookup");
+
+
+        orderUpdateKTable()
+                .toStream()
+                .through("_demo.store.orders.order-header", builder.producedJson(OrderUpdatedMessage.class))
+                //.to("_demo.store.orders.order-header", builder.producedJson(OrderUpdatedMessage.class));
+                .leftJoin(
+                        orderItemsLookup,
+                        (k, v) -> k,
+                        (order, items) -> {
+                            if(items != null){
+                                order.items = new ArrayList<>(items);
+                            }
+                            return order;
+                        }
+                        // builder.materializedJson("order-join", OrderUpdatedMessage.class)
+                        // builder.joinedJson(OrderUpdatedMessage.class, new TypeReference<Set<OrderItem>>() {})
+                )
+                .peek(
+                        (key, value) -> {
+                            log.info("Peek: " + key + ", value: " + value);
+                        }
+                ).to(OrderUpdatedMessage.TOPIC, builder.producedJson(OrderUpdatedMessage.class));
     }
 
 

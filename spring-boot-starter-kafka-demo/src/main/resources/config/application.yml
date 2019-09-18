@@ -34,8 +34,9 @@ kafka:
       - name: _demo.store.orders.order-header
         partitions: 1
         cleanUpPolicy: compact
-        retention: 24h
+      - name: _demo.store.orders.order-items
+        partitions: 1
+        cleanUpPolicy: compact
       - name: demo.store.orders.order
         partitions: 1
         cleanUpPolicy: compact
-        retention: 24h

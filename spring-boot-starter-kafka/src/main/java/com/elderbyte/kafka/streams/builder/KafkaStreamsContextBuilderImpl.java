@@ -277,6 +277,14 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
         return Produced.with(keySerde, ElderJsonSerde.from(mapper, valueClazz));
     }
 
+    public <V> Produced<String, V> producedJson(TypeReference<V> valueClazz) {
+        return Produced.with(Serdes.String(), ElderJsonSerde.from(mapper, valueClazz));
+    }
+
+    public <K, V> Produced<K, V> producedJson(Serde<K> keySerde, TypeReference<V> valueClazz) {
+        return Produced.with(keySerde, ElderJsonSerde.from(mapper, valueClazz));
+    }
+
     public <K,V> Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized(String storeName, Serde<K> keySerde, Serde<V> valueSerde){
         return Materialized.<K, V, KeyValueStore<Bytes, byte[]>>as(storeName)
                 .withKeySerde(keySerde)

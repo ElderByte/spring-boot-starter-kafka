@@ -53,7 +53,7 @@ public class CdcMockProducer {
         sendAllMessages(CdcOrderItemEvent.TOPIC, mockCdcOrderItemEvents());
     }
 
-
+    /**/
     @Scheduled(fixedDelay = 5000)
     public void emitItemUpdate(){
         sendAllMessages(CdcOrderItemEvent.TOPIC, Arrays.asList(

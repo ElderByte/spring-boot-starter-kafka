@@ -115,4 +115,8 @@ public interface KafkaStreamsContextBuilder {
 
     <K, V> Produced<K, V> producedJson(Serde<K> keySerde, Class<V> valueClazz);
 
+    <V> Produced<String, V> producedJson(TypeReference<V> valueClazz);
+
+    <K, V> Produced<K, V> producedJson(Serde<K> keySerde, TypeReference<V> valueClazz);
+
 }
