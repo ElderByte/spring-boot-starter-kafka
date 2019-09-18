@@ -1,14 +1,10 @@
 package com.elderbyte.kafka.demo.streams.model;
 
 import com.elderbyte.messaging.annotations.MessageHeader;
-import com.elderbyte.messaging.annotations.MessageKey;
 import com.elderbyte.messaging.annotations.Tombstone;
 
 @Tombstone
-public class OrderDeletedMessage {
-
-    @MessageKey
-    public String number;
+public class OrderDeletedMessage extends OrderMessage {
 
     @MessageHeader
     public String company;

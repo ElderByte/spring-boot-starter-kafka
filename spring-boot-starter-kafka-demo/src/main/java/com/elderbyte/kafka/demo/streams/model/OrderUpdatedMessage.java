@@ -1,17 +1,13 @@
 package com.elderbyte.kafka.demo.streams.model;
 
 import com.elderbyte.messaging.annotations.MessageHeader;
-import com.elderbyte.messaging.annotations.MessageKey;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class OrderUpdatedMessage {
+public class OrderUpdatedMessage extends OrderMessage {
 
     public static final String TOPIC = "demo.store.orders.order";
-
-    @MessageKey
-    public String number;
 
     @MessageHeader
     public String company;
