@@ -1,8 +1,8 @@
 package com.elderbyte.kafka.messages;
 
 import com.elderbyte.commons.exceptions.ArgumentNullException;
-import com.elderbyte.kafka.messages.api.MessageCompositeKey;
 import com.elderbyte.messaging.MessageKeyUtil;
+import com.elderbyte.messaging.annotations.MessageCompositeKey;
 import com.elderbyte.messaging.annotations.MessageKey;
 
 import java.lang.reflect.Constructor;

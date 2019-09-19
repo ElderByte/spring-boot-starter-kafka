@@ -1,6 +1,7 @@
 package com.elderbyte.kafka.streams.builder;
 
-import com.elderbyte.kafka.messages.api.ElderMessage;
+
+import com.elderbyte.messaging.api.ElderMessage;
 
 public class UpdateOrDelete<MK, U extends ElderMessage<MK>, D extends ElderMessage<MK>> {
 

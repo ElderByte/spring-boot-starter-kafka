@@ -1,6 +1,6 @@
 package com.elderbyte.kafka.streams.builder;
 
-import com.elderbyte.kafka.messages.api.ElderMessage;
+import com.elderbyte.messaging.api.ElderMessage;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.lang.Nullable;

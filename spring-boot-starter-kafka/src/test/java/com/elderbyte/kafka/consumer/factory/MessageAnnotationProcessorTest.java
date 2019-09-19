@@ -1,10 +1,10 @@
 package com.elderbyte.kafka.consumer.factory;
 
-import com.elderbyte.kafka.messages.api.ElderMessage;
 import com.elderbyte.kafka.producer.KafkaMessage;
 import com.elderbyte.messaging.annotations.MessageHeader;
 import com.elderbyte.messaging.annotations.MessageKey;
 import com.elderbyte.messaging.annotations.Tombstone;
+import com.elderbyte.messaging.api.ElderMessage;
 import org.junit.Test;
 
 import java.util.HashMap;

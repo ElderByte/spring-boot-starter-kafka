@@ -1,8 +1,8 @@
 package com.elderbyte.kafka.demo.streams.model.items;
 
 import com.elderbyte.kafka.demo.streams.model.orders.OrderKey;
-import com.elderbyte.kafka.messages.api.ElderMessage;
 import com.elderbyte.messaging.annotations.MessageKey;
+import com.elderbyte.messaging.api.ElderMessage;
 
 import java.util.Set;
 

@@ -1,6 +1,6 @@
 package com.elderbyte.kafka.producer;
 
-import com.elderbyte.kafka.messages.api.ElderMessage;
+import com.elderbyte.messaging.api.ElderMessage;
 import org.springframework.kafka.support.SendResult;
 
 import java.util.Collection;

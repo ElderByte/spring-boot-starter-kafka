@@ -2,8 +2,8 @@ package com.elderbyte.kafka.messages;
 
 import com.elderbyte.kafka.consumer.factory.MessageAnnotationProcessor;
 import com.elderbyte.kafka.consumer.processing.Processor;
-import com.elderbyte.kafka.messages.api.ElderMessage;
 import com.elderbyte.kafka.records.RecordBatch;
+import com.elderbyte.messaging.api.ElderMessage;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.util.*;

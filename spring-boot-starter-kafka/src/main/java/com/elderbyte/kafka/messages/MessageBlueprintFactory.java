@@ -1,11 +1,10 @@
 package com.elderbyte.kafka.messages;
 
 import com.elderbyte.commons.exceptions.ArgumentNullException;
-import com.elderbyte.kafka.messages.api.ElderMessage;
 import com.elderbyte.messaging.annotations.MessageHeader;
 import com.elderbyte.messaging.annotations.MessageKey;
 import com.elderbyte.messaging.annotations.Tombstone;
-import org.springframework.messaging.handler.annotation.Header;
+import com.elderbyte.messaging.api.ElderMessage;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

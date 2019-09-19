@@ -1,10 +1,10 @@
 package com.elderbyte.kafka.producer;
 
 import com.elderbyte.kafka.messages.InvalidMessageException;
-import com.elderbyte.kafka.messages.api.ElderMessage;
 import com.elderbyte.messaging.annotations.MessageHeader;
 import com.elderbyte.messaging.annotations.MessageKey;
 import com.elderbyte.messaging.annotations.Tombstone;
+import com.elderbyte.messaging.api.ElderMessage;
 import org.junit.Test;
 
 import static org.junit.Assert.*;

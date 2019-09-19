@@ -1,8 +1,8 @@
 package com.elderbyte.kafka.streams.builder;
 
-import com.elderbyte.kafka.messages.api.ElderMessage;
 import com.elderbyte.kafka.streams.builder.cdc.CdcRecipesBuilder;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContext;
+import com.elderbyte.messaging.api.ElderMessage;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.utils.Bytes;

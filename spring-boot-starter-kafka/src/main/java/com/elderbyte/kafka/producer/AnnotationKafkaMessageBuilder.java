@@ -2,7 +2,7 @@ package com.elderbyte.kafka.producer;
 
 import com.elderbyte.kafka.messages.InvalidMessageException;
 import com.elderbyte.kafka.messages.MessageBlueprintFactory;
-import com.elderbyte.kafka.messages.api.ElderMessage;
+import com.elderbyte.messaging.api.ElderMessage;
 
 public class AnnotationKafkaMessageBuilder {
 

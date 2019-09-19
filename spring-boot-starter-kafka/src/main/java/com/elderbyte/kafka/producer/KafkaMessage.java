@@ -1,6 +1,6 @@
 package com.elderbyte.kafka.producer;
 
-import com.elderbyte.kafka.messages.api.ElderMessage;
+import com.elderbyte.messaging.api.ElderMessage;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.Header;

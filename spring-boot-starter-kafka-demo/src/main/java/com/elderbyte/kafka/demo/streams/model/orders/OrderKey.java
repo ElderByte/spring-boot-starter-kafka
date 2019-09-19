@@ -1,6 +1,6 @@
 package com.elderbyte.kafka.demo.streams.model.orders;
 
-import com.elderbyte.kafka.messages.api.MessageCompositeKey;
+import com.elderbyte.messaging.annotations.MessageCompositeKey;
 import com.elderbyte.messaging.annotations.MessageKey;
 
 @MessageCompositeKey({"company", "number"})

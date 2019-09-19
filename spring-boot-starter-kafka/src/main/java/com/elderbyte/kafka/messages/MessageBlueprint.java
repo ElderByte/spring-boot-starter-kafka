@@ -1,7 +1,7 @@
 package com.elderbyte.kafka.messages;
 
 import com.elderbyte.commons.exceptions.ArgumentNullException;
-import com.elderbyte.kafka.messages.api.ElderMessage;
+import com.elderbyte.messaging.api.ElderMessage;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Headers;
 

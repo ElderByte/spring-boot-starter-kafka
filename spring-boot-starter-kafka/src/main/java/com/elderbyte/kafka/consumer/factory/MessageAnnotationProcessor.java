@@ -1,7 +1,7 @@
 package com.elderbyte.kafka.consumer.factory;
 
 import com.elderbyte.kafka.messages.MessageBlueprintFactory;
-import com.elderbyte.kafka.messages.api.ElderMessage;
+import com.elderbyte.messaging.api.ElderMessage;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 
