@@ -1,4 +1,4 @@
-package com.elderbyte.kafka.demo.streams.model;
+package com.elderbyte.kafka.demo.streams.model.items;
 
 import java.util.Objects;
 

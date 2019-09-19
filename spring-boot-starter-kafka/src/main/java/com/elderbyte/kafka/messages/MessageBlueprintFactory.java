@@ -1,13 +1,13 @@
 package com.elderbyte.kafka.messages;
 
 import com.elderbyte.commons.exceptions.ArgumentNullException;
+import com.elderbyte.messaging.annotations.Message;
 import com.elderbyte.messaging.annotations.MessageKey;
 import com.elderbyte.messaging.annotations.MessageHeader;
 import com.elderbyte.messaging.annotations.Tombstone;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class MessageBlueprintFactory {
@@ -49,9 +49,9 @@ public class MessageBlueprintFactory {
     private static MessageBlueprint fromMessageClass(Class<?> messageClazz) throws InvalidMessageException {
 
         var isTombstone = messageClazz.getAnnotation(Tombstone.class) != null;
+        var messageAttr = messageClazz.getAnnotation(Message.class);
 
-        Field keyField = null;
-        boolean readKey = true;
+        var keyFields = new HashMap<String, MessageKeyField>();
         var metadataFields = new ArrayList<MetadataField>();
 
         var fields = messageClazz.getFields();
@@ -61,12 +61,7 @@ public class MessageBlueprintFactory {
             var messageHeader = field.getAnnotation(MessageHeader.class);
 
             if(messageKey != null){
-                if(keyField != null){
-                    throw new InvalidMessageException("@MessageKey can only be specified once on a message," +
-                            " but was on field " + keyField.getName() + " and on field " + field.getName());
-                }
-                keyField = field;
-                readKey = messageKey.read();
+                keyFields.put(field.getName(), new MessageKeyField(field, messageKey.read()));
             }
 
             if(isTombstone || messageHeader != null){
@@ -76,11 +71,45 @@ public class MessageBlueprintFactory {
             }
         }
 
-        if(keyField == null){
+        if(keyFields.isEmpty()){
             throw new InvalidMessageException("The given class is not a valid message definition since no @MessageKey key is defined!");
         }
 
-        return new MessageBlueprint(isTombstone, keyField, readKey, metadataFields);
+        List<MessageKeyField> keyFieldSequence;
+
+        if(messageAttr != null && messageAttr.compositeKey().length > 0){
+
+            // Its a composite key, we have to bring it in order
+
+            if(keyFields.size() != messageAttr.compositeKey().length){
+                throw new InvalidMessageException("Each composite-key must have a matching @MessageKey field," +
+                        " fields: " + String.join(", ", keyFields.keySet()) +
+                        "; composite-keys: " + String.join(", ",  messageAttr.compositeKey())
+                );
+            }
+
+            keyFieldSequence = new ArrayList<>();
+
+            Arrays.asList(messageAttr.compositeKey())
+                    .forEach(compositeKey -> {
+                        var field = keyFields.get(compositeKey);
+                        if(field != null){
+                            keyFieldSequence.add(field);
+                        }else{
+                            throw new InvalidMessageException("Could not find composite-key field " + compositeKey);
+                        }
+                    });
+        }else{
+            // Its a standard key
+            if(keyFields.size() > 1){
+                throw new InvalidMessageException("@MessageKey can only be specified once on a message without a composite-key," +
+                        " but was on fields: " + String.join(", ", keyFields.keySet()));
+            }
+            keyFieldSequence = Collections.singletonList(keyFields.values().iterator().next());
+        }
+
+
+        return new MessageBlueprint(isTombstone, keyFieldSequence, metadataFields);
     }
 
 

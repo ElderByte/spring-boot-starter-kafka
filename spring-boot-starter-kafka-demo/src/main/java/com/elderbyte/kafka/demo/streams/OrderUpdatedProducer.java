@@ -3,9 +3,9 @@ package com.elderbyte.kafka.demo.streams;
 import com.elderbyte.kafka.demo.streams.cdc.CdcEvent;
 import com.elderbyte.kafka.demo.streams.cdc.CdcOrderEvent;
 import com.elderbyte.kafka.demo.streams.cdc.CdcOrderItemEvent;
-import com.elderbyte.kafka.demo.streams.model.OrderDeletedMessage;
-import com.elderbyte.kafka.demo.streams.model.OrderItem;
-import com.elderbyte.kafka.demo.streams.model.OrderUpdatedMessage;
+import com.elderbyte.kafka.demo.streams.model.orders.OrderDeletedMessage;
+import com.elderbyte.kafka.demo.streams.model.items.OrderItem;
+import com.elderbyte.kafka.demo.streams.model.orders.OrderUpdatedMessage;
 import com.elderbyte.kafka.streams.builder.KafkaStreamsContextBuilder;
 import com.elderbyte.kafka.streams.builder.UpdateOrDelete;
 import com.elderbyte.kafka.streams.factory.KafkaStreamsContextBuilderFactory;
@@ -201,16 +201,16 @@ public class OrderUpdatedProducer {
 
         var orderItems = builder.mapStreamToTable(
                 "order-items",
-                            cdcOrderItems,
-                            (k,v) -> {
-                                if(!v.delete){
-                                    return KeyValue.pair(v.updated.id + "", v.updated);
-                                }else{
-                                    return KeyValue.pair(v.updated.id + "", null);
-                                }
-                            },
-                            CdcOrderItemEvent.class
-                );
+                cdcOrderItems,
+                (k,v) -> {
+                    if(!v.delete){
+                        return KeyValue.pair(v.updated.id + "", v.updated);
+                    }else{
+                        return KeyValue.pair(v.updated.id + "", null);
+                    }
+                },
+                CdcOrderItemEvent.class
+        );
 
         return builder.cdcRecipes()
                 .aggregateSet(

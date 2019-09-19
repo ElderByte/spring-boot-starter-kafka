@@ -1,6 +1,7 @@
-package com.elderbyte.kafka.demo.streams.model;
+package com.elderbyte.kafka.demo.streams.model.orders;
 
-import com.elderbyte.messaging.annotations.MessageHeader;
+
+import com.elderbyte.kafka.demo.streams.model.items.OrderItem;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,9 +9,6 @@ import java.util.List;
 public class OrderUpdatedMessage extends OrderMessage {
 
     public static final String TOPIC = "demo.store.orders.order";
-
-    @MessageHeader
-    public String company;
 
     public String description;
 
@@ -20,8 +18,7 @@ public class OrderUpdatedMessage extends OrderMessage {
     public OrderUpdatedMessage(){ }
 
     public OrderUpdatedMessage(String number, String company, String description) {
-        this.number = number;
-        this.company = company;
+        super(number, company);
         this.description = description;
     }
 

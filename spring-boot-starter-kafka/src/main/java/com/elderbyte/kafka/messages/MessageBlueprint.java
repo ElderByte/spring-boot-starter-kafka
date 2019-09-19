@@ -2,6 +2,7 @@ package com.elderbyte.kafka.messages;
 
 import com.elderbyte.commons.exceptions.ArgumentNullException;
 import com.elderbyte.commons.utils.NumberUtil;
+import com.elderbyte.messaging.MessageKeyUtil;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Headers;
 
@@ -9,6 +10,7 @@ import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 public class MessageBlueprint {
@@ -20,13 +22,12 @@ public class MessageBlueprint {
      **************************************************************************/
 
     private final boolean tombstone;
-    private final Field keyField;
-    private final boolean populateKeyField;
+    private final List<MessageKeyField> keyFields;
 
     /**
      * Header-Key : Field
      */
-    private final Map<String, MetadataField> metadataFields;
+    private final Map<String, MetadataField> headerFields;
 
 
     /***************************************************************************
@@ -37,18 +38,16 @@ public class MessageBlueprint {
 
     public MessageBlueprint(
             boolean tomstone,
-            Field keyField,
-            boolean populateKeyField,
-            Collection<MetadataField> metadataFields
+            List<MessageKeyField> keyFields,
+            Collection<MetadataField> headerFields
     ) {
 
-        if(keyField == null) throw new ArgumentNullException("keyField");
-        if(metadataFields == null) throw new ArgumentNullException("metadataFields");
+        if(keyFields == null) throw new ArgumentNullException("keyFields");
+        if(headerFields == null) throw new ArgumentNullException("metadataFields");
 
         this.tombstone = tomstone;
-        this.keyField = keyField;
-        this.populateKeyField = populateKeyField;
-        this.metadataFields = metadataFields.stream()
+        this.keyFields = keyFields;
+        this.headerFields = headerFields.stream()
                 .collect(toMap(MetadataField::getMetadataKey, mf -> mf));
     }
 
@@ -72,16 +71,25 @@ public class MessageBlueprint {
 
 
     public <V> String getKey(V message) {
-        var value = getFieldAsString(keyField, message);
-        if(value == null){
-            throw new InvalidMessageException("The key of a message must not be null!");
+
+        String value;
+
+        if(keyFields.size() > 1){
+            value = MessageKeyUtil.compositeKey(
+                    keyFields.stream()
+                            .map(kf -> getRequiredFieldAsString(kf.getField(), message))
+                            .collect(toList())
+            );
+        }else{
+            var keyField = keyFields.get(0);
+            value = getRequiredFieldAsString(keyField.getField(), message);
         }
         return value;
     }
 
     public <V> Map<String, String> getHeaders(V message) {
         var headers = new HashMap<String, String>();
-        metadataFields.values().forEach(
+        headerFields.values().forEach(
                 f -> {
                     if(f.isWriteToMetadata()){
                         var val = getFieldAsString(f.getField(), message);
@@ -103,15 +111,30 @@ public class MessageBlueprint {
 
     public <V, K, M> M updateFromRecord(M message, ConsumerRecord<K, V> record) {
 
-        if(populateKeyField){
-            if(record.key() != null){
-                setFieldString(keyField, message, record.key().toString());
+
+        if(keyFields.size() == 1){
+            var field = keyFields.get(0);
+            if(field.isPopulateField()){
+                if(record.key() != null){
+                    setFieldString(field.getField(), message, record.key().toString());
+                }
+            }
+        }else{
+            var key = record.key().toString();
+            var values = MessageKeyUtil.parseCompositeKey(key);
+
+            for(int i = 0;i < keyFields.size(); i++){
+                var k = keyFields.get(i);
+                if(k.isPopulateField()){
+                    var v = values.get(i);
+                    setFieldString(k.getField(), message, v);
+                }
             }
         }
 
         var headers = record.headers();
 
-        metadataFields.forEach((k,field) -> {
+        headerFields.forEach((k, field) -> {
             if(field.isPopulate()){
 
                 if(Map.class.isAssignableFrom(field.getField().getType())){
@@ -160,8 +183,16 @@ public class MessageBlueprint {
             }
             return null;
         } catch (IllegalAccessException e) {
-            throw new InvalidMessageException("Failed to access value of key field: "+keyField.getName(), e);
+            throw new InvalidMessageException("Failed to access value of field: "+field.getName(), e);
         }
+    }
+
+    private <V> String getRequiredFieldAsString(Field field, V message){
+        var val = getFieldAsString(field, message);
+        if(val == null){
+            throw new InvalidMessageException("The field "+field.getName()+" of the message must not be null!");
+        }
+        return val;
     }
 
     private <V> void setField(Field field, V message, byte[] headerValue){
@@ -181,7 +212,7 @@ public class MessageBlueprint {
                         " "+field.getName()+" was of unsupported type "+field.getType()+" ! ");
             }
         } catch (IllegalAccessException e) {
-            throw new InvalidMessageException("Failed to access value of key field: "+keyField.getName(), e);
+            throw new InvalidMessageException("Failed to access value of key field: "+field.getName(), e);
         }
     }
 

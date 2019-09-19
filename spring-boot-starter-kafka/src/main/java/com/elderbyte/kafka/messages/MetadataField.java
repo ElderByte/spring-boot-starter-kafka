@@ -7,7 +7,7 @@ import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Field;
 
-public class MetadataField {
+class MetadataField {
 
     public static MetadataField from(Field field, @Nullable MessageHeader messageHeaderAttr){
 
