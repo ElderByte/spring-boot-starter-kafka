@@ -119,7 +119,6 @@ public class OrderUpdatedProducer {
      **************************************************************************/
 
 
-
     private KTable<OrderKey, OrderUpdatedMessage> orderUpdateKTable(){
 
         var cdcOrders = builder.streamFromJsonTopic(CdcOrderEvent.TOPIC, new TypeReference<CdcEvent<CdcOrderEvent>>() {});
@@ -146,13 +145,10 @@ public class OrderUpdatedProducer {
         var orderItems = builder.mapStreamToTable(
                 "order-items",
                 cdcOrderItems,
-                (k,v) -> {
-                    if(!v.delete){
-                        return KeyValue.pair(v.updated.id + "", v.updated);
-                    }else{
-                        return KeyValue.pair(v.updated.id + "", null);
-                    }
-                },
+                (k,v) -> KeyValue.pair(
+                        v.updated.id + "",
+                        v.delete ? null : v.updated
+                ),
                 String.class,
                 CdcOrderItemEvent.class
         );
@@ -161,7 +157,10 @@ public class OrderUpdatedProducer {
                 .aggregateSet(
                         "order-items-agg",
                         orderItems,
-                        (k, v) -> new KeyValue<>(OrderKey.from(v.tenant, v.orderNumber), itemUpdated(v)),
+                        (k, v) -> KeyValue.pair(
+                                OrderKey.from(v.tenant, v.orderNumber),
+                                itemUpdated(v)
+                        ),
                         OrderKey.class,
                         OrderItem.class,
                         new TypeReference<Set<OrderItem>>() {}
