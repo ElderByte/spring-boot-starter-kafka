@@ -1,33 +1,34 @@
 package com.elderbyte.kafka.consumer.factory;
 
 import com.elderbyte.kafka.messages.MessageBlueprintFactory;
+import com.elderbyte.kafka.messages.api.ElderMessage;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 
 public class MessageAnnotationProcessor {
 
 
-    public static  <K, V> V buildMessage(ConsumerRecord<K, V> record){
+    public static  <K, M extends ElderMessage<K>> M buildMessage(ConsumerRecord<K, M> record){
 
         if(record.value() == null) throw new IllegalArgumentException("record must NOT be a tombstone!");
         var value = record.value();
-        return buildMessageInt(value, record, value.getClass());
+        return buildMessageInt(value, record, (Class<M>)value.getClass());
     }
 
-    public static <K, V, D> D buildMessageTombstone(ConsumerRecord<K, V> record, Class<D> tombstoneClazz){
+    public static <K, M extends ElderMessage<K>, V> M buildMessageTombstone(ConsumerRecord<K, V> record, Class<M> messageClazz){
         if(record.value() != null) throw new IllegalArgumentException("record must BE a tombstone!");
 
-        D instance;
+        M instance;
         try {
-            instance = tombstoneClazz.getDeclaredConstructor().newInstance();
+            instance = messageClazz.getDeclaredConstructor().newInstance();
         } catch (Exception e) {
             throw new IllegalStateException("The given tomb-stone message class could not be instantiated!", e);
         }
-        return buildMessageInt(instance, record, tombstoneClazz);
+        return buildMessageInt(instance, record, messageClazz);
     }
 
-    private static <D, K, V> D buildMessageInt(D value, ConsumerRecord<K, V> record, Class<?> targetClazz){
-        var blueprint = MessageBlueprintFactory.lookupOrCreate(targetClazz);
-        return blueprint.updateFromRecord(value, record);
+    private static <K, M extends ElderMessage<K>, V> M buildMessageInt(M message, ConsumerRecord<K, V> record, Class<M> messageClazz){
+        var blueprint = MessageBlueprintFactory.lookupOrCreate(messageClazz);
+        return blueprint.updateFromRecord(message, record);
     }
 }

@@ -1,5 +1,6 @@
 package com.elderbyte.kafka.producer;
 
+import com.elderbyte.kafka.messages.api.ElderMessage;
 import org.springframework.kafka.support.SendResult;
 
 import java.util.Collection;
@@ -17,7 +18,11 @@ public interface KafkaProducerTx<K,V> extends KafkaProducer<K,V> {
 
     List<CompletableFuture<SendResult<K, V>>> sendAllTransactionally(String topic, Collection<KafkaMessage<K, V>> messages);
 
-    default List<CompletableFuture<SendResult<String, V>>> sendAllMessagesTransactionally(String topic, Collection<? extends V> messageBodys) {
+    default <
+            MK,
+            MV extends ElderMessage<MK>
+            >
+    List<CompletableFuture<SendResult<MK, MV>>> sendAllMessagesTransactionally(String topic, Collection<? extends MV> messageBodys) {
         var messages = messageBodys.stream()
                 .map(KafkaMessage::fromMessage)
                 .collect(toList());

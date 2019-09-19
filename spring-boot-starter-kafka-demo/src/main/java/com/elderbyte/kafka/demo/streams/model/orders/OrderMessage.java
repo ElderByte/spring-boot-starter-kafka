@@ -1,23 +1,16 @@
 package com.elderbyte.kafka.demo.streams.model.orders;
 
-import com.elderbyte.messaging.annotations.Message;
+import com.elderbyte.kafka.messages.api.ElderMessage;
 import com.elderbyte.messaging.annotations.MessageKey;
 
-@Message(compositeKey = {"company", "number"})
-public abstract class OrderMessage {
+public abstract class OrderMessage implements ElderMessage<OrderKey> {
 
     @MessageKey
-    public String number;
-
-    @MessageKey
-    public String company;
-
+    public OrderKey key;
 
     public OrderMessage(){}
 
-
     public OrderMessage(String number, String company) {
-        this.number = number;
-        this.company = company;
+        key = OrderKey.from(company, number);
     }
 }

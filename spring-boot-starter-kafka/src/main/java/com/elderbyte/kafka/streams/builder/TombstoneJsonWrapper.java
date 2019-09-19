@@ -1,5 +1,6 @@
 package com.elderbyte.kafka.streams.builder;
 
+import com.elderbyte.kafka.messages.api.ElderMessage;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.lang.Nullable;
@@ -14,8 +15,15 @@ public class TombstoneJsonWrapper<V> {
      *                                                                         *
      **************************************************************************/
 
-    public static <T, D> TombstoneJsonWrapper<T> from(ObjectMapper mapper, UpdateOrDelete<T,D> updateOrDelete){
-        TombstoneJsonWrapper<T> tombstoneWrapper;
+    public static
+            <
+            MK,
+            U extends ElderMessage<MK>,
+            D extends ElderMessage<MK>
+            >
+    TombstoneJsonWrapper<U> from(ObjectMapper mapper, UpdateOrDelete<MK, U, D> updateOrDelete){
+
+        TombstoneJsonWrapper<U> tombstoneWrapper;
         if(updateOrDelete.isDelete()){
             tombstoneWrapper = TombstoneJsonWrapper.tombstone();
         }else{

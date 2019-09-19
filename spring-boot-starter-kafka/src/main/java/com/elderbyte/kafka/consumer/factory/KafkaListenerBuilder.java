@@ -3,6 +3,7 @@ package com.elderbyte.kafka.consumer.factory;
 import com.elderbyte.kafka.consumer.configuration.AutoOffsetReset;
 import com.elderbyte.kafka.consumer.processing.Processor;
 import com.elderbyte.kafka.messages.MessageBatch;
+import com.elderbyte.kafka.messages.api.ElderMessage;
 import com.elderbyte.kafka.metrics.MetricsContext;
 import com.elderbyte.kafka.records.RecordBatch;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -156,13 +157,11 @@ public interface KafkaListenerBuilder<K,V> {
      * @param tombstoneClazz The Deleted message type
      * @param updatedCallback A callback when a updated message has arrived.
      * @param deletedCallback A callback when a deleted [tombstone] message has arrived.
-     * @param <T>
-     * @return
      */
-    default <T> MessageListenerContainer buildMessageHandler(
-            Class<T> tombstoneClazz,
-            Processor<V> updatedCallback,
-            Processor<T> deletedCallback
+    default <MU extends ElderMessage<K>, MD extends ElderMessage<K>> MessageListenerContainer buildMessageHandler(
+            Class<MD> tombstoneClazz,
+            Processor<MU> updatedCallback,
+            Processor<MD> deletedCallback
             ){
         return build(
                 record -> {
@@ -172,7 +171,7 @@ public interface KafkaListenerBuilder<K,V> {
                         );
                     }else{
                         updatedCallback.proccess(
-                                MessageAnnotationProcessor.buildMessage(record)
+                                MessageAnnotationProcessor.buildMessage((ConsumerRecord<K, MU>) record)
                         );
                     }
                 }
@@ -189,12 +188,12 @@ public interface KafkaListenerBuilder<K,V> {
      * @param tombstoneClazz The Deleted message type
      * @param messageBatchCallback a message batch callback
      */
-    default <T> MessageListenerContainer buildBatchMessageHandler(
-            Class<T> tombstoneClazz,
-            Processor<MessageBatch<K, V, T>> messageBatchCallback
+    default <MU extends ElderMessage<K>, MD extends ElderMessage<K>> MessageListenerContainer buildBatchMessageHandler(
+            Class<MD> tombstoneClazz,
+            Processor<MessageBatch<K, MU, MD>> messageBatchCallback
     ){
         return buildBatchManaged(
-               recordBatch -> messageBatchCallback.proccess(MessageBatch.from(recordBatch, tombstoneClazz))
+               recordBatch -> messageBatchCallback.proccess(MessageBatch.from((RecordBatch<K, MU>)recordBatch, tombstoneClazz))
         );
     }
 

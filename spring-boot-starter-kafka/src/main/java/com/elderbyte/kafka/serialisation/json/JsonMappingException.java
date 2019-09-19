@@ -1,4 +1,4 @@
-package com.elderbyte.kafka.serialisation;
+package com.elderbyte.kafka.serialisation.json;
 
 /**
  * Exception thrown when the provided json data does not map to the given dto.

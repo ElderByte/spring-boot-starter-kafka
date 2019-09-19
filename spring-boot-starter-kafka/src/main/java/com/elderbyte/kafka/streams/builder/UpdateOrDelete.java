@@ -1,11 +1,13 @@
 package com.elderbyte.kafka.streams.builder;
 
-public class UpdateOrDelete<U, D> {
+import com.elderbyte.kafka.messages.api.ElderMessage;
 
-    public static <U,D> UpdateOrDelete<U,D> update(U update){
+public class UpdateOrDelete<MK, U extends ElderMessage<MK>, D extends ElderMessage<MK>> {
+
+    public static <MK, U extends ElderMessage<MK>, D extends ElderMessage<MK>> UpdateOrDelete<MK,U,D> update(U update){
         return new UpdateOrDelete<>(update, null);
     }
-    public static <U,D> UpdateOrDelete<U,D> delete(D delete){
+    public static <MK, U extends ElderMessage<MK>,D extends ElderMessage<MK>> UpdateOrDelete<MK,U,D> delete(D delete){
         return new UpdateOrDelete<>(null, delete);
     }
 
@@ -31,7 +33,7 @@ public class UpdateOrDelete<U, D> {
         return deleted;
     }
 
-    public Object getMessage() {
+    public ElderMessage<MK> getMessage() {
         return isDelete() ? deleted : updated;
     }
 }

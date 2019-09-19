@@ -1,6 +1,6 @@
 package com.elderbyte.kafka.streams.builder;
 
-import com.elderbyte.kafka.streams.ElderJsonSerde;
+import com.elderbyte.kafka.messages.api.ElderMessage;
 import com.elderbyte.kafka.streams.builder.cdc.CdcRecipesBuilder;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContext;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -42,21 +42,23 @@ public interface KafkaStreamsContextBuilder {
     /**
      * Maps the given KStream values to a KTable.
      */
-    <V, U, D> KTable<String, U> mapStreamToMessagesTable(
+    <V, MK, U extends ElderMessage<MK>, D extends ElderMessage<MK>> KTable<MK, U> mapStreamToMessagesTable(
             String storeName,
             KStream<String, V> inputStream,
-            KeyValueMapper<String, V, UpdateOrDelete<U, D>> kvm,
-            Class<U> clazz
+            KeyValueMapper<String, V, UpdateOrDelete<MK, U, D>> kvm,
+            Class<MK> keyClazz,
+            Class<U> updateClazz
     );
 
     /**
      * Maps the given KStream values to a KTable.
      */
-    <V, VR> KTable<String, VR> mapStreamToTable(
+    <K, V, VR> KTable<K, VR> mapStreamToTable(
             String storeName,
-            KStream<String, V> cdcEventStream,
-            KeyValueMapper<String, V, KeyValue<String,VR>> kvm,
-            Class<VR> clazz
+            KStream<K, V> inputStream,
+            KeyValueMapper<K, V, KeyValue<K,VR>> kvm,
+            Class<K> keyClazz,
+            Class<VR> valueClazz
     );
 
     StreamsBuilder streamsBuilder();
@@ -106,6 +108,8 @@ public interface KafkaStreamsContextBuilder {
     );
 
      <V> Materialized<String, V, KeyValueStore<Bytes, byte[]>> materializedJson(String storeName, TypeReference<V> clazz);
+
+     <K, V> Materialized<K, V, KeyValueStore<Bytes, byte[]>> materializedJson(String storeName, Serde<K> keySerde, TypeReference<V> clazz);
 
     <V> Materialized<String, V, KeyValueStore<Bytes, byte[]>> materializedJson(String storeName, Class<V> valueClazz);
 

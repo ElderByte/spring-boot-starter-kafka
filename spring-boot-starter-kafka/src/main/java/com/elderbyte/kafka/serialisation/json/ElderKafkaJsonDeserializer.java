@@ -1,4 +1,4 @@
-package com.elderbyte.kafka.serialisation;
+package com.elderbyte.kafka.serialisation.json;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

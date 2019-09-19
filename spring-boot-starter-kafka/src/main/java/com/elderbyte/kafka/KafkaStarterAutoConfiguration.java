@@ -7,7 +7,7 @@ import com.elderbyte.kafka.consumer.factory.KafkaListenerFactoryConfiguration;
 import com.elderbyte.kafka.consumer.processing.ManagedProcessorFactoryConfiguration;
 import com.elderbyte.kafka.producer.DefaultJsonKafkaTemplateConfiguration;
 import com.elderbyte.kafka.producer.KafkaProducerConfiguration;
-import com.elderbyte.kafka.serialisation.ElderKafkaJsonSerializer;
+import com.elderbyte.kafka.serialisation.json.ElderKafkaJsonSerializer;
 import com.elderbyte.kafka.streams.ElderKafkaStreamsConfiguration;
 import com.elderbyte.kafka.topics.ElderKakfaNewTopicsConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;

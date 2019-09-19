@@ -1,10 +1,13 @@
 package com.elderbyte.kafka.streams.builder;
 
 import com.elderbyte.commons.exceptions.ArgumentNullException;
+import com.elderbyte.kafka.messages.MessageBlueprint;
 import com.elderbyte.kafka.messages.MessageBlueprintFactory;
-import com.elderbyte.kafka.streams.ElderJsonSerde;
+import com.elderbyte.kafka.messages.api.ElderMessage;
+import com.elderbyte.kafka.streams.serdes.ElderJsonSerde;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContext;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContextImpl;
+import com.elderbyte.kafka.streams.serdes.ElderKeySerde;
 import com.elderbyte.kafka.streams.support.Transformers;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -109,11 +112,12 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
 
 
     @Override
-    public <V, U, D> KTable<String, U> mapStreamToMessagesTable(
+    public <V, MK, U extends ElderMessage<MK>, D extends ElderMessage<MK>> KTable<MK, U> mapStreamToMessagesTable(
             String storeName,
             KStream<String, V> inputStream,
-            KeyValueMapper<String, V, UpdateOrDelete<U, D>> kvm,
-            Class<U> clazz
+            KeyValueMapper<String, V, UpdateOrDelete<MK, U, D>> kvm,
+            Class<MK> keyClazz,
+            Class<U> updateClazz
     ){
         var events = inputStream
                 .transform(() -> Transformers.transformerWithHeader(
@@ -123,7 +127,7 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
 
                                 var message = messageHolder.getMessage();
 
-                                var messageSupport = MessageBlueprintFactory.lookupOrCreate(message.getClass());
+                                MessageBlueprint<MK, ElderMessage<MK>> messageSupport = MessageBlueprintFactory.lookupOrCreate(message.getClass());
 
                                 var messageKey = messageSupport.getKey(message);
 
@@ -146,23 +150,28 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
         return tableJson(
                 storeName,
                 events,
-                clazz
+                keyClazz,
+                updateClazz
         );
     }
 
-    private  <V> KTable<String, V> tableJson(
+    private  <K, V> KTable<K, V> tableJson(
             String storeName,
-            KStream<String, TombstoneJsonWrapper<V>> stream,
+            KStream<K, TombstoneJsonWrapper<V>> stream,
+            Class<K> keyClazz,
             Class<V> valueClazz
     ) {
+
+        var keySerde = ElderKeySerde.from(keyClazz);
+
         return stream
                 .groupByKey(
-                        groupedJson(new TypeReference<TombstoneJsonWrapper<V>>() {})
+                        groupedJson(keySerde, new TypeReference<TombstoneJsonWrapper<V>>() {})
                 )
                 .aggregate(
                     () -> null,
                     (k, value, oldValue) -> value.getValue(mapper,valueClazz).orElse(null),
-                    materialized(storeName, Serdes.String(), ElderJsonSerde.from(mapper, valueClazz))
+                    materialized(storeName, keySerde, ElderJsonSerde.from(mapper, valueClazz))
                 );
     }
 
@@ -170,11 +179,13 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
      * Interprets the given KSTREAM as KTABLE, supporting key/value transformation.
      * Null values are translated into tombstone events.
      */
-    public <V, VR> KTable<String, VR> mapStreamToTable(
+    @Override
+    public <K, V, VR> KTable<K, VR> mapStreamToTable(
             String storeName,
-            KStream<String, V> inputStream,
-            KeyValueMapper<String, V, KeyValue<String,VR>> kvm,
-            Class<VR> clazz
+            KStream<K, V> inputStream,
+            KeyValueMapper<K, V, KeyValue<K,VR>> kvm,
+            Class<K> keyClazz,
+            Class<VR> valueClazz
     ){
         var events = inputStream
                 .map(kvm)
@@ -184,7 +195,8 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
         return tableJson(
                 storeName,
                 events,
-                clazz
+                keyClazz,
+                valueClazz
         );
     }
 
@@ -266,6 +278,10 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
 
     public <K,V> Materialized<K, V, KeyValueStore<Bytes, byte[]>> materializedJson(String storeName, Serde<K> keySerde, Class<V> valueClazz){
         return materialized(storeName, keySerde, ElderJsonSerde.from(mapper, valueClazz));
+    }
+
+    public  <K, V> Materialized<K, V, KeyValueStore<Bytes, byte[]>> materializedJson(String storeName, Serde<K> keySerde, TypeReference<V> clazz){
+        return materialized(storeName, keySerde, ElderJsonSerde.from(mapper, clazz));
     }
 
 

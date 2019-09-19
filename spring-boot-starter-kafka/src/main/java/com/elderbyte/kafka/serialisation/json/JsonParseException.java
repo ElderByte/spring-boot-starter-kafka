@@ -1,4 +1,4 @@
-package com.elderbyte.kafka.serialisation;
+package com.elderbyte.kafka.serialisation.json;
 
 /**
  * Exception thrown when the input was not valid JSON

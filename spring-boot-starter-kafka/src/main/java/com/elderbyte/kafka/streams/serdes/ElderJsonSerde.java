@@ -1,7 +1,7 @@
-package com.elderbyte.kafka.streams;
+package com.elderbyte.kafka.streams.serdes;
 
-import com.elderbyte.kafka.serialisation.ElderKafkaJsonDeserializer;
-import com.elderbyte.kafka.serialisation.ElderKafkaJsonSerializer;
+import com.elderbyte.kafka.serialisation.json.ElderKafkaJsonDeserializer;
+import com.elderbyte.kafka.serialisation.json.ElderKafkaJsonSerializer;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.common.serialization.Serdes;

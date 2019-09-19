@@ -5,11 +5,13 @@ import com.elderbyte.kafka.demo.streams.cdc.CdcOrderEvent;
 import com.elderbyte.kafka.demo.streams.cdc.CdcOrderItemEvent;
 import com.elderbyte.kafka.demo.streams.model.orders.OrderDeletedMessage;
 import com.elderbyte.kafka.demo.streams.model.items.OrderItem;
+import com.elderbyte.kafka.demo.streams.model.orders.OrderKey;
 import com.elderbyte.kafka.demo.streams.model.orders.OrderUpdatedMessage;
 import com.elderbyte.kafka.streams.builder.KafkaStreamsContextBuilder;
 import com.elderbyte.kafka.streams.builder.UpdateOrDelete;
 import com.elderbyte.kafka.streams.factory.KafkaStreamsContextBuilderFactory;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContext;
+import com.elderbyte.kafka.streams.serdes.ElderKeySerde;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.*;
@@ -86,67 +88,8 @@ public class OrderUpdatedProducer {
                         (key, value) -> {
                             log.info("Peek: " + key + ", value: " + value);
                         }
-                ).to(OrderUpdatedMessage.TOPIC, builder.producedJson(OrderUpdatedMessage.class));
+                ).to(OrderUpdatedMessage.TOPIC, builder.producedJson(ElderKeySerde.from(OrderKey.class), OrderUpdatedMessage.class));
     }
-
-    private void join_stream_tables(){
-
-
-        orderUpdateKTable()
-                .toStream()
-                .through("_demo.store.orders.order-header", builder.producedJson(OrderUpdatedMessage.class))
-                .leftJoin(
-                        orderItemUpdateKTable(),
-                        (order, items) -> {
-                            if(items != null){
-                                order.items = new ArrayList<>(items);
-                            }
-                            return order;
-                        }
-                        // builder.materializedJson("order-join", OrderUpdatedMessage.class)
-                        // builder.joinedJson(OrderUpdatedMessage.class, new TypeReference<Set<OrderItem>>() {})
-                )
-                .peek(
-                        (key, value) -> {
-                            log.info("Peek: " + key + ", value: " + value);
-                        }
-                ).to(OrderUpdatedMessage.TOPIC, builder.producedJson(OrderUpdatedMessage.class));
-    }
-
-    private void join_with_global(){
-        final String TOPIC_STORE_ITEMS = "_demo.store.orders.order-items";
-
-        orderItemUpdateKTable()
-                .toStream()
-                .to(TOPIC_STORE_ITEMS, builder.producedJson(new TypeReference<Set<OrderItem>>() {}));
-
-
-        var orderItemsLookup = builder.globalTableFromJsonTopic(TOPIC_STORE_ITEMS, new TypeReference<Set<OrderItem>>() {}, "order-items-lookup");
-
-
-        orderUpdateKTable()
-                .toStream()
-                .through("_demo.store.orders.order-header", builder.producedJson(OrderUpdatedMessage.class))
-                //.to("_demo.store.orders.order-header", builder.producedJson(OrderUpdatedMessage.class));
-                .leftJoin(
-                        orderItemsLookup,
-                        (k, v) -> k,
-                        (order, items) -> {
-                            if(items != null){
-                                order.items = new ArrayList<>(items);
-                            }
-                            return order;
-                        }
-                        // builder.materializedJson("order-join", OrderUpdatedMessage.class)
-                        // builder.joinedJson(OrderUpdatedMessage.class, new TypeReference<Set<OrderItem>>() {})
-                )
-                .peek(
-                        (key, value) -> {
-                            log.info("Peek: " + key + ", value: " + value);
-                        }
-                ).to(OrderUpdatedMessage.TOPIC, builder.producedJson(OrderUpdatedMessage.class));
-    }
-
 
 
     /***************************************************************************
@@ -177,7 +120,7 @@ public class OrderUpdatedProducer {
 
 
 
-    private KTable<String, OrderUpdatedMessage> orderUpdateKTable(){
+    private KTable<OrderKey, OrderUpdatedMessage> orderUpdateKTable(){
 
         var cdcOrders = builder.streamFromJsonTopic(CdcOrderEvent.TOPIC, new TypeReference<CdcEvent<CdcOrderEvent>>() {});
 
@@ -191,11 +134,12 @@ public class OrderUpdatedProducer {
                         return UpdateOrDelete.delete(orderDeleted(v.updated));
                     }
                 },
+                OrderKey.class,
                 OrderUpdatedMessage.class
         );
     }
 
-    private KTable<String, Set<OrderItem>> orderItemUpdateKTable(){
+    private KTable<OrderKey, Set<OrderItem>> orderItemUpdateKTable(){
 
         var cdcOrderItems = builder.streamFromJsonTopic(CdcOrderItemEvent.TOPIC, new TypeReference<CdcEvent<CdcOrderItemEvent>>() {});
 
@@ -209,6 +153,7 @@ public class OrderUpdatedProducer {
                         return KeyValue.pair(v.updated.id + "", null);
                     }
                 },
+                String.class,
                 CdcOrderItemEvent.class
         );
 
@@ -216,7 +161,8 @@ public class OrderUpdatedProducer {
                 .aggregateSet(
                         "order-items-agg",
                         orderItems,
-                        (k, v) -> new KeyValue<>(v.orderNumber, itemUpdated(v)),
+                        (k, v) -> new KeyValue<>(OrderKey.from(v.tenant, v.orderNumber), itemUpdated(v)),
+                        OrderKey.class,
                         OrderItem.class,
                         new TypeReference<Set<OrderItem>>() {}
                 );

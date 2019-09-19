@@ -3,7 +3,7 @@ package com.elderbyte.kafka.consumer.factory;
 import com.elderbyte.kafka.consumer.configuration.AutoOffsetReset;
 import com.elderbyte.kafka.consumer.processing.Processor;
 import com.elderbyte.kafka.metrics.MetricsContext;
-import com.elderbyte.kafka.serialisation.ElderKafkaJsonDeserializer;
+import com.elderbyte.kafka.serialisation.json.ElderKafkaJsonDeserializer;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.consumer.Consumer;

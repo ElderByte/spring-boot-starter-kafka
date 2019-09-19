@@ -133,7 +133,7 @@ public class CdcMockProducer {
         return new CdcEvent<>(
                 orderItemEventId.incrementAndGet(),
                 null,
-                new CdcOrderItemEvent(id, number, item, quantity),
+                new CdcOrderItemEvent(id,"holy", number, item, quantity),
                 deleted,
                 "cdc-item"
         );

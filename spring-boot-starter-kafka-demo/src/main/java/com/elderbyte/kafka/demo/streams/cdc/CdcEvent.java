@@ -1,9 +1,10 @@
 package com.elderbyte.kafka.demo.streams.cdc;
 
+import com.elderbyte.kafka.messages.api.ElderMessage;
 import com.elderbyte.messaging.annotations.MessageHeader;
 import com.elderbyte.messaging.annotations.MessageKey;
 
-public class CdcEvent<T> {
+public class CdcEvent<T> implements ElderMessage<String> {
 
     /***************************************************************************
      *                                                                         *
@@ -12,7 +13,7 @@ public class CdcEvent<T> {
      **************************************************************************/
 
     @MessageKey
-    public int id;
+    public String id;
 
     public T previous;
     public T updated;
@@ -40,7 +41,7 @@ public class CdcEvent<T> {
             boolean delete,
             String greetings
     ) {
-        this.id = id;
+        this.id = id + "";
         this.previous = previous;
         this.updated = updated;
         this.delete = delete;

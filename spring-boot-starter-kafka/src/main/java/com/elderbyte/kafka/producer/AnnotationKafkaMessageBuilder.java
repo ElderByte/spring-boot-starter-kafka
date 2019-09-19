@@ -1,6 +1,7 @@
 package com.elderbyte.kafka.producer;
 
 import com.elderbyte.kafka.messages.MessageBlueprintFactory;
+import com.elderbyte.kafka.messages.api.ElderMessage;
 
 public class AnnotationKafkaMessageBuilder {
 
@@ -13,11 +14,11 @@ public class AnnotationKafkaMessageBuilder {
     /**
      * Build a kafka message from a generic pojo with message annotations
      * @param message The message object / body
-     * @param <V> Type of message object
+     * @param <M> Type of message object
      * @return Returns a typed kafka message
      */
-    public static <V> KafkaMessage<String,V> build(V message){
-        var blueprint = MessageBlueprintFactory.lookupOrCreate(message.getClass());
+    public static <K, M extends ElderMessage<K>> KafkaMessage<K,M> build(M message){
+        var blueprint = MessageBlueprintFactory.lookupOrCreate((Class<M>)message.getClass());
 
         var key = blueprint.getKey(message);
         var headers = blueprint.getHeaders(message);

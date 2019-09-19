@@ -6,6 +6,8 @@ public class CdcOrderItemEvent {
 
     public long id;
 
+    public String tenant;
+
     public String orderNumber;
 
     public String item;
@@ -14,8 +16,9 @@ public class CdcOrderItemEvent {
 
     public CdcOrderItemEvent(){}
 
-    public CdcOrderItemEvent(int id, String orderNumber, String item, int quantity){
+    public CdcOrderItemEvent(int id, String tenant, String orderNumber, String item, int quantity){
         this.id = id;
+        this.tenant = tenant;
         this.orderNumber = orderNumber;
         this.item = item;
         this.quantity = quantity;

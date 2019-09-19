@@ -1,18 +1,12 @@
-package com.elderbyte.kafka.producer.impl;
+package com.elderbyte.kafka.serialisation.key;
 
-import com.elderbyte.kafka.producer.KafkaMessage;
-import com.elderbyte.kafka.producer.KafkaProducerTx;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.SendResult;
-import org.springframework.util.concurrent.ListenableFuture;
+import com.elderbyte.kafka.messages.MessageKeyBlueprint;
+import org.apache.kafka.common.serialization.Serializer;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
-import static java.util.stream.Collectors.toList;
-
-public class KafkaProducerTxImpl<K,V> extends KafkaProducerImpl<K,V> implements KafkaProducerTx<K,V> {
+public class ElderCompositeKeySerializer<K> implements Serializer<K> {
 
     /***************************************************************************
      *                                                                         *
@@ -20,16 +14,30 @@ public class KafkaProducerTxImpl<K,V> extends KafkaProducerImpl<K,V> implements 
      *                                                                         *
      **************************************************************************/
 
+    private final MessageKeyBlueprint<K> messageKeyBlueprint;
+
     /***************************************************************************
      *                                                                         *
-     * Constructors                                                            *
+     * Constructor                                                             *
      *                                                                         *
      **************************************************************************/
 
-    public KafkaProducerTxImpl(KafkaTemplate<K,V> kafkaOperations){
-        super(kafkaOperations);
-        if(!kafkaOperations.isTransactional()) throw new IllegalArgumentException("You must provide a kafka template which supports transactions!");
+    /**
+     * Creates a new ElderCompositeKeySerializer
+     */
+    public ElderCompositeKeySerializer(Class<K> keyClazz) {
+        this(MessageKeyBlueprint.from(keyClazz));
     }
+
+    public ElderCompositeKeySerializer(MessageKeyBlueprint<K> messageKeyBlueprint) {
+        this.messageKeyBlueprint = messageKeyBlueprint;
+    }
+
+    /***************************************************************************
+     *                                                                         *
+     * Properties                                                              *
+     *                                                                         *
+     **************************************************************************/
 
     /***************************************************************************
      *                                                                         *
@@ -38,15 +46,16 @@ public class KafkaProducerTxImpl<K,V> extends KafkaProducerImpl<K,V> implements 
      **************************************************************************/
 
     @Override
-    public List<CompletableFuture<SendResult<K, V>>> sendAllTransactionally(String topic, Collection<KafkaMessage<K, V>> kafkaMessages) {
-        return getKafkaOperations()
-                .executeInTransaction(
-                        t -> kafkaMessages.stream()
-                            .map(m -> t.send(m.toRecord(topic)))
-                            .map(ListenableFuture::completable)
-                            .collect(toList())
-                );
+    public void configure(Map<String, ?> configs, boolean isKey) { }
+
+    @Override
+    public byte[] serialize(String topic, K data) {
+        var serialized = messageKeyBlueprint.serializeKey(data);
+        return serialized.getBytes(StandardCharsets.UTF_8);
     }
+
+    @Override
+    public void close() { }
 
     /***************************************************************************
      *                                                                         *
