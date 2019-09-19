@@ -95,7 +95,7 @@ public class MessageBlueprint<K, M extends ElderMessage<K>> {
     public <RK, RV> M updateFromRecord(M message, ConsumerRecord<RK, RV> record) {
 
 
-        if(record.key() != null){
+        if(record.key() != null && keyField.isPopulateField()){
             var key = record.key();
             ReflectionSupport.setField(keyField.getField(), message, key);
         }

@@ -11,16 +11,25 @@ class MetadataField {
 
     public static MetadataField from(Field field, @Nullable MessageHeader messageHeaderAttr){
 
-        String metadataKey;
+        String metadataKey = field.getName();
         var writeToMetadata = true;
         var populate = true;
 
-        if(messageHeaderAttr != null && StringUtils.hasText(messageHeaderAttr.key())){
-            metadataKey = messageHeaderAttr.key();
-            writeToMetadata = messageHeaderAttr.write();
-            populate = messageHeaderAttr.read();
-        }else{
-            metadataKey = field.getName();
+        if(messageHeaderAttr != null){
+
+            String key = null;
+
+            if(StringUtils.hasText(messageHeaderAttr.key())) {
+                key = messageHeaderAttr.key();
+            }else{
+                key = messageHeaderAttr.value();
+            }
+
+            if(StringUtils.hasText(key)){
+                metadataKey = key;
+                writeToMetadata = messageHeaderAttr.write();
+                populate = messageHeaderAttr.read();
+            }
         }
 
         return new MetadataField(field, metadataKey, writeToMetadata, populate);

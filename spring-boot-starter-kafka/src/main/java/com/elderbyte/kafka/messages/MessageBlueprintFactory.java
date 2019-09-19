@@ -5,6 +5,7 @@ import com.elderbyte.kafka.messages.api.ElderMessage;
 import com.elderbyte.messaging.annotations.MessageHeader;
 import com.elderbyte.messaging.annotations.MessageKey;
 import com.elderbyte.messaging.annotations.Tombstone;
+import org.springframework.messaging.handler.annotation.Header;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -51,7 +52,6 @@ public class MessageBlueprintFactory {
      * Private methods                                                         *
      *                                                                         *
      **************************************************************************/
-
 
     private static <K, M extends ElderMessage<K>> MessageBlueprint<K,M> fromMessageClass(Class<M> messageClazz) throws InvalidMessageException {
 

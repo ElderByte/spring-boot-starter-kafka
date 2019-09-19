@@ -1,8 +1,9 @@
 package com.elderbyte.kafka.producer;
 
 import com.elderbyte.kafka.messages.InvalidMessageException;
+import com.elderbyte.kafka.messages.api.ElderMessage;
+import com.elderbyte.messaging.annotations.MessageHeader;
 import com.elderbyte.messaging.annotations.MessageKey;
-import com.elderbyte.messaging.annotations.MessageMetadata;
 import com.elderbyte.messaging.annotations.Tombstone;
 import org.junit.Test;
 
@@ -10,41 +11,41 @@ import static org.junit.Assert.*;
 
 public class AnnotationKafkaMessageBuilderTest {
 
-    public static class MessageBlob {
+    public static class MessageBlob implements ElderMessage<String> {
         @MessageKey
         public String id;
 
-        @MessageMetadata
+        @MessageHeader
         public String test;
 
-        @MessageMetadata(key = "yes.yes")
+        @MessageHeader("yes.yes")
         public int age;
 
         public String ignore;
     }
 
     @Tombstone
-    public static class MessageBlobTomb {
+    public static class MessageBlobTomb implements ElderMessage<String> {
         @MessageKey
         public String id;
 
-        @MessageMetadata
+        @MessageHeader
         public String test;
 
-        @MessageMetadata(key = "yes.yes")
+        @MessageHeader("yes.yes")
         public int age;
 
         public String ignore;
     }
 
-    public static class MessageBlobNoKey {
+    public static class MessageBlobNoKey implements ElderMessage<String> {
 
         public String id;
 
-        @MessageMetadata
+        @MessageHeader
         public String test;
 
-        @MessageMetadata(key = "yes.yes")
+        @MessageHeader("yes.yes")
         public int age;
 
         public String ignore;

@@ -1,10 +1,10 @@
 package com.elderbyte.kafka.consumer.factory;
 
+import com.elderbyte.kafka.messages.api.ElderMessage;
 import com.elderbyte.kafka.producer.KafkaMessage;
+import com.elderbyte.messaging.annotations.MessageHeader;
 import com.elderbyte.messaging.annotations.MessageKey;
-import com.elderbyte.messaging.annotations.MessageMetadata;
 import com.elderbyte.messaging.annotations.Tombstone;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -14,31 +14,31 @@ import static org.junit.Assert.*;
 
 public class MessageAnnotationProcessorTest {
 
-    public static class SampleMessage {
-        @MessageKey(populate = false)
+    public static class SampleMessage implements ElderMessage<String> {
+        @MessageKey(read = false)
         public String id = "uno";
 
-        @MessageMetadata
+        @MessageHeader
         public String meta;
     }
 
     @Tombstone
-    public static class SampleMessageDeleted {
+    public static class SampleMessageDeleted implements ElderMessage<String> {
         @MessageKey
         public String id;
 
-        @MessageMetadata
+        @MessageHeader
         public String meta;
     }
 
-    public static class SampleMessageMap {
-        @MessageKey(populate = false)
+    public static class SampleMessageMap implements ElderMessage<String> {
+        @MessageKey(read = false)
         public String id = "uno";
 
-        @MessageMetadata
+        @MessageHeader
         public String meta;
 
-        @MessageMetadata
+        @MessageHeader
         public Map<String, String> headers;
     }
 

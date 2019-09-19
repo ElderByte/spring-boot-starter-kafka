@@ -1,5 +1,6 @@
 package com.elderbyte.kafka.producer;
 
+import com.elderbyte.kafka.messages.InvalidMessageException;
 import com.elderbyte.kafka.messages.MessageBlueprintFactory;
 import com.elderbyte.kafka.messages.api.ElderMessage;
 
@@ -22,6 +23,10 @@ public class AnnotationKafkaMessageBuilder {
 
         var key = blueprint.getKey(message);
         var headers = blueprint.getHeaders(message);
+
+        if(key == null){
+            throw new InvalidMessageException("The given message "+message.getClass().getName()+" has null as key value which is not allowed.");
+        }
 
         if (blueprint.isTombstone()){
             return KafkaMessage.tombstone(key, headers);

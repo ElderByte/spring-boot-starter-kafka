@@ -9,8 +9,8 @@ buildscript {
 }
 
 allprojects {
-    version =  '2.1.8.E32'
-    group = 'com.elderbyte.spring.boot'
+    version =  springBoot + '.E32'
+    group = 'com.elderbyte.starter'
 
     //Always show stacktrace
     gradle.startParameter.showStacktrace = ShowStacktrace.ALWAYS
@@ -18,8 +18,9 @@ allprojects {
 
 subprojects {
     ext {
-        springBootVersion = '2.2.0.M6'
-        starterVersion = '5.22.0'
+        springBoot = '2.2.0'
+        springBootVersion = springBoot + '.M6'
+        starterVersion = '5.23.0'
     }
 
     tasks.withType(Javadoc) {
