@@ -86,12 +86,28 @@ public class ElKStream<K,V> extends ElStreamBase<K,V> {
      *                                                                         *
      **************************************************************************/
 
+    public <KR,VR> ElKStreamMapper<K,V, KR, VR> mapTo(Class<KR> newKey, Class<VR> newValue){
+        return mapTo(context().serde(newKey, newValue));
+    }
+
     public <KR,VR> ElKStreamMapper<K,V, KR, VR> mapTo(KStreamSerde<KR, VR> newSerde){
         return new ElKStreamMapper<>(this, newSerde);
     }
 
-    public <VR> ElKStreamMapper<K,V, K, VR> mapTo(Serde<VR> newValue){
+    public <VR> ElKStreamMapper<K,V, K, VR> mapToValue(Serde<VR> newValue){
         return new ElKStreamMapper<>(this, serde().withValue(newValue));
+    }
+
+    public <VR> ElKStreamMapper<K,V, K, VR> mapToValue(Class<VR> newValue){
+        return mapToValue(context().serde(newValue).value());
+    }
+
+    public <KR> ElKStreamMapper<K,V, KR, V> mapToKey(Serde<KR> newKey){
+        return new ElKStreamMapper<>(this, serde().withKey(newKey));
+    }
+
+    public <KR> ElKStreamMapper<K,V, KR, V> mapToKey(Class<KR> newKey){
+        return mapToKey(context().serde(newKey).value()); // Ugly should be serde().withKey(newKey)
     }
 
     /***************************************************************************

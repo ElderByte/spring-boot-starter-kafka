@@ -1,7 +1,6 @@
 package com.elderbyte.kafka.streams.builder;
 
 import com.elderbyte.commons.exceptions.ArgumentNullException;
-import com.elderbyte.kafka.messages.MessageBlueprint;
 import com.elderbyte.kafka.messages.MessageBlueprintFactory;
 import com.elderbyte.kafka.streams.builder.dsl.ElStreamsBuilder;
 import com.elderbyte.kafka.streams.builder.dsl.KStreamSerde;
@@ -250,7 +249,7 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
     }
 
     @Override
-    public <K,V> KStreamSerde<K,V> serde(Serde<K> keySerde, Serde<V> valueSerde){
+    public <K,V> KStreamSerde<K,V> serde(Serde<K> keySerde, Serde<V> valueSerde) {
         return new KStreamSerde<>(
                 keySerde,
                 valueSerde

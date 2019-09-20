@@ -1,9 +1,10 @@
 package com.elderbyte.kafka.streams.builder.dsl;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.kstream.*;
 
-public class ElKGroupedStream<K,V> extends ElStreamBase<K,V> {
+public class ElKGroupedTable<K,V> extends ElStreamBase<K,V> {
 
     /***************************************************************************
      *                                                                         *
@@ -11,7 +12,7 @@ public class ElKGroupedStream<K,V> extends ElStreamBase<K,V> {
      *                                                                         *
      **************************************************************************/
 
-    private final KGroupedStream<K,V> groupedStream;
+    private final KGroupedTable<K,V> groupedTable;
 
     /***************************************************************************
      *                                                                         *
@@ -22,9 +23,9 @@ public class ElKGroupedStream<K,V> extends ElStreamBase<K,V> {
     /**
      * Creates a new ElKGroupedStream
      */
-    public ElKGroupedStream(ElStreamsBuilder<K,V> elBuilder, KGroupedStream<K,V> groupedStream) {
+    public ElKGroupedTable(ElStreamsBuilder<K,V> elBuilder, KGroupedTable<K,V> groupedTable) {
         super(elBuilder);
-        this.groupedStream = groupedStream;
+        this.groupedTable = groupedTable;
     }
 
     /***************************************************************************
@@ -33,16 +34,17 @@ public class ElKGroupedStream<K,V> extends ElStreamBase<K,V> {
      *                                                                         *
      **************************************************************************/
 
-    public KGroupedStream<K,V> groupedStream(){
-        return groupedStream;
+    public KGroupedTable<K,V> groupedTable(){
+        return groupedTable;
     }
 
-    public ElKTable<K,V> reduce(Reducer<V> reducer, String storeName){
+    public ElKTable<K,V> reduce(Reducer<V> adder, Reducer<V> subtractor, String storeName){
         return builder()
                 .el(
-                        groupedStream()
+                        groupedTable()
                                 .reduce(
-                                        reducer,
+                                        adder,
+                                        subtractor,
                                         serde().materialized(storeName)
                                 )
                 );
@@ -50,53 +52,58 @@ public class ElKGroupedStream<K,V> extends ElStreamBase<K,V> {
 
     public ElKTable<K,V> aggregate(
             final Initializer<V> initializer,
-            final Aggregator<? super K, ? super V, V> aggregator,
+            final Aggregator<K, V, V> adder,
+            final Aggregator<K, V, V> subtractor,
             String storeName
     ){
         return builder()
                 .el(
-                        groupedStream()
+                        groupedTable()
                                 .aggregate(
                                         initializer,
-                                        aggregator,
+                                        adder,
+                                        subtractor,
                                         serde().materialized(storeName)
                                 )
                 );
     }
 
-    public ElKTable<K,V> latest(
-            String storeName
-    ){
-        return reduce((current, agg) -> current, storeName);
-    }
-
-    public <VR> ElKTable<K,VR> latest(
-            final KeyValueMapper<K, V, VR> mapper,
+    public <VR> ElKTable<K,VR> aggregateMap(
+            final Initializer<VR> initializer,
+            final Aggregator<K, V, VR> adder,
+            final Aggregator<K, V, VR> subtractor,
             String storeName,
-            Class<VR> clazz
+            TypeReference<VR> clazz
     ){
-        // Aggregate not reduce, since we change the Value type
         return aggregateMap(
-                () -> null,
-                (k, current, agg) -> mapper.apply(k, current),
+                initializer,
+                adder,
+                subtractor,
                 storeName,
                 context().serde(clazz).value()
         );
     }
 
-
     public <VR> ElKTable<K,VR> aggregateMap(
             final Initializer<VR> initializer,
-            final Aggregator<K, V, VR> aggregator,
+            final Aggregator<K, V, VR> adder,
+            final Aggregator<K, V, VR> subtractor,
             String storeName,
             Class<VR> clazz
     ){
-        return aggregateMap(initializer, aggregator, storeName, context().serde(clazz).value());
+        return aggregateMap(
+                initializer,
+                adder,
+                subtractor,
+                storeName,
+                context().serde(clazz).value()
+        );
     }
 
     public <VR> ElKTable<K,VR> aggregateMap(
             final Initializer<VR> initializer,
-            final Aggregator<K, V, VR> aggregator,
+            final Aggregator<K, V, VR> adder,
+            final Aggregator<K, V, VR> subtractor,
             String storeName,
             Serde<VR> serde
     ){
@@ -104,10 +111,11 @@ public class ElKGroupedStream<K,V> extends ElStreamBase<K,V> {
         var newSerde = serde().withValue(serde);
 
         return builder().with(newSerde).el(
-                groupedStream()
+                groupedTable()
                         .aggregate(
                                 initializer,
-                                aggregator,
+                                adder,
+                                subtractor,
                                 newSerde.materialized(storeName)
                         )
         );

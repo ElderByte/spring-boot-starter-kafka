@@ -40,16 +40,21 @@ public class ElKStreamMapper<K,V, KR, VR> {
      *                                                                         *
      **************************************************************************/
 
-    public ElKStream<KR, VR> map(final KeyValueMapper<? super K, ? super V, ? extends KeyValue<? extends KR, ? extends VR>> mapper){
+    public ElKStream<KR, V> selectKey(KeyValueMapper<? super K, ? super V, ? extends KR> mapper){
+        var myBuilder = stream.builder().with(stream.serde().withKey(targetBuilder.serde()));
+        return myBuilder.el(stream.kstream().selectKey(mapper));
+    }
+
+    public ElKStream<KR, VR> map(KeyValueMapper<? super K, ? super V, ? extends KeyValue<? extends KR, ? extends VR>> mapper){
         return targetBuilder.el(stream.kstream().map(mapper));
     }
 
-    public ElKStream<K, VR> mapValues(final ValueMapperWithKey<? super K, ? super V, ? extends VR> mapper){
+    public ElKStream<K, VR> mapValues(ValueMapperWithKey<? super K, ? super V, ? extends VR> mapper){
         var myBuilder = stream.builder().with(stream.serde().withValue(targetBuilder.serde()));
         return myBuilder.el(stream.kstream().mapValues(mapper));
     }
 
-    public ElKStream<KR, VR> transform(final WithHeaderMapper<K, V, KeyValue<KR, VR>> mapper){
+    public ElKStream<KR, VR> transform(WithHeaderMapper<K, V, KeyValue<KR, VR>> mapper){
         var transformed = stream.kstream()
                 .transform(() -> Transformers.transformerWithHeader(mapper));
         return targetBuilder.el(transformed);

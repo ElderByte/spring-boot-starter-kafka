@@ -39,6 +39,14 @@ public class KStreamSerde<K,V> {
      *                                                                         *
      **************************************************************************/
 
+    public Serde<K> key(){
+        return keySerde;
+    };
+
+    public Serde<V> value(){
+        return valueSerde;
+    };
+
     public Grouped<K, V> grouped(){
         return Grouped.with(keySerde, valueSerde);
     }

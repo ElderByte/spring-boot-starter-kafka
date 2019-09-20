@@ -1,8 +1,9 @@
 package com.elderbyte.kafka.streams.builder.dsl;
 
-import com.elderbyte.kafka.streams.builder.KafkaStreamsContextBuilder;
+import org.apache.kafka.streams.KeyValue;
+import org.apache.kafka.streams.kstream.KeyValueMapper;
 
-public class ElStreamBase<K,V> {
+public class ElKTableMapper<K,V, KR, VR> {
 
     /***************************************************************************
      *                                                                         *
@@ -10,7 +11,8 @@ public class ElStreamBase<K,V> {
      *                                                                         *
      **************************************************************************/
 
-    private final ElStreamsBuilder<K,V> elBuilder;
+    private final ElKTable<K,V> table;
+    private final ElStreamsBuilder<KR, VR> targetBuilder;
 
     /***************************************************************************
      *                                                                         *
@@ -19,10 +21,15 @@ public class ElStreamBase<K,V> {
      **************************************************************************/
 
     /**
-     * Creates a new ElKtable
+     * Creates a new ElKTableMapper
      */
-    public ElStreamBase(ElStreamsBuilder<K,V> elBuilder) {
-        this.elBuilder = elBuilder;
+    public ElKTableMapper(
+            ElKTable<K, V> table,
+            KStreamSerde<KR, VR> targetSerde) {
+        this.table = table;
+        this.targetBuilder = table.builder().with(targetSerde);
+
+
     }
 
     /***************************************************************************
@@ -31,16 +38,14 @@ public class ElStreamBase<K,V> {
      *                                                                         *
      **************************************************************************/
 
-    public ElStreamsBuilder<K,V> builder(){
-        return elBuilder;
-    }
-
-    public KafkaStreamsContextBuilder context() {
-        return elBuilder.context();
-    }
-
-    public KStreamSerde<K, V> serde() {
-        return elBuilder.serde();
+    public ElKGroupedTable<KR, VR> groupBy(
+            KeyValueMapper<K, V, KeyValue<KR,VR>> selector
+    ){
+        var grp = table.ktable().groupBy(
+                selector,
+                targetBuilder.serde().grouped()
+        );
+        return new ElKGroupedTable<>(targetBuilder, grp);
     }
 
     /***************************************************************************

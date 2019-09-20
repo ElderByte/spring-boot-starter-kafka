@@ -95,5 +95,4 @@ public interface KafkaStreamsContextBuilder {
     <K,V> KStreamSerde<K,V> serde(Class<K> keyClazz, Class<V> valueClazz);
 
     <K,V> KStreamSerde<K,V> serde(Serde<K> keySerde, Serde<V> valueSerde);
-
 }

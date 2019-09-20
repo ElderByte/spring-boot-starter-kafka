@@ -8,6 +8,7 @@ import org.springframework.lang.Nullable;
 
 import java.util.Optional;
 
+@Deprecated
 public class TombstoneJsonWrapper<V> {
 
     /***************************************************************************

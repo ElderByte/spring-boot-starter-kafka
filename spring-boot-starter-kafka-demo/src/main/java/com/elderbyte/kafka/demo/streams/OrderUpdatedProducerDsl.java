@@ -9,6 +9,7 @@ import com.elderbyte.kafka.demo.streams.model.orders.OrderKey;
 import com.elderbyte.kafka.demo.streams.model.orders.OrderUpdatedMessage;
 import com.elderbyte.kafka.streams.builder.KafkaStreamsContextBuilder;
 import com.elderbyte.kafka.streams.builder.UpdateOrDelete;
+import com.elderbyte.kafka.streams.builder.dsl.ElKTable;
 import com.elderbyte.kafka.streams.factory.KafkaStreamsContextBuilderFactory;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContext;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Set;
 
 @SuppressWarnings("DuplicatedCode")
@@ -52,7 +54,7 @@ public class OrderUpdatedProducerDsl {
     ) {
 
         this.builder = streamsBuilderFactory
-                                .newStreamsBuilder("demo");
+                .newStreamsBuilder("demo");
 
 
         join_with__table_tables();
@@ -68,7 +70,7 @@ public class OrderUpdatedProducerDsl {
 
         orderUpdateKTable()
                 .leftJoin(
-                        orderItemUpdateKTable(),
+                        orderItemUpdateKTable().ktable(),
                         (order, items) -> {
                             // Support header join behaviour
                             if(items != null){
@@ -135,34 +137,36 @@ public class OrderUpdatedProducerDsl {
         );
     }
 
-    private KTable<OrderKey, Set<OrderItem>> orderItemUpdateKTable(){
+    private ElKTable<OrderKey, Set<OrderItem>> orderItemUpdateKTable(){
 
         var cdcOrderItems = builder.from(String.class, new TypeReference<CdcEvent<CdcOrderItemEvent>>() {})
                 .kstream(CdcOrderItemEvent.TOPIC);
 
-        var orderItems = builder.mapStreamToTable(
-                "order-items",
-                cdcOrderItems.kstream(),
-                (k,v) -> KeyValue.pair(
-                        v.updated.id + "",
-                        v.delete ? null : v.updated
-                ),
-                String.class,
-                CdcOrderItemEvent.class
-        );
 
-        return builder.cdcRecipes()
-                .aggregateSet(
-                        "order-items-agg",
-                        orderItems,
-                        (k, v) -> KeyValue.pair(
-                                OrderKey.from(v.tenant, v.orderNumber),
-                                itemUpdated(v)
-                        ),
-                        OrderKey.class,
-                        OrderItem.class,
-                        new TypeReference<Set<OrderItem>>() {}
+        var orderItems = cdcOrderItems
+                .mapToKey(String.class)
+                .selectKey((k,v) -> v.updated.id + "")
+                .groupByKey()
+                .latest(
+                        (key, value) -> value.delete ? null : value.updated,
+                        "order-items",
+                        CdcOrderItemEvent.class
                 );
+
+        return orderItems
+                .mapTo(OrderKey.class, OrderItem.class)
+                    .groupBy(
+                            (k,v) -> KeyValue.pair(
+                                    OrderKey.from(v.tenant, v.orderNumber),
+                                    itemUpdated(v)
+                            )
+                    ).aggregateMap(
+                            HashSet::new,
+                            (k,v, agg) -> { agg.add(v); return agg; }, // Adder
+                            (k,v, agg) -> { agg.remove(v); return agg; }, // Remover
+                            "order-items-agg",
+                            new TypeReference<Set<OrderItem>>() {}
+                    );
     }
 
 
