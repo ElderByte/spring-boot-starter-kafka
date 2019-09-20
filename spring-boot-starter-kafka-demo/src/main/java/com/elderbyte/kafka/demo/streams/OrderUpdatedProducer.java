@@ -11,7 +11,6 @@ import com.elderbyte.kafka.streams.builder.KafkaStreamsContextBuilder;
 import com.elderbyte.kafka.streams.builder.UpdateOrDelete;
 import com.elderbyte.kafka.streams.factory.KafkaStreamsContextBuilderFactory;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContext;
-import com.elderbyte.kafka.streams.serdes.ElderKeySerde;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.*;
@@ -88,7 +87,7 @@ public class OrderUpdatedProducer {
                         (key, value) -> {
                             log.info("Peek: " + key + ", value: " + value);
                         }
-                ).to(OrderUpdatedMessage.TOPIC, builder.producedJson(ElderKeySerde.from(OrderKey.class), OrderUpdatedMessage.class));
+                ).to(OrderUpdatedMessage.TOPIC, builder.serde(OrderKey.class, OrderUpdatedMessage.class).produced());
     }
 
 

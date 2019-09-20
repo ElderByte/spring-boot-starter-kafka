@@ -24,6 +24,7 @@ import javax.annotation.PreDestroy;
 import java.util.ArrayList;
 import java.util.Set;
 
+@SuppressWarnings("DuplicatedCode")
 @Service
 public class OrderUpdatedProducerDsl {
 
@@ -84,7 +85,7 @@ public class OrderUpdatedProducerDsl {
                         (key, value) -> {
                             log.info("Peek: " + key + ", value: " + value);
                         }
-                ).to(OrderUpdatedMessage.TOPIC, builder.producedJson(ElderKeySerde.from(OrderKey.class), OrderUpdatedMessage.class));
+                ).to(OrderUpdatedMessage.TOPIC, builder.serde(OrderKey.class, OrderUpdatedMessage.class).produced());
     }
 
 
@@ -117,11 +118,12 @@ public class OrderUpdatedProducerDsl {
 
     private KTable<OrderKey, OrderUpdatedMessage> orderUpdateKTable(){
 
-        var cdcOrders = builder.streamFromJsonTopic(CdcOrderEvent.TOPIC, new TypeReference<CdcEvent<CdcOrderEvent>>() {});
+        var cdcOrders = builder.from(String.class, new TypeReference<CdcEvent<CdcOrderEvent>>() {})
+                .kstream(CdcOrderEvent.TOPIC);
 
         return builder.mapStreamToMessagesTable(
                 "orders",
-                cdcOrders,
+                cdcOrders.kstream(),
                 (k,v) -> {
                     if(!v.delete){
                         return UpdateOrDelete.update(orderUpdated(v.updated));
@@ -136,11 +138,12 @@ public class OrderUpdatedProducerDsl {
 
     private KTable<OrderKey, Set<OrderItem>> orderItemUpdateKTable(){
 
-        var cdcOrderItems = builder.streamFromJsonTopic(CdcOrderItemEvent.TOPIC, new TypeReference<CdcEvent<CdcOrderItemEvent>>() {});
+        var cdcOrderItems = builder.from(String.class, new TypeReference<CdcEvent<CdcOrderItemEvent>>() {})
+                .kstream(CdcOrderItemEvent.TOPIC);
 
         var orderItems = builder.mapStreamToTable(
                 "order-items",
-                cdcOrderItems,
+                cdcOrderItems.kstream(),
                 (k,v) -> KeyValue.pair(
                         v.updated.id + "",
                         v.delete ? null : v.updated
