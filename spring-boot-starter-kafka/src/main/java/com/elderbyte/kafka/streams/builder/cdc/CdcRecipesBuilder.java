@@ -4,11 +4,14 @@ import com.elderbyte.kafka.streams.builder.KafkaStreamsContextBuilder;
 import com.elderbyte.kafka.streams.builder.TombstoneJsonWrapper;
 import com.elderbyte.kafka.streams.serdes.ElderKeySerde;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.KeyValueMapper;
 
+import java.io.IOException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class CdcRecipesBuilder {
@@ -18,6 +21,7 @@ public class CdcRecipesBuilder {
      * Fields                                                                  *
      *                                                                         *
      **************************************************************************/
+
 
     private final KafkaStreamsContextBuilder builder;
 
@@ -67,5 +71,16 @@ public class CdcRecipesBuilder {
      * Private methods                                                         *
      *                                                                         *
      **************************************************************************/
+
+    /*
+    //private final ObjectMapper mapper;
+    private <V> Set<V> test(Class<V> clazz){
+        var colType = mapper.getTypeFactory().constructCollectionType(Set.class, clazz);
+        try {
+            return  mapper.readValue("Sadf", colType);
+        } catch (IOException e) {
+            throw new RuntimeException();
+        }
+    }*/
 
 }

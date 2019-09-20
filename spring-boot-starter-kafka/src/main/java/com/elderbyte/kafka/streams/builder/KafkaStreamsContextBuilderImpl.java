@@ -189,7 +189,6 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
     ){
         var events = inputStream
                 .map(kvm)
-                //.transformValues(() -> Transformers.valueTransformerWithHeader(headerMapper()))
                 .mapValues((v) -> TombstoneJsonWrapper.ofNullable(mapper, v));
 
         return tableJson(
