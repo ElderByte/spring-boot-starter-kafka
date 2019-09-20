@@ -102,10 +102,6 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
         return ElStreamsBuilder.from(this, serde);
     }
 
-    @Override
-    public <V> KStream<String, V> streamFromJsonTopic(String topic, TypeReference<V> clazz) {
-        return streamFromJsonTopic(topic,  ElderJsonSerde.from(mapper, clazz));
-    }
 
     @Override
     public <V, MK, U extends ElderMessage<MK>, D extends ElderMessage<MK>> KTable<MK, U> mapStreamToMessagesTable(
@@ -171,35 +167,6 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
                             // .withLoggingDisabled()
                             // .withCachingDisabled()
                 );
-    }
-
-    /**
-     * Interprets the given KSTREAM as KTABLE, supporting key/value transformation.
-     * Null values are translated into tombstone events.
-     */
-    @Override
-    public <K, V, VR> KTable<K, VR> mapStreamToTable(
-            String storeName,
-            KStream<K, V> inputStream,
-            KeyValueMapper<K, V, KeyValue<K,VR>> kvm,
-            Class<K> keyClazz,
-            Class<VR> valueClazz
-    ){
-        var events = inputStream
-                .map((k,v) -> {
-                    var udfR = kvm.apply(k,v);
-                    return KeyValue.pair(
-                            udfR.key,
-                            TombstoneJsonWrapper.ofNullable(mapper, udfR.value)
-                    );
-                });
-
-        return tableJson(
-                storeName,
-                events,
-                keyClazz,
-                valueClazz
-        );
     }
 
     /***************************************************************************

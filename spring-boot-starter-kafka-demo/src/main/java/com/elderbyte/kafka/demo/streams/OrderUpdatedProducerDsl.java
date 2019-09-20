@@ -58,8 +58,6 @@ public class OrderUpdatedProducerDsl {
 
 
         join_with__table_tables();
-        // join_with_global();
-        // join_stream_tables();
 
         streamsContext = builder.build();
     }
