@@ -1,5 +1,6 @@
 package com.elderbyte.kafka.streams.builder.dsl;
 
+import com.elderbyte.kafka.streams.builder.KafkaStreamsContextBuilder;
 import com.elderbyte.kafka.streams.builder.SerdeStreamsBuilder;
 import org.apache.kafka.streams.kstream.GlobalKTable;
 import org.apache.kafka.streams.kstream.KStream;
@@ -12,10 +13,27 @@ public class ElStreamsBuilder<K,V> {
 
     /***************************************************************************
      *                                                                         *
+     * Static Builder                                                          *
+     *                                                                         *
+     **************************************************************************/
+
+    public static <K,V> ElStreamsBuilder<K,V> from(
+            KafkaStreamsContextBuilder contextBuilder,
+            KStreamSerde<K,V> serde
+    ){
+        return new ElStreamsBuilder<>(
+                contextBuilder,
+                new SerdeStreamsBuilder<>(contextBuilder.streamsBuilder(), serde)
+        );
+    }
+
+    /***************************************************************************
+     *                                                                         *
      * Fields                                                                  *
      *                                                                         *
      **************************************************************************/
 
+    private final KafkaStreamsContextBuilder contextBuilder;
     private final SerdeStreamsBuilder<K, V> serdeStreamsBuilder;
 
     /***************************************************************************
@@ -27,15 +45,18 @@ public class ElStreamsBuilder<K,V> {
     /**
      * Creates a new ElStreamsBuilder
      */
-    public ElStreamsBuilder(
+    private ElStreamsBuilder(
+            KafkaStreamsContextBuilder contextBuilder,
             SerdeStreamsBuilder<K, V> serdeStreamsBuilder
     ) {
+        this.contextBuilder = contextBuilder;
         this.serdeStreamsBuilder = serdeStreamsBuilder;
     }
 
 
     public <KR,VR> ElStreamsBuilder<KR,VR> with(KStreamSerde<KR,VR> streamSerde){
         return new ElStreamsBuilder<>(
+                contextBuilder,
                 serdeStreamsBuilder.with(streamSerde)
         );
     }
@@ -86,6 +107,10 @@ public class ElStreamsBuilder<K,V> {
 
     public KStreamSerde<K,V> serde(){
         return serdeStreamsBuilder.serde();
+    }
+
+    public KafkaStreamsContextBuilder context(){
+        return contextBuilder;
     }
 
     /***************************************************************************

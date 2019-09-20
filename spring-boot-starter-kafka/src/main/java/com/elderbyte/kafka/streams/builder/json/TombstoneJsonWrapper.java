@@ -1,5 +1,6 @@
-package com.elderbyte.kafka.streams.builder;
+package com.elderbyte.kafka.streams.builder.json;
 
+import com.elderbyte.kafka.streams.builder.UpdateOrDelete;
 import com.elderbyte.messaging.api.ElderMessage;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -71,7 +72,7 @@ public class TombstoneJsonWrapper<V> {
      **************************************************************************/
 
 
-    public <T> Optional<T> getValue(ObjectMapper mapper, Class<T> clazz){
+    public Optional<V> getValue(ObjectMapper mapper, Class<V> clazz){
         return Optional.ofNullable(value)
                         .flatMap(v -> {
                             if(value.isNull() || value.isMissingNode()){

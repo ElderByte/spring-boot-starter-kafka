@@ -1,19 +1,15 @@
 package com.elderbyte.kafka.streams.builder.cdc;
 
 import com.elderbyte.kafka.streams.builder.KafkaStreamsContextBuilder;
-import com.elderbyte.kafka.streams.builder.TombstoneJsonWrapper;
-import com.elderbyte.kafka.streams.serdes.ElderKeySerde;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.KeyValueMapper;
 
-import java.io.IOException;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
+@Deprecated
 public class CdcRecipesBuilder {
 
     /***************************************************************************
@@ -51,18 +47,15 @@ public class CdcRecipesBuilder {
             Class<OutV> valueClazz,
             TypeReference<Set<OutV>> setClazz
     ){
-        var keySerde = ElderKeySerde.from(keyClazz);
-
-
         return compactedTable.groupBy(
                 kvm,
-                builder.groupedJson(keySerde, valueClazz)
+                builder.serde(keyClazz, valueClazz).grouped()
         )
                 .aggregate(
                         HashSet::new,
                         (k,v, agg) -> { agg.add(v); return agg; }, // Adder
                         (k,v, agg) -> { agg.remove(v); return agg; }, // Remover
-                        builder.materializedJson(storeName, keySerde, setClazz)
+                        builder.serde(keyClazz, setClazz).materialized(storeName)
                 );
     }
 

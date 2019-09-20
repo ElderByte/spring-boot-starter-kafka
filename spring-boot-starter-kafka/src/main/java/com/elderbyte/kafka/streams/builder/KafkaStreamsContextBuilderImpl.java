@@ -5,6 +5,7 @@ import com.elderbyte.kafka.messages.MessageBlueprint;
 import com.elderbyte.kafka.messages.MessageBlueprintFactory;
 import com.elderbyte.kafka.streams.builder.dsl.ElStreamsBuilder;
 import com.elderbyte.kafka.streams.builder.dsl.KStreamSerde;
+import com.elderbyte.kafka.streams.builder.json.TombstoneJsonWrapper;
 import com.elderbyte.kafka.streams.serdes.ElderJsonSerde;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContext;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContextImpl;
@@ -99,7 +100,7 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
     }
     @Override
     public <K,V> ElStreamsBuilder<K,V> from(KStreamSerde<K,V> serde){
-        return new ElStreamsBuilder<>(new SerdeStreamsBuilder<>(streamsBuilder, serde));
+        return ElStreamsBuilder.from(this, serde);
     }
 
     @Override
@@ -123,7 +124,9 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
 
                             var message = messageHolder.getMessage();
 
-                            MessageBlueprint<MK, ElderMessage<MK>> messageSupport = MessageBlueprintFactory.lookupOrCreate(message.getClass());
+                            var messageSupport = MessageBlueprintFactory.lookupOrCreate(
+                                    (Class<ElderMessage<MK>>)message.getClass()
+                            );
 
                             var messageKey = messageSupport.getKey(message);
 
@@ -159,12 +162,15 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
     ) {
         return stream
                 .groupByKey(
+
                         serde(keyClazz, new TypeReference<TombstoneJsonWrapper<V>>() {}).grouped()
                 )
-                .aggregate(
+                .aggregate( // Aggregate not reduce, since we change the Value type
                         () -> null,
-                        (k, value, oldValue) -> value.getValue(mapper,valueClazz).orElse(null),
+                        (key, value, agg) -> value.getValue(mapper,valueClazz).orElse(null),
                         serde(keyClazz, valueClazz).materialized(storeName)
+                            // .withLoggingDisabled()
+                            // .withCachingDisabled()
                 );
     }
 
@@ -181,8 +187,13 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
             Class<VR> valueClazz
     ){
         var events = inputStream
-                .map(kvm)
-                .mapValues((v) -> TombstoneJsonWrapper.ofNullable(mapper, v));
+                .map((k,v) -> {
+                    var udfR = kvm.apply(k,v);
+                    return KeyValue.pair(
+                            udfR.key,
+                            TombstoneJsonWrapper.ofNullable(mapper, udfR.value)
+                    );
+                });
 
         return tableJson(
                 storeName,
@@ -275,22 +286,6 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
         return streamsBuilder().stream(
                 topic,
                 serde(serde).consumed()
-        );
-    }
-
-    private  <V> KTable<String, V> tableFromJsonTopic(String topic, ElderJsonSerde<V> serde, String storeName) {
-        return streamsBuilder().table(
-                topic,
-                serde(serde).materialized(storeName)
-                        .withLoggingDisabled()
-        );
-    }
-
-    private  <V> GlobalKTable<String, V> globalTableFromJsonTopic(String topic, ElderJsonSerde<V> serde, String storeName) {
-        return streamsBuilder().globalTable(
-                topic,
-                serde(serde).materialized(storeName)
-                        .withLoggingDisabled()
         );
     }
 }
