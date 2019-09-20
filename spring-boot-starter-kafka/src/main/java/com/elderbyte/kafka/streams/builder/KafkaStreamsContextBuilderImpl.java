@@ -3,6 +3,8 @@ package com.elderbyte.kafka.streams.builder;
 import com.elderbyte.commons.exceptions.ArgumentNullException;
 import com.elderbyte.kafka.messages.MessageBlueprint;
 import com.elderbyte.kafka.messages.MessageBlueprintFactory;
+import com.elderbyte.kafka.streams.builder.dsl.ElStreamsBuilder;
+import com.elderbyte.kafka.streams.builder.dsl.KStreamSerde;
 import com.elderbyte.kafka.streams.serdes.ElderJsonSerde;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContext;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContextImpl;
@@ -78,6 +80,27 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
     @Override
     public StreamsBuilder streamsBuilder() {
         return this.streamsBuilder;
+    }
+
+
+    public <K,V> ElStreamsBuilder<K,V> from(Class<K> keyClazz, TypeReference<V> valueClazz){
+        return from(
+                new KStreamSerde<>(
+                        ElderKeySerde.from(keyClazz),
+                        ElderJsonSerde.from(mapper, valueClazz))
+        );
+    }
+
+    public <K,V> ElStreamsBuilder<K,V> from(Class<K> keyClazz, Class<V> valueClazz){
+        return from(
+                new KStreamSerde<>(
+                        ElderKeySerde.from(keyClazz),
+                        ElderJsonSerde.from(mapper, valueClazz))
+        );
+    }
+
+    public <K,V> ElStreamsBuilder<K,V> from(KStreamSerde<K,V> serde){
+        return new ElStreamsBuilder<>(new SerdeStreamsBuilder<>(streamsBuilder, serde));
     }
 
     @Override

@@ -1,6 +1,8 @@
 package com.elderbyte.kafka.streams.builder;
 
 import com.elderbyte.kafka.streams.builder.cdc.CdcRecipesBuilder;
+import com.elderbyte.kafka.streams.builder.dsl.ElStreamsBuilder;
+import com.elderbyte.kafka.streams.builder.dsl.KStreamSerde;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContext;
 import com.elderbyte.messaging.api.ElderMessage;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -60,6 +62,20 @@ public interface KafkaStreamsContextBuilder {
             Class<K> keyClazz,
             Class<VR> valueClazz
     );
+
+
+    /***************************************************************************
+     *                                                                         *
+     * El Builder                                                              *
+     *                                                                         *
+     **************************************************************************/
+
+
+    <K,V> ElStreamsBuilder<K,V> from(Class<K> keyClazz, TypeReference<V> valueClazz);
+
+    <K,V> ElStreamsBuilder<K,V> from(Class<K> keyClazz, Class<V> valueClazz);
+
+    <K,V> ElStreamsBuilder<K,V> from(KStreamSerde<K,V> serde);
 
     StreamsBuilder streamsBuilder();
 
