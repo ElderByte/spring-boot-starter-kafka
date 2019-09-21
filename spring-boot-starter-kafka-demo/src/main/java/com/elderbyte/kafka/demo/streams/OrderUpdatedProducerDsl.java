@@ -8,13 +8,11 @@ import com.elderbyte.kafka.demo.streams.model.orders.OrderDeletedMessage;
 import com.elderbyte.kafka.demo.streams.model.orders.OrderKey;
 import com.elderbyte.kafka.demo.streams.model.orders.OrderUpdatedMessage;
 import com.elderbyte.kafka.streams.builder.KafkaStreamsContextBuilder;
-import com.elderbyte.kafka.streams.builder.UpdateOrDelete;
 import com.elderbyte.kafka.streams.builder.dsl.ElKTable;
 import com.elderbyte.kafka.streams.factory.KafkaStreamsContextBuilderFactory;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContext;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.kstream.KTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -25,7 +23,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-@SuppressWarnings("DuplicatedCode")
 @Service
 public class OrderUpdatedProducerDsl {
 
@@ -66,11 +63,10 @@ public class OrderUpdatedProducerDsl {
     private void join_with__table_tables(){
 
 
-        orderUpdateKTableDsl().ktable()
+        orderUpdateKTable().ktable()
                 .leftJoin(
                         orderItemUpdateKTable().ktable(),
                         (order, items) -> {
-                            // Support header join behaviour
                             if(items != null){
                                 order.items = new ArrayList<>(items);
                             }
@@ -113,7 +109,7 @@ public class OrderUpdatedProducerDsl {
      *                                                                         *
      **************************************************************************/
 
-    private ElKTable<OrderKey, OrderUpdatedMessage> orderUpdateKTableDsl(){
+    private ElKTable<OrderKey, OrderUpdatedMessage> orderUpdateKTable(){
 
         var cdcOrders = builder.from(String.class, new TypeReference<CdcEvent<CdcOrderEvent>>() {})
                 .kstream(CdcOrderEvent.TOPIC);
@@ -166,14 +162,6 @@ public class OrderUpdatedProducerDsl {
                 orderEvent.number,
                 orderEvent.tenant,
                 orderEvent.description
-        );
-        return order;
-    }
-
-    private OrderDeletedMessage orderDeleted(CdcOrderEvent orderEvent){
-        var order = new OrderDeletedMessage(
-                orderEvent.number,
-                orderEvent.tenant
         );
         return order;
     }
