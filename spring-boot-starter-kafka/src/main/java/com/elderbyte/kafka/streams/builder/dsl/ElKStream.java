@@ -4,7 +4,13 @@ package com.elderbyte.kafka.streams.builder.dsl;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.kstream.ForeachAction;
 import org.apache.kafka.streams.kstream.KStream;
+import org.apache.kafka.streams.kstream.Predicate;
 import org.apache.kafka.streams.processor.TopicNameExtractor;
+
+import java.util.Arrays;
+import java.util.List;
+
+import static java.util.stream.Collectors.toList;
 
 public class ElKStream<K,V> extends ElStreamBase<K,V> {
 
@@ -61,6 +67,10 @@ public class ElKStream<K,V> extends ElStreamBase<K,V> {
         return this;
     }
 
+    public void foreach(final ForeachAction<? super K, ? super V> action){
+        kstream.foreach(action);
+    }
+
     public ElKStream<K,V> merge(ElKStream<K,V> otherStream){
         return builder().el(kstream.merge(otherStream.kstream()));
     }
@@ -79,6 +89,13 @@ public class ElKStream<K,V> extends ElStreamBase<K,V> {
         );
     }
 
+    public List<ElKStream<K, V>> branch(final Predicate<? super K, ? super V>... predicates){
+        var branches = kstream.branch(predicates);
+
+        return Arrays.stream(branches)
+                .map(b -> builder().el(b))
+                .collect(toList());
+    }
 
     /***************************************************************************
      *                                                                         *

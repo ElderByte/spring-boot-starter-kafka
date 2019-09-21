@@ -4,6 +4,7 @@ import com.elderbyte.kafka.streams.support.Transformers;
 import com.elderbyte.kafka.streams.support.WithHeaderMapper;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.KeyValueMapper;
+import org.apache.kafka.streams.kstream.TransformerSupplier;
 import org.apache.kafka.streams.kstream.ValueMapperWithKey;
 
 public class ElKStreamMapper<K,V, KR, VR> {
@@ -62,7 +63,23 @@ public class ElKStreamMapper<K,V, KR, VR> {
         return targetBuilder.el(transformed);
     }
 
-    // TODO flat*Map
+    public ElKStream<KR, VR> transform(TransformerSupplier<? super K, ? super V, KeyValue<KR, VR>> transformerSupplier,
+                                       String... stateStoreNames
+    ){
+        var transformed = stream.kstream()
+                .transform(transformerSupplier, stateStoreNames);
+        return targetBuilder.el(transformed);
+    }
+
+    public ElKStream<KR, VR> flatMap(KeyValueMapper<? super K, ? super V, ? extends Iterable<? extends KeyValue<? extends KR, ? extends VR>>> mapper){
+        return targetBuilder.el(stream.kstream().flatMap(mapper));
+    }
+
+    public ElKStream<K, VR> flatMap(ValueMapperWithKey<? super K, ? super V, ? extends Iterable<? extends VR>> mapper){
+        var myBuilder = builder().withValue(targetSerde.value());
+        return myBuilder.el(stream.kstream().flatMapValues(mapper));
+    }
+
 
     /***************************************************************************
      *                                                                         *
