@@ -66,7 +66,7 @@ public class OrderUpdatedProducerDsl {
     private void join_with__table_tables(){
 
 
-        orderUpdateKTable()
+        orderUpdateKTableDsl().ktable()
                 .leftJoin(
                         orderItemUpdateKTable().ktable(),
                         (order, items) -> {
@@ -75,9 +75,8 @@ public class OrderUpdatedProducerDsl {
                                 order.items = new ArrayList<>(items);
                             }
                             return order;
-                        }
-                        // builder.materializedJson("order-join", OrderUpdatedMessage.class)
-                        // builder.joinedJson(OrderUpdatedMessage.class, new TypeReference<Set<OrderItem>>() {})
+                        },
+                        builder.serde(OrderKey.class, OrderUpdatedMessage.class).materialized("order-join-items")
                 )
                 .toStream()
                 .peek(
@@ -114,25 +113,19 @@ public class OrderUpdatedProducerDsl {
      *                                                                         *
      **************************************************************************/
 
-
-    private KTable<OrderKey, OrderUpdatedMessage> orderUpdateKTable(){
+    private ElKTable<OrderKey, OrderUpdatedMessage> orderUpdateKTableDsl(){
 
         var cdcOrders = builder.from(String.class, new TypeReference<CdcEvent<CdcOrderEvent>>() {})
                 .kstream(CdcOrderEvent.TOPIC);
 
-        return builder.mapStreamToMessagesTable(
-                "orders",
-                cdcOrders.kstream(),
-                (k,v) -> {
-                    if(!v.delete){
-                        return UpdateOrDelete.update(orderUpdated(v.updated));
-                    }else{
-                        return UpdateOrDelete.delete(orderDeleted(v.updated));
-                    }
-                },
-                OrderKey.class,
-                OrderUpdatedMessage.class
-        );
+        return cdcOrders.mapToKey(OrderKey.class)
+                    .selectKey((k,v) -> OrderKey.from(v.updated.tenant, v.updated.number))
+                    .groupByKey()
+                    .latest(
+                            (key, value) -> value.delete ? null : orderUpdated(value.updated),
+                            "orders",
+                            OrderUpdatedMessage.class
+                    );
     }
 
     private ElKTable<OrderKey, Set<OrderItem>> orderItemUpdateKTable(){

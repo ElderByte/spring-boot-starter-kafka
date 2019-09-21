@@ -107,7 +107,7 @@ public class ElKStream<K,V> extends ElStreamBase<K,V> {
     }
 
     public <KR> ElKStreamMapper<K,V, KR, V> mapToKey(Class<KR> newKey){
-        return mapToKey(context().serde(newKey).value()); // Ugly should be serde().withKey(newKey)
+        return mapToKey(context().keySerde(newKey));
     }
 
     /***************************************************************************

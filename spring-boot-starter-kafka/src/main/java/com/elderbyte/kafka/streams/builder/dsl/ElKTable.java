@@ -73,7 +73,7 @@ public class ElKTable<K,V> extends ElStreamBase<K,V> {
     }
 
     public <KR> ElKTableMapper<K,V, KR, V> mapToKey(Class<KR> newKey){
-        return mapToKey(context().serde(newKey).value()); // Ugly key as value
+        return mapToKey(context().keySerde(newKey));
     }
 
     /***************************************************************************
