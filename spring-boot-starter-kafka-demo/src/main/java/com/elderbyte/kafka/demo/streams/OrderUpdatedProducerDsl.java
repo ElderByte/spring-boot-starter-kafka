@@ -132,13 +132,13 @@ public class OrderUpdatedProducerDsl {
 
         var orderItems = cdcOrderItems
                 .mapToKey(String.class)
-                .selectKey((k,v) -> v.updated.id + "")
+                    .selectKey((k,v) -> v.updated.id + "")
                 .groupByKey()
-                .latest(
-                        (key, value) -> value.delete ? null : value.updated,
-                        "order-items",
-                        CdcOrderItemEvent.class
-                );
+                    .latest(
+                            (key, value) -> value.delete ? null : value.updated,
+                            "order-items",
+                            CdcOrderItemEvent.class
+                    );
 
         return orderItems
                 .mapTo(OrderKey.class, OrderItem.class)
@@ -147,13 +147,14 @@ public class OrderUpdatedProducerDsl {
                                     OrderKey.from(v.tenant, v.orderNumber),
                                     itemUpdated(v)
                             )
-                    ).aggregateMap(
-                            HashSet::new,
-                            (k,v, agg) -> { agg.add(v); return agg; }, // Adder
-                            (k,v, agg) -> { agg.remove(v); return agg; }, // Remover
-                            "order-items-agg",
-                            new TypeReference<Set<OrderItem>>() {}
-                    );
+                    )
+                    .aggregateMap( // We should use the key / Map<Key, Value> for the aggregation
+                                HashSet::new,
+                                (k,v, agg) -> { agg.add(v); return agg; }, // Adder
+                                (k,v, agg) -> { agg.remove(v); return agg; }, // Remover
+                                "order-items-agg",
+                                new TypeReference<Set<OrderItem>>() {}
+                        );
     }
 
 
