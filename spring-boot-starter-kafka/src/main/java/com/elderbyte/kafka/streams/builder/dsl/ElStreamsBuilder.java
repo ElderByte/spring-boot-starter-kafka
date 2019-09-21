@@ -2,6 +2,7 @@ package com.elderbyte.kafka.streams.builder.dsl;
 
 import com.elderbyte.kafka.streams.builder.KafkaStreamsContextBuilder;
 import com.elderbyte.kafka.streams.builder.SerdeStreamsBuilder;
+import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.kstream.GlobalKTable;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
@@ -53,12 +54,25 @@ public class ElStreamsBuilder<K,V> {
         this.serdeStreamsBuilder = serdeStreamsBuilder;
     }
 
+    /***************************************************************************
+     *                                                                         *
+     * Mutator                                                                 *
+     *                                                                         *
+     **************************************************************************/
 
     public <KR,VR> ElStreamsBuilder<KR,VR> with(KStreamSerde<KR,VR> streamSerde){
         return new ElStreamsBuilder<>(
                 contextBuilder,
                 serdeStreamsBuilder.with(streamSerde)
         );
+    }
+
+    public <KR> ElStreamsBuilder<KR,V> withKey(Serde<KR> keySerde){
+        return with(serde().withKey(keySerde));
+    }
+
+    public <VR> ElStreamsBuilder<K,VR> withValue(Serde<VR> valueSerde){
+        return with(serde().withValue(valueSerde));
     }
 
     /***************************************************************************

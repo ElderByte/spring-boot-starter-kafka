@@ -28,8 +28,6 @@ public class ElKTableMapper<K,V, KR, VR> {
             KStreamSerde<KR, VR> targetSerde) {
         this.table = table;
         this.targetBuilder = table.builder().with(targetSerde);
-
-
     }
 
     /***************************************************************************
@@ -54,4 +52,7 @@ public class ElKTableMapper<K,V, KR, VR> {
      *                                                                         *
      **************************************************************************/
 
+    private ElStreamsBuilder<K,V> builder(){
+        return table.builder();
+    }
 }

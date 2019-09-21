@@ -59,6 +59,28 @@ public class KStreamSerde<K,V> {
         );
     }
 
+    public Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized(ElMat matConfig){
+        var mat = materialized(matConfig.getStoreName());
+
+        if(matConfig.isCachingEnabled()){
+            mat.withCachingEnabled();
+        }else{
+            mat.withCachingDisabled();
+        }
+
+        if(matConfig.isLoggingEnabled()){
+            mat.withLoggingEnabled(matConfig.getTopicConfig());
+        }else{
+            mat.withLoggingDisabled();
+        }
+
+        if(matConfig.getRetention() != null){
+            mat.withRetention(matConfig.getRetention());
+        }
+
+        return mat;
+    }
+
     public Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized(String storeName){
         return Materialized.<K, V, KeyValueStore<Bytes, byte[]>>as(storeName)
                 .withKeySerde(keySerde)

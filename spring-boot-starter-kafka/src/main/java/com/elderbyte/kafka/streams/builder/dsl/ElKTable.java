@@ -2,7 +2,10 @@ package com.elderbyte.kafka.streams.builder.dsl;
 
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.kstream.KTable;
+import org.apache.kafka.streams.kstream.Predicate;
 import org.apache.kafka.streams.kstream.Suppressed;
+
+import java.util.Optional;
 
 public class ElKTable<K,V> extends ElStreamBase<K,V> {
 
@@ -42,6 +45,10 @@ public class ElKTable<K,V> extends ElStreamBase<K,V> {
         return builder().el(ktable().suppress(suppressed));
     }
 
+    public ElKTable<K,V> filter(final Predicate<? super K, ? super V> predicate){
+        return builder().el(ktable().filter(predicate));
+    }
+
     public ElKStream<K,V> toStream(){
         return builder().el(ktable().toStream());
     }
@@ -74,6 +81,34 @@ public class ElKTable<K,V> extends ElStreamBase<K,V> {
 
     public <KR> ElKTableMapper<K,V, KR, V> mapToKey(Class<KR> newKey){
         return mapToKey(context().keySerde(newKey));
+    }
+
+    /***************************************************************************
+     *                                                                         *
+     * Joiner API                                                              *
+     *                                                                         *
+     **************************************************************************/
+
+    public ElKTableJoiner<K, V, V> joiner(){
+        return new ElKTableJoiner<>(this, serde());
+    }
+
+    public <VR> ElKTableJoiner<K, V, VR> joiner(Serde<VR> newValueSerde){
+        return new ElKTableJoiner<>(this, serde().withValue(newValueSerde));
+    }
+
+    public <VR> ElKTableJoiner<K, V, VR> joiner(KStreamSerde<K, VR> newSerde){
+        return new ElKTableJoiner<>(this, newSerde);
+    }
+
+    /***************************************************************************
+     *                                                                         *
+     * Store                                                                   *
+     *                                                                         *
+     **************************************************************************/
+
+    public Optional<String> queryableStoreName(){
+        return Optional.ofNullable(ktable.queryableStoreName());
     }
 
     /***************************************************************************

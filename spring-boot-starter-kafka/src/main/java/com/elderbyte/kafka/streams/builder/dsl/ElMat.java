@@ -1,12 +1,15 @@
 package com.elderbyte.kafka.streams.builder.dsl;
 
-import com.elderbyte.kafka.streams.support.Transformers;
-import com.elderbyte.kafka.streams.support.WithHeaderMapper;
-import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.kstream.KeyValueMapper;
-import org.apache.kafka.streams.kstream.ValueMapperWithKey;
 
-public class ElKStreamMapper<K,V, KR, VR> {
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+
+public class ElMat {
+
+    public static ElMat store(String storeName){
+        return new ElMat().storeName(storeName);
+    }
 
     /***************************************************************************
      *                                                                         *
@@ -14,9 +17,16 @@ public class ElKStreamMapper<K,V, KR, VR> {
      *                                                                         *
      **************************************************************************/
 
-    private final ElKStream<K,V> stream;
-    private final ElStreamsBuilder<KR, VR> targetBuilder;
-    private final KStreamSerde<KR, VR> targetSerde;
+    // Local state store name and part of the generated log topic
+    private String storeName;
+
+    // Local state store
+    private boolean cachingEnabled = true;
+
+    // Backing Kafka topic
+    private boolean loggingEnabled = true;
+    private Map<String, String> topicConfig = new HashMap<>();
+    private Duration retention;
 
     /***************************************************************************
      *                                                                         *
@@ -25,60 +35,71 @@ public class ElKStreamMapper<K,V, KR, VR> {
      **************************************************************************/
 
     /**
-     * Creates a new ElKStreamMapper
+     * Creates a new ElMat
      */
-    public ElKStreamMapper(
-            ElKStream<K,V> stream,
-            KStreamSerde<KR, VR> targetSerde
-    ) {
-        this.stream = stream;
-        this.targetSerde = targetSerde;
-        this.targetBuilder = stream.builder().with(targetSerde);
+    private ElMat() { }
+
+    /***************************************************************************
+     *                                                                         *
+     * Properties                                                              *
+     *                                                                         *
+     **************************************************************************/
+
+    public String getStoreName() {
+        return storeName;
+    }
+
+    public ElMat storeName(String storeName) {
+        this.storeName = storeName;
+        return this;
+    }
+
+    public boolean isLoggingEnabled() {
+        return loggingEnabled;
+    }
+
+    public ElMat loggingEnabled(boolean loggingEnabled) {
+        this.loggingEnabled = loggingEnabled;
+        return this;
+    }
+
+    public boolean isCachingEnabled() {
+        return cachingEnabled;
+    }
+
+    public ElMat cachingEnabled(boolean cachingEnabled) {
+        this.cachingEnabled = cachingEnabled;
+        return this;
+    }
+
+    public Duration getRetention() {
+        return retention;
+    }
+
+    public Map<String, String> getTopicConfig() {
+        return topicConfig;
+    }
+
+    public ElMat topicConfig(Map<String, String> topicConfig) {
+        this.topicConfig = topicConfig;
+        return this;
+    }
+
+    public ElMat retention(Duration retention) {
+        this.retention = retention;
+        return this;
     }
 
     /***************************************************************************
      *                                                                         *
-     * Map KStream to KStream                                                  *
+     * Public API                                                              *
      *                                                                         *
      **************************************************************************/
-
-    public ElKStream<KR, V> selectKey(KeyValueMapper<? super K, ? super V, ? extends KR> mapper){
-        var myBuilder = builder().withKey(targetSerde.key());
-        return myBuilder.el(stream.kstream().selectKey(mapper));
-    }
-
-    public ElKStream<KR, VR> map(KeyValueMapper<? super K, ? super V, ? extends KeyValue<? extends KR, ? extends VR>> mapper){
-        return targetBuilder.el(stream.kstream().map(mapper));
-    }
-
-    public ElKStream<K, VR> mapValues(ValueMapperWithKey<? super K, ? super V, ? extends VR> mapper){
-        var myBuilder = builder().withValue(targetSerde.value());
-        return myBuilder.el(stream.kstream().mapValues(mapper));
-    }
-
-    public ElKStream<KR, VR> transform(WithHeaderMapper<K, V, KeyValue<KR, VR>> mapper){
-        var transformed = stream.kstream()
-                .transform(() -> Transformers.transformerWithHeader(mapper));
-        return targetBuilder.el(transformed);
-    }
-
-    // TODO flat*Map
-
-    /***************************************************************************
-     *                                                                         *
-     * Map KStream to KTable                                                   *
-     *                                                                         *
-     **************************************************************************/
-
 
     /***************************************************************************
      *                                                                         *
      * Private methods                                                         *
      *                                                                         *
      **************************************************************************/
-
-    private ElStreamsBuilder<K,V> builder(){
-        return stream.builder();
-    }
 
 }

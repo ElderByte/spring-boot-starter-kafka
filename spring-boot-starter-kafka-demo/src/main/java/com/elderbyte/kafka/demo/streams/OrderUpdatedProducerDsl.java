@@ -4,11 +4,11 @@ import com.elderbyte.kafka.demo.streams.cdc.CdcEvent;
 import com.elderbyte.kafka.demo.streams.cdc.CdcOrderEvent;
 import com.elderbyte.kafka.demo.streams.cdc.CdcOrderItemEvent;
 import com.elderbyte.kafka.demo.streams.model.items.OrderItem;
-import com.elderbyte.kafka.demo.streams.model.orders.OrderDeletedMessage;
 import com.elderbyte.kafka.demo.streams.model.orders.OrderKey;
 import com.elderbyte.kafka.demo.streams.model.orders.OrderUpdatedMessage;
 import com.elderbyte.kafka.streams.builder.KafkaStreamsContextBuilder;
 import com.elderbyte.kafka.streams.builder.dsl.ElKTable;
+import com.elderbyte.kafka.streams.builder.dsl.ElMat;
 import com.elderbyte.kafka.streams.factory.KafkaStreamsContextBuilderFactory;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContext;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -63,23 +63,23 @@ public class OrderUpdatedProducerDsl {
     private void join_with__table_tables(){
 
 
-        orderUpdateKTable().ktable()
-                .leftJoin(
-                        orderItemUpdateKTable().ktable(),
-                        (order, items) -> {
-                            if(items != null){
-                                order.items = new ArrayList<>(items);
+        orderUpdateKTable()
+                .joiner()
+                    .leftJoin(
+                            orderItemUpdateKTable(),
+                            (order, items) -> {
+                                if(items != null){
+                                    order.items = new ArrayList<>(items);
+                                }
+                                return order;
+                            },
+                            ElMat.store("order-join-items")
+                    ).toStream()
+                    .peek(
+                            (key, value) -> {
+                                log.info("Peek: " + key + ", value: " + value);
                             }
-                            return order;
-                        },
-                        builder.serde(OrderKey.class, OrderUpdatedMessage.class).materialized("order-join-items")
-                )
-                .toStream()
-                .peek(
-                        (key, value) -> {
-                            log.info("Peek: " + key + ", value: " + value);
-                        }
-                ).to(OrderUpdatedMessage.TOPIC, builder.serde(OrderKey.class, OrderUpdatedMessage.class).produced());
+                    ).to(OrderUpdatedMessage.TOPIC);
     }
 
 
