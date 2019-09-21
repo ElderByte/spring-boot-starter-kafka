@@ -12,16 +12,13 @@ import com.elderbyte.kafka.streams.builder.dsl.ElMat;
 import com.elderbyte.kafka.streams.factory.KafkaStreamsContextBuilderFactory;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContext;
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.apache.kafka.streams.KeyValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class OrderUpdatedProducerDsl {
@@ -119,12 +116,12 @@ public class OrderUpdatedProducerDsl {
                     .groupByKey()
                     .latest(
                             (key, value) -> value.delete ? null : orderUpdated(value.updated),
-                            "orders",
+                            ElMat.store("orders"),
                             OrderUpdatedMessage.class
                     );
     }
 
-    private ElKTable<OrderKey, Set<OrderItem>> orderItemUpdateKTable(){
+    private ElKTable<OrderKey, Collection<OrderItem>> orderItemUpdateKTable(){
 
         var cdcOrderItems = builder.from(String.class, new TypeReference<CdcEvent<CdcOrderItemEvent>>() {})
                 .kstream(CdcOrderItemEvent.TOPIC);
@@ -132,29 +129,28 @@ public class OrderUpdatedProducerDsl {
 
         var orderItems = cdcOrderItems
                 .mapToKey(String.class)
-                    .selectKey((k,v) -> v.updated.id + "")
-                .groupByKey()
+                    .groupByKey((k,v) -> v.updated.id + "")
                     .latest(
                             (key, value) -> value.delete ? null : value.updated,
-                            "order-items",
+                            ElMat.store("order-items"),
                             CdcOrderItemEvent.class
                     );
 
         return orderItems
-                .mapTo(OrderKey.class, OrderItem.class)
-                    .groupBy(
-                            (k,v) -> KeyValue.pair(
-                                    OrderKey.from(v.tenant, v.orderNumber),
-                                    itemUpdated(v)
-                            )
+                .mapToKey(OrderKey.class)
+                    .groupByKey(
+                            (k,v) -> OrderKey.from(v.tenant, v.orderNumber)
                     )
                     .aggregateMap( // We should use the key / Map<Key, Value> for the aggregation
-                                HashSet::new,
-                                (k,v, agg) -> { agg.add(v); return agg; }, // Adder
-                                (k,v, agg) -> { agg.remove(v); return agg; }, // Remover
-                                "order-items-agg",
-                                new TypeReference<Set<OrderItem>>() {}
-                        );
+                                HashMap::new,
+                                (k,v, agg) -> { agg.put(v.id + "", itemUpdated(v)); return agg; }, // Adder
+                                (k,v, agg) -> { agg.remove(v.id + ""); return agg; }, // Remover
+                                ElMat.store("order-items-agg"),
+                                new TypeReference<Map<String,OrderItem>>() {}
+                        )
+                    .mapToValue(new TypeReference<Collection<OrderItem>>() {})
+                    .mapValues((k,v) -> v.values(), ElMat.store("items-for-order"));
+
     }
 
 

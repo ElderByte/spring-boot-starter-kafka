@@ -6,6 +6,7 @@ import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.KeyValueMapper;
 import org.apache.kafka.streams.kstream.TransformerSupplier;
 import org.apache.kafka.streams.kstream.ValueMapperWithKey;
+import org.apache.kafka.streams.kstream.ValueTransformerWithKeySupplier;
 
 public class ElKStreamMapper<K,V, KR, VR> {
 
@@ -48,6 +49,10 @@ public class ElKStreamMapper<K,V, KR, VR> {
         return myBuilder.el(stream.kstream().selectKey(mapper));
     }
 
+    public ElKGroupedStream<KR,V> groupByKey(KeyValueMapper<? super K, ? super V, ? extends KR> mapper){
+        return selectKey(mapper).groupByKey();
+    }
+
     public ElKStream<KR, VR> map(KeyValueMapper<? super K, ? super V, ? extends KeyValue<? extends KR, ? extends VR>> mapper){
         return targetBuilder.el(stream.kstream().map(mapper));
     }
@@ -58,9 +63,11 @@ public class ElKStreamMapper<K,V, KR, VR> {
     }
 
     public ElKStream<KR, VR> transform(WithHeaderMapper<K, V, KeyValue<KR, VR>> mapper){
-        var transformed = stream.kstream()
-                .transform(() -> Transformers.transformerWithHeader(mapper));
-        return targetBuilder.el(transformed);
+        return transform(() -> Transformers.transformerWithHeader(mapper));
+    }
+
+    public ElKStream<K, VR> transformValues(WithHeaderMapper<K, V, VR> mapper){
+        return transformValues(() -> Transformers.valueTransformerWithHeader(mapper));
     }
 
     public ElKStream<KR, VR> transform(TransformerSupplier<? super K, ? super V, KeyValue<KR, VR>> transformerSupplier,
@@ -69,6 +76,16 @@ public class ElKStreamMapper<K,V, KR, VR> {
         var transformed = stream.kstream()
                 .transform(transformerSupplier, stateStoreNames);
         return targetBuilder.el(transformed);
+    }
+
+    public ElKStream<K, VR> transformValues(ValueTransformerWithKeySupplier<? super K, ? super V, VR> valueTransformerSupplier,
+                                            String... stateStoreNames
+    ){
+        var myBuilder = builder().withValue(targetSerde.value());
+
+        var transformed = stream.kstream()
+                .transformValues(valueTransformerSupplier, stateStoreNames);
+        return myBuilder.el(transformed);
     }
 
     public ElKStream<KR, VR> flatMap(KeyValueMapper<? super K, ? super V, ? extends Iterable<? extends KeyValue<? extends KR, ? extends VR>>> mapper){

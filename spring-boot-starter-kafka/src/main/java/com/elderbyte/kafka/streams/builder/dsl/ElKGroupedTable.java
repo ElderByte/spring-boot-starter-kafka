@@ -54,7 +54,7 @@ public class ElKGroupedTable<K,V> extends ElStreamBase<K,V> {
             final Initializer<V> initializer,
             final Aggregator<K, V, V> adder,
             final Aggregator<K, V, V> subtractor,
-            String storeName
+            ElMat store
     ){
         return builder()
                 .el(
@@ -63,7 +63,7 @@ public class ElKGroupedTable<K,V> extends ElStreamBase<K,V> {
                                         initializer,
                                         adder,
                                         subtractor,
-                                        serde().materialized(storeName)
+                                        serde().materialized(store)
                                 )
                 );
     }
@@ -72,14 +72,14 @@ public class ElKGroupedTable<K,V> extends ElStreamBase<K,V> {
             final Initializer<VR> initializer,
             final Aggregator<K, V, VR> adder,
             final Aggregator<K, V, VR> subtractor,
-            String storeName,
+            ElMat store,
             TypeReference<VR> clazz
     ){
         return aggregateMap(
                 initializer,
                 adder,
                 subtractor,
-                storeName,
+                store,
                 context().serde(clazz).value()
         );
     }
@@ -88,14 +88,14 @@ public class ElKGroupedTable<K,V> extends ElStreamBase<K,V> {
             final Initializer<VR> initializer,
             final Aggregator<K, V, VR> adder,
             final Aggregator<K, V, VR> subtractor,
-            String storeName,
+            ElMat store,
             Class<VR> clazz
     ){
         return aggregateMap(
                 initializer,
                 adder,
                 subtractor,
-                storeName,
+                store,
                 context().serde(clazz).value()
         );
     }
@@ -104,7 +104,7 @@ public class ElKGroupedTable<K,V> extends ElStreamBase<K,V> {
             final Initializer<VR> initializer,
             final Aggregator<K, V, VR> adder,
             final Aggregator<K, V, VR> subtractor,
-            String storeName,
+            ElMat store,
             Serde<VR> serde
     ){
 
@@ -116,7 +116,7 @@ public class ElKGroupedTable<K,V> extends ElStreamBase<K,V> {
                                 initializer,
                                 adder,
                                 subtractor,
-                                newSerde.materialized(storeName)
+                                newSerde.materialized(store)
                         )
         );
     }

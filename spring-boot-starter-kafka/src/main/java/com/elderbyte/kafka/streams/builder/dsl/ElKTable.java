@@ -1,5 +1,6 @@
 package com.elderbyte.kafka.streams.builder.dsl;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.Predicate;
@@ -69,6 +70,10 @@ public class ElKTable<K,V> extends ElStreamBase<K,V> {
 
     public <VR> ElKTableMapper<K,V, K, VR> mapToValue(Serde<VR> newValue){
         return new ElKTableMapper<>(this, serde().withValue(newValue));
+    }
+
+    public <VR> ElKTableMapper<K,V, K, VR> mapToValue(TypeReference<VR> newValue){
+        return mapToValue(context().serde(newValue).value());
     }
 
     public <VR> ElKTableMapper<K,V, K, VR> mapToValue(Class<VR> newValue){

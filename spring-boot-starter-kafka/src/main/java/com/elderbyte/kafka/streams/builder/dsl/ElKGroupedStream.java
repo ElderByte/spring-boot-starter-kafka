@@ -72,14 +72,14 @@ public class ElKGroupedStream<K,V> extends ElStreamBase<K,V> {
 
     public <VR> ElKTable<K,VR> latest(
             final KeyValueMapper<K, V, VR> mapper,
-            String storeName,
+            ElMat store,
             Class<VR> clazz
     ){
         // Aggregate not reduce, since we change the Value type
         return aggregateMap(
                 () -> null,
                 (k, current, agg) -> mapper.apply(k, current),
-                storeName,
+                store,
                 context().serde(clazz).value()
         );
     }
@@ -88,16 +88,16 @@ public class ElKGroupedStream<K,V> extends ElStreamBase<K,V> {
     public <VR> ElKTable<K,VR> aggregateMap(
             final Initializer<VR> initializer,
             final Aggregator<K, V, VR> aggregator,
-            String storeName,
+            ElMat store,
             Class<VR> clazz
     ){
-        return aggregateMap(initializer, aggregator, storeName, context().serde(clazz).value());
+        return aggregateMap(initializer, aggregator, store, context().serde(clazz).value());
     }
 
     public <VR> ElKTable<K,VR> aggregateMap(
             final Initializer<VR> initializer,
             final Aggregator<K, V, VR> aggregator,
-            String storeName,
+            ElMat store,
             Serde<VR> serde
     ){
 
@@ -108,7 +108,7 @@ public class ElKGroupedStream<K,V> extends ElStreamBase<K,V> {
                         .aggregate(
                                 initializer,
                                 aggregator,
-                                newSerde.materialized(storeName)
+                                newSerde.materialized(store)
                         )
         );
     }
