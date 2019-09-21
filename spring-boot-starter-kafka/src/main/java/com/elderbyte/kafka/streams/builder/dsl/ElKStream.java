@@ -116,6 +116,17 @@ public class ElKStream<K,V> extends ElStreamBase<K,V> {
      *                                                                         *
      **************************************************************************/
 
+    public ElKStreamJoiner<K, V, V> joiner(){
+        return new ElKStreamJoiner<>(this, serde());
+    }
+
+    public <VR> ElKStreamJoiner<K, V, VR> joiner(Serde<VR> newValueSerde){
+        return new ElKStreamJoiner<>(this, serde().withValue(newValueSerde));
+    }
+
+    public <VR> ElKStreamJoiner<K, V, VR> joiner(KStreamSerde<K, VR> newSerde){
+        return new ElKStreamJoiner<>(this, newSerde);
+    }
 
     /***************************************************************************
      *                                                                         *
