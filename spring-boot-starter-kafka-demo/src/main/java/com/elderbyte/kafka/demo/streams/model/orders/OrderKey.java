@@ -3,6 +3,8 @@ package com.elderbyte.kafka.demo.streams.model.orders;
 import com.elderbyte.messaging.annotations.MessageCompositeKey;
 import com.elderbyte.messaging.annotations.MessageKey;
 
+import java.util.Objects;
+
 @MessageCompositeKey({"company", "number"})
 public class OrderKey {
 
@@ -27,5 +29,20 @@ public class OrderKey {
                 "number='" + number + '\'' +
                 ", company='" + company + '\'' +
                 '}';
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        OrderKey orderKey = (OrderKey) o;
+        return Objects.equals(number, orderKey.number) &&
+                Objects.equals(company, orderKey.company);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(number, company);
     }
 }
