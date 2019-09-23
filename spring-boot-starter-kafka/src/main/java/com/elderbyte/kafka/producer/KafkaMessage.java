@@ -1,6 +1,5 @@
 package com.elderbyte.kafka.producer;
 
-import com.elderbyte.messaging.api.ElderMessage;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.Header;
@@ -27,7 +26,7 @@ public class KafkaMessage<K,V> {
     /**
      * Build a kafka message from an annotated message object.
      */
-    public static <K, M extends ElderMessage<K>> KafkaMessage<K, M> fromMessage(M messageObject){
+    public static <K, M> KafkaMessage<K, M> fromMessage(M messageObject){
         return AnnotationKafkaMessageBuilder.build(messageObject);
     }
 

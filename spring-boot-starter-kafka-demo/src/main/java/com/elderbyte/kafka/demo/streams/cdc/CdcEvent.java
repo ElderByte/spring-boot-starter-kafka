@@ -2,9 +2,8 @@ package com.elderbyte.kafka.demo.streams.cdc;
 
 import com.elderbyte.messaging.annotations.MessageHeader;
 import com.elderbyte.messaging.annotations.MessageKey;
-import com.elderbyte.messaging.api.ElderMessage;
 
-public class CdcEvent<T> implements ElderMessage<String> {
+public class CdcEvent<T> {
 
     /***************************************************************************
      *                                                                         *

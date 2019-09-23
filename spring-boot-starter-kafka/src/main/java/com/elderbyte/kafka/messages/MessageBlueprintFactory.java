@@ -4,7 +4,6 @@ import com.elderbyte.commons.exceptions.ArgumentNullException;
 import com.elderbyte.messaging.annotations.MessageHeader;
 import com.elderbyte.messaging.annotations.MessageKey;
 import com.elderbyte.messaging.annotations.Tombstone;
-import com.elderbyte.messaging.api.ElderMessage;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,7 +34,7 @@ public class MessageBlueprintFactory {
 
 
     @SuppressWarnings("unchecked")
-    public static <K, M extends ElderMessage<K>> MessageBlueprint<K,M> lookupOrCreate(Class<M> messageClazz){
+    public static <K, M> MessageBlueprint<K,M> lookupOrCreate(Class<M> messageClazz){
 
         if(messageClazz == null) throw new ArgumentNullException("messageClazz");
 
@@ -52,7 +51,7 @@ public class MessageBlueprintFactory {
      *                                                                         *
      **************************************************************************/
 
-    private static <K, M extends ElderMessage<K>> MessageBlueprint<K,M> fromMessageClass(Class<M> messageClazz) throws InvalidMessageException {
+    private static <K, M> MessageBlueprint<K,M> fromMessageClass(Class<M> messageClazz) throws InvalidMessageException {
 
         var isTombstone = messageClazz.getAnnotation(Tombstone.class) != null;
 

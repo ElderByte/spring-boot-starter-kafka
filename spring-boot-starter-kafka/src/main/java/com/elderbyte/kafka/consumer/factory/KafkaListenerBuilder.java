@@ -5,7 +5,6 @@ import com.elderbyte.kafka.consumer.processing.Processor;
 import com.elderbyte.kafka.messages.MessageBatch;
 import com.elderbyte.kafka.metrics.MetricsContext;
 import com.elderbyte.kafka.records.RecordBatch;
-import com.elderbyte.messaging.api.ElderMessage;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.annotation.InterfaceStability;
@@ -158,7 +157,7 @@ public interface KafkaListenerBuilder<K,V> {
      * @param updatedCallback A callback when a updated message has arrived.
      * @param deletedCallback A callback when a deleted [tombstone] message has arrived.
      */
-    default <MU extends ElderMessage<K>, MD extends ElderMessage<K>> MessageListenerContainer buildMessageHandler(
+    default <MU, MD> MessageListenerContainer buildMessageHandler(
             Class<MD> tombstoneClazz,
             Processor<MU> updatedCallback,
             Processor<MD> deletedCallback
@@ -188,7 +187,7 @@ public interface KafkaListenerBuilder<K,V> {
      * @param tombstoneClazz The Deleted message type
      * @param messageBatchCallback a message batch callback
      */
-    default <MU extends ElderMessage<K>, MD extends ElderMessage<K>> MessageListenerContainer buildBatchMessageHandler(
+    default <MU, MD> MessageListenerContainer buildBatchMessageHandler(
             Class<MD> tombstoneClazz,
             Processor<MessageBatch<K, MU, MD>> messageBatchCallback
     ){

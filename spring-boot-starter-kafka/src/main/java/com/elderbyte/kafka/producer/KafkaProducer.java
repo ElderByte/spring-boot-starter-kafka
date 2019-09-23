@@ -1,6 +1,5 @@
 package com.elderbyte.kafka.producer;
 
-import com.elderbyte.messaging.api.ElderMessage;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.common.PartitionInfo;
 import org.springframework.kafka.support.SendResult;
@@ -27,7 +26,7 @@ public interface KafkaProducer<K,V> {
     default
             <
             MK,
-            MV extends ElderMessage<MK>
+            MV
             >
     CompletableFuture<SendResult<MK, V>> sendMessage(String topic, MV messageBody) {
         var message = KafkaMessage.fromMessage(messageBody);
@@ -37,7 +36,7 @@ public interface KafkaProducer<K,V> {
     default
             <
             MK,
-            MV extends ElderMessage<MK>
+            MV
             >
     List<CompletableFuture<SendResult<MK, V>>> sendAllMessages(String topic, Collection<? extends MV> messageBodys) {
         var messages = messageBodys.stream()

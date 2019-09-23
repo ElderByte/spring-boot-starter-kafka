@@ -2,7 +2,6 @@ package com.elderbyte.kafka.producer;
 
 import com.elderbyte.kafka.messages.InvalidMessageException;
 import com.elderbyte.kafka.messages.MessageBlueprintFactory;
-import com.elderbyte.messaging.api.ElderMessage;
 
 public class AnnotationKafkaMessageBuilder {
 
@@ -18,8 +17,8 @@ public class AnnotationKafkaMessageBuilder {
      * @param <M> Type of message object
      * @return Returns a typed kafka message
      */
-    public static <K, M extends ElderMessage<K>> KafkaMessage<K,M> build(M message){
-        var blueprint = MessageBlueprintFactory.lookupOrCreate((Class<M>)message.getClass());
+    public static <K, M> KafkaMessage<K,M> build(M message){
+        var blueprint = MessageBlueprintFactory.<K,M>lookupOrCreate((Class<M>)message.getClass());
 
         var key = blueprint.getKey(message);
         var headers = blueprint.getHeaders(message);

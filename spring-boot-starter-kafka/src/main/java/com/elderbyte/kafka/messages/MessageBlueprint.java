@@ -1,7 +1,6 @@
 package com.elderbyte.kafka.messages;
 
 import com.elderbyte.commons.exceptions.ArgumentNullException;
-import com.elderbyte.messaging.api.ElderMessage;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Headers;
 
@@ -12,7 +11,7 @@ import java.util.*;
 import static com.elderbyte.kafka.messages.ReflectionSupport.setFieldString;
 import static java.util.stream.Collectors.toMap;
 
-public class MessageBlueprint<K, M extends ElderMessage<K>> {
+public class MessageBlueprint<K, M> {
 
     /***************************************************************************
      *                                                                         *

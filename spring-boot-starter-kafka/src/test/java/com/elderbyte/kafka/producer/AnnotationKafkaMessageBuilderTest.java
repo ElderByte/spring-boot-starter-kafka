@@ -4,14 +4,13 @@ import com.elderbyte.kafka.messages.InvalidMessageException;
 import com.elderbyte.messaging.annotations.MessageHeader;
 import com.elderbyte.messaging.annotations.MessageKey;
 import com.elderbyte.messaging.annotations.Tombstone;
-import com.elderbyte.messaging.api.ElderMessage;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
 public class AnnotationKafkaMessageBuilderTest {
 
-    public static class MessageBlob implements ElderMessage<String> {
+    public static class MessageBlob {
         @MessageKey
         public String id;
 
@@ -25,7 +24,7 @@ public class AnnotationKafkaMessageBuilderTest {
     }
 
     @Tombstone
-    public static class MessageBlobTomb implements ElderMessage<String> {
+    public static class MessageBlobTomb {
         @MessageKey
         public String id;
 
@@ -38,7 +37,7 @@ public class AnnotationKafkaMessageBuilderTest {
         public String ignore;
     }
 
-    public static class MessageBlobNoKey implements ElderMessage<String> {
+    public static class MessageBlobNoKey {
 
         public String id;
 

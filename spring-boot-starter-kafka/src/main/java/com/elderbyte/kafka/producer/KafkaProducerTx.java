@@ -1,6 +1,5 @@
 package com.elderbyte.kafka.producer;
 
-import com.elderbyte.messaging.api.ElderMessage;
 import org.springframework.kafka.support.SendResult;
 
 import java.util.Collection;
@@ -20,7 +19,7 @@ public interface KafkaProducerTx<K,V> extends KafkaProducer<K,V> {
 
     default <
             MK,
-            MV extends ElderMessage<MK>
+            MV
             >
     List<CompletableFuture<SendResult<MK, MV>>> sendAllMessagesTransactionally(String topic, Collection<? extends MV> messageBodys) {
         var messages = messageBodys.stream()
