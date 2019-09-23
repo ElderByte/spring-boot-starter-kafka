@@ -50,8 +50,7 @@ public class KafkaStreamsContextFactoryImpl implements KafkaStreamsContextBuilde
     public KafkaStreamsContextBuilder newStreamsBuilder(String appName) {
         return new KafkaStreamsContextBuilderImpl(
                 mapper,
-                kafkaStreamsConfiguration(appName),
-                new CleanupConfig(false, true)
+                kafkaStreamsConfiguration(appName)
         );
     }
 

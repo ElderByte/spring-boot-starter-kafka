@@ -10,5 +10,5 @@ public interface KafkaStreamsContext extends SmartLifecycle {
 
     Topology getTopology();
 
-    Optional<KafkaStreams> getKafkaStreams() ;
+    Optional<KafkaStreams> getKafkaStreams();
 }

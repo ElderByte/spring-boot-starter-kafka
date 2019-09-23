@@ -3,6 +3,7 @@ package com.elderbyte.kafka.streams.builder;
 import com.elderbyte.commons.exceptions.ArgumentNullException;
 import com.elderbyte.kafka.streams.builder.dsl.ElStreamsBuilder;
 import com.elderbyte.kafka.streams.builder.dsl.KStreamSerde;
+import com.elderbyte.kafka.streams.managed.StreamsCleanupConfig;
 import com.elderbyte.kafka.streams.serdes.ElderJsonSerde;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContext;
 import com.elderbyte.kafka.streams.managed.KafkaStreamsContextImpl;
@@ -12,11 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.kstream.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.config.KafkaStreamsConfiguration;
-import org.springframework.kafka.core.CleanupConfig;
 
 
 /**
@@ -35,9 +34,12 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
     private static final Logger logger = LoggerFactory.getLogger(KafkaStreamsContextBuilderImpl.class);
 
     private final KafkaStreamsConfiguration streamsConfig;
-    private final CleanupConfig cleanupConfig;
     private final StreamsBuilder streamsBuilder;
     private final ObjectMapper mapper;
+
+    private boolean cleanUpOnStart = false;
+    private boolean cleanUpOnStop = false;
+    private boolean cleanUpOnError = false;
 
     /***************************************************************************
      *                                                                         *
@@ -50,18 +52,34 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
      */
     public KafkaStreamsContextBuilderImpl(
             ObjectMapper mapper,
-            KafkaStreamsConfiguration streamsConfig,
-            CleanupConfig cleanupConfig
+            KafkaStreamsConfiguration streamsConfig
     ) {
         if(streamsConfig == null) throw new ArgumentNullException("streamsConfig");
-        if(cleanupConfig == null) throw new ArgumentNullException("cleanupConfig");
-
         this.mapper = mapper;
         this.streamsConfig = streamsConfig;
-        this.cleanupConfig = cleanupConfig;
         this.streamsBuilder = new StreamsBuilder();
     }
 
+    /***************************************************************************
+     *                                                                         *
+     * Config API                                                              *
+     *                                                                         *
+     **************************************************************************/
+
+    public KafkaStreamsContextBuilder cleanUpOnStart(boolean cleanUp){
+        this.cleanUpOnStart = cleanUp;
+        return this;
+    }
+
+    public KafkaStreamsContextBuilder cleanUpOnStop(boolean cleanUp){
+        this.cleanUpOnStop = cleanUp;
+        return this;
+    }
+
+    public KafkaStreamsContextBuilder cleanUpOnError(boolean cleanUp){
+        this.cleanUpOnError = cleanUp;
+        return this;
+    }
 
     /***************************************************************************
      *                                                                         *
@@ -179,7 +197,7 @@ public class KafkaStreamsContextBuilderImpl implements KafkaStreamsContextBuilde
         return new KafkaStreamsContextImpl(
                 topology,
                 streamsConfig,
-                cleanupConfig,
+                new StreamsCleanupConfig(cleanUpOnStart, cleanUpOnStop, cleanUpOnError),
                 streams -> { }
         );
     }

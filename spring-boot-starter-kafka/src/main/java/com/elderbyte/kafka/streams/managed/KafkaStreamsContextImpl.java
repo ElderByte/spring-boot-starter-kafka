@@ -1,6 +1,7 @@
 package com.elderbyte.kafka.streams.managed;
 
 import com.elderbyte.commons.exceptions.ArgumentNullException;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.streams.KafkaClientSupplier;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.Topology;
@@ -30,7 +31,7 @@ public class KafkaStreamsContextImpl implements KafkaStreamsContext  {
     private static final Logger logger = LoggerFactory.getLogger(KafkaStreamsContextImpl.class);
 
     private final KafkaStreamsConfiguration streamsConfig;
-    private final CleanupConfig cleanupConfig;
+    private final StreamsCleanupConfig cleanupConfig;
     private final Topology topology;
 
 
@@ -61,7 +62,7 @@ public class KafkaStreamsContextImpl implements KafkaStreamsContext  {
     public KafkaStreamsContextImpl(
             Topology topology,
             KafkaStreamsConfiguration streamsConfig,
-            CleanupConfig cleanupConfig,
+            StreamsCleanupConfig cleanupConfig,
             KafkaStreamsCustomizer kafkaStreamsCustomizer
     ) {
         if(topology == null) throw new ArgumentNullException("topology");
@@ -73,7 +74,38 @@ public class KafkaStreamsContextImpl implements KafkaStreamsContext  {
         this.cleanupConfig = cleanupConfig;
         this.kafkaStreamsCustomizer = kafkaStreamsCustomizer;
 
-        stateListener = (state, old) -> logger.info("State: " + state);
+
+        uncaughtExceptionHandler = (t, ex) -> {
+            logger.error("Kafka Streams thread "+t.getName()+" died due unhandled exception!", ex);
+        };
+
+
+        stateRestoreListener = new StateRestoreListener() {
+            @Override
+            public void onRestoreStart(TopicPartition topicPartition, String storeName, long startingOffset, long endingOffset) {
+                logger.info("Start Restoring Store: " + storeName + " at topic " + topicPartition + " for " + startingOffset + " - " + endingOffset + "...");
+            }
+
+            @Override
+            public void onBatchRestored(TopicPartition topicPartition, String storeName, long batchEndOffset, long numRestored) {
+                logger.info("Restoring Store: " + storeName + " at topic " + topicPartition + " restored: " + numRestored);
+            }
+
+            @Override
+            public void onRestoreEnd(TopicPartition topicPartition, String storeName, long totalRestored) {
+                logger.info("Completed Restored Store : " + storeName + " at topic " + topicPartition + " total restored: " + totalRestored);
+            }
+        };
+
+        stateListener = (state, old) -> {
+            logger.info("State: " + state);
+            if(state == KafkaStreams.State.ERROR){
+                if(cleanupConfig.cleanupOnError()){
+                    logger.warn("Since Kafka Streams died in an Error, we clean up local storage to improve recovery chances!");
+                    kafkaStreams.cleanUp();
+                }
+            }
+        };
     }
 
     /***************************************************************************

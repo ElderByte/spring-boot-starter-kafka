@@ -48,8 +48,8 @@ public class OrderUpdatedProducerDsl {
     ) {
 
         this.builder = streamsBuilderFactory
-                .newStreamsBuilder("demo");
-
+                .newStreamsBuilder("demo")
+                .cleanUpOnError(true); // Recover from state store errors
 
         join_with__table_tables();
 

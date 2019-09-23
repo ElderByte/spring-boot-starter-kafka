@@ -10,6 +10,12 @@ import org.apache.kafka.streams.StreamsBuilder;
 
 public interface KafkaStreamsContextBuilder {
 
+    KafkaStreamsContextBuilder cleanUpOnError(boolean cleanUp);
+
+    KafkaStreamsContextBuilder cleanUpOnStart(boolean cleanUp);
+
+    KafkaStreamsContextBuilder cleanUpOnStop(boolean cleanUp);
+
     /***************************************************************************
      *                                                                         *
      * Builder API                                                             *
