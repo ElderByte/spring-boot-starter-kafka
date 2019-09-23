@@ -70,7 +70,7 @@ public class OrderUpdatedProducerDsl {
                                 }
                                 return order;
                             },
-                            ElMat.store("order-join-items")
+                            ElMat.ephemeral()
                     ).toStream()
                     .peek(
                             (key, value) -> {
@@ -145,7 +145,7 @@ public class OrderUpdatedProducerDsl {
                                 HashMap::new,
                                 (k,v, agg) -> { agg.put(v.id + "", itemUpdated(v)); return agg; }, // Adder
                                 (k,v, agg) -> { agg.remove(v.id + ""); return agg; }, // Remover
-                                ElMat.store("order-items-agg"),
+                                ElMat.store("order-items-agg"), // TODO necessary?
                                 new TypeReference<Map<String,OrderItem>>() {}
                         )
                     .mapToValue(new TypeReference<Collection<OrderItem>>() {})

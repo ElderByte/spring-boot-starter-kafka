@@ -60,7 +60,10 @@ public class KStreamSerde<K,V> {
     }
 
     public Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized(ElMat matConfig){
-        var mat = materialized(matConfig.getStoreName());
+
+        var mat = matConfig.getStoreName()
+                .map(this::materialized)
+                .orElse(materialized());
 
         if(matConfig.isCachingEnabled()){
             mat.withCachingEnabled();
@@ -85,6 +88,10 @@ public class KStreamSerde<K,V> {
         return Materialized.<K, V, KeyValueStore<Bytes, byte[]>>as(storeName)
                 .withKeySerde(keySerde)
                 .withValueSerde(valueSerde);
+    }
+
+    public Materialized<K, V, KeyValueStore<Bytes, byte[]>> materialized(){
+        return Materialized.with(keySerde, valueSerde);
     }
 
     public Produced<K, V> produced() {

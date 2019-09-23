@@ -39,19 +39,12 @@ public class ElKTableJoiner<K,V, VR> {
 
     public <VO> ElKTable<K, VR> leftJoin(
             final ElKTable<K, VO> other,
-            final ValueJoiner<? super V, ? super VO, VR> joiner
-    ){
-        return leftJoin(other, joiner, null);
-    }
-
-    public <VO> ElKTable<K, VR> leftJoin(
-            final ElKTable<K, VO> other,
             final ValueJoiner<? super V, ? super VO, VR> joiner,
             ElMat matConfig
     ){
         KTable<K, VR> joined;
 
-        if(matConfig == null){
+        if(matConfig.isEphemeral()){
             joined = ktable()
                     .leftJoin(
                             other.ktable(),
@@ -68,12 +61,6 @@ public class ElKTableJoiner<K,V, VR> {
         return builder().with(targetSerde).el(joined);
     }
 
-    public <VO> ElKTable<K, VR> join(
-            final ElKTable<K, VO> other,
-            final ValueJoiner<? super V, ? super VO, VR> joiner
-    ){
-        return join(other, joiner, null);
-    }
 
     public <VO> ElKTable<K, VR> join(
             final ElKTable<K, VO> other,
@@ -82,7 +69,7 @@ public class ElKTableJoiner<K,V, VR> {
     ){
         KTable<K, VR> joined;
 
-        if(matConfig == null){
+        if(matConfig.isEphemeral()){
             joined = ktable()
                     .join(
                             other.ktable(),
@@ -99,12 +86,6 @@ public class ElKTableJoiner<K,V, VR> {
         return builder().with(targetSerde).el(joined);
     }
 
-    public <VO> ElKTable<K, VR> outerJoin(
-            final ElKTable<K, VO> other,
-            final ValueJoiner<? super V, ? super VO, VR> joiner
-    ){
-        return outerJoin(other, joiner, null);
-    }
 
     public <VO> ElKTable<K, VR> outerJoin(
             final ElKTable<K, VO> other,
@@ -113,7 +94,7 @@ public class ElKTableJoiner<K,V, VR> {
     ){
         KTable<K, VR> joined;
 
-        if(matConfig == null){
+        if(matConfig.isEphemeral()){
             joined = ktable()
                     .outerJoin(
                             other.ktable(),
