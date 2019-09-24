@@ -9,7 +9,7 @@ buildscript {
 }
 
 allprojects {
-    version =   '2.2.0.E33'
+    version =   '2.2.0.E34'
     group = 'com.elderbyte.starter'
 
     //Always show stacktrace

@@ -36,7 +36,7 @@ dependencies {
 
 	// Kafka Client
 	compile('org.springframework.kafka:spring-kafka')
-	compile('org.apache.kafka:kafka-streams')
+	compileOnly('org.apache.kafka:kafka-streams')
 
 
 	compile("com.elderbyte.starter:starter:${starterVersion}")
