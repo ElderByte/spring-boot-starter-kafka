@@ -2,6 +2,7 @@ package com.elderbyte.kafka.producer;
 
 import com.elderbyte.kafka.config.KafkaClientProperties;
 import com.elderbyte.kafka.serialisation.json.ElderKafkaJsonSerializer;
+import com.elderbyte.kafka.serialisation.key.ElderCompositeKeySerializerGeneric;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +38,7 @@ public class DefaultJsonKafkaTemplateConfiguration {
      *                                                                         *
      **************************************************************************/
 
-    @Bean
+    @Bean("kafkaTemplate")
     @Primary
     public KafkaTemplate<String, Object> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
@@ -54,11 +55,35 @@ public class DefaultJsonKafkaTemplateConfiguration {
         return new KafkaTemplate<>(factory);
     }
 
+    @Bean("elderKafkaTemplate")
+    @Primary
+    public KafkaTemplate<Object, Object> elderKafkaTemplate() {
+        return new KafkaTemplate<>(elderProducerFactory());
+    }
+
+    @ConditionalOnProperty("kafka.client.producer.transaction.id")
+    @Bean("elderKafkaTemplateTransactional")
+    public KafkaTemplate<Object, Object> elderKafkaTemplateTransactional() {
+        var factory = elderProducerFactory();
+        var prodTid = config.getProducer().getTransaction().getId();
+        if(prodTid != null){
+            factory.setTransactionIdPrefix(prodTid);
+        }
+        return new KafkaTemplate<>(factory);
+    }
+
     /***************************************************************************
      *                                                                         *
      * Private methods                                                         *
      *                                                                         *
      **************************************************************************/
+
+    private DefaultKafkaProducerFactory<Object, Object> elderProducerFactory() {
+        var factory = new DefaultKafkaProducerFactory<Object, Object>(producerConfigs());
+        factory.setKeySerializer(new ElderCompositeKeySerializerGeneric());
+        factory.setValueSerializer(elderKafkaJsonSerializer);
+        return factory;
+    }
 
     private DefaultKafkaProducerFactory<String, Object> producerFactory() {
         var factory = new DefaultKafkaProducerFactory<String, Object>(producerConfigs());

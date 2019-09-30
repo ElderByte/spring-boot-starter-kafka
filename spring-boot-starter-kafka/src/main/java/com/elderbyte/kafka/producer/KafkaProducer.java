@@ -8,42 +8,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import static java.util.stream.Collectors.toList;
-
 /**
  * Provides the ability to send messages / records to a kafka broker.
  * @param <K> The message key
  * @param <V> The message content
  */
 public interface KafkaProducer<K,V> {
-
-    /***************************************************************************
-     *                                                                         *
-     * Message Producer API                                                    *
-     *                                                                         *
-     **************************************************************************/
-
-    default
-            <
-            MK,
-            MV
-            >
-    CompletableFuture<SendResult<MK, V>> sendMessage(String topic, MV messageBody) {
-        var message = KafkaMessage.fromMessage(messageBody);
-        return send(topic, (KafkaMessage) message);
-    }
-
-    default
-            <
-            MK,
-            MV
-            >
-    List<CompletableFuture<SendResult<MK, V>>> sendAllMessages(String topic, Collection<? extends MV> messageBodys) {
-        var messages = messageBodys.stream()
-                .map(KafkaMessage::fromMessage)
-                .collect(toList());
-        return sendAll(topic, (Collection) messages);
-    }
 
     /***************************************************************************
      *                                                                         *

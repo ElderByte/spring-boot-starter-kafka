@@ -24,13 +24,6 @@ public class KafkaMessage<K,V> {
      **************************************************************************/
 
     /**
-     * Build a kafka message from an annotated message object.
-     */
-    public static <K, M> KafkaMessage<K, M> fromMessage(M messageObject){
-        return AnnotationKafkaMessageBuilder.build(messageObject);
-    }
-
-    /**
      * Builds a message which might be a value or tombstone.
      * @param key The message key. Must not be null.
      * @param value The message value which might be null. (tombstone)

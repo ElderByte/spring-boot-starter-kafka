@@ -3,7 +3,7 @@ package com.elderbyte.kafka.demo.streams;
 import com.elderbyte.kafka.demo.streams.cdc.CdcEvent;
 import com.elderbyte.kafka.demo.streams.cdc.CdcOrderEvent;
 import com.elderbyte.kafka.demo.streams.cdc.CdcOrderItemEvent;
-import com.elderbyte.kafka.producer.KafkaProducerTx;
+import com.elderbyte.kafka.producer.messages.KafkaMessageProducerTx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -30,7 +30,7 @@ public class CdcMockProducer {
 
     private final AtomicInteger quantityCnt = new AtomicInteger(2);
     private final AtomicInteger orderCnt = new AtomicInteger(0);
-    private final KafkaProducerTx<String, Object> kafkaProducer;
+    private final KafkaMessageProducerTx messageProducer;
 
     /***************************************************************************
      *                                                                         *
@@ -42,9 +42,9 @@ public class CdcMockProducer {
      * Creates a new CdcMockProducer
      */
     public CdcMockProducer(
-            KafkaProducerTx<String, Object> kafkaProducer
+            KafkaMessageProducerTx messageProducer
     ) {
-        this.kafkaProducer = kafkaProducer;
+        this.messageProducer = messageProducer;
     }
 
     @PostConstruct
@@ -141,7 +141,7 @@ public class CdcMockProducer {
 
     private void sendAllMessages(String topic, Collection<? extends CdcEvent<?>> messages){
         log.info("Sending " + messages.size() + " messages to topic " + topic);
-        this.kafkaProducer.sendAllMessagesTransactionally(topic, messages);
+        this.messageProducer.sendAllMessagesTransactionally(topic, messages);
     }
 
 }

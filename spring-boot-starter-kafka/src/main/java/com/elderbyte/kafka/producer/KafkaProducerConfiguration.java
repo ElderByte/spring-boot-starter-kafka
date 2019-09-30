@@ -2,18 +2,19 @@ package com.elderbyte.kafka.producer;
 
 import com.elderbyte.kafka.producer.impl.KafkaProducerImpl;
 import com.elderbyte.kafka.producer.impl.KafkaProducerTxImpl;
+import com.elderbyte.kafka.producer.messages.KafkaMessageProducerConfiguration;
 import com.elderbyte.kafka.producer.mock.KafkaProducerMock;
 import com.elderbyte.kafka.producer.mock.KafkaProducerTxMock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.DependsOn;
-import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.*;
 import org.springframework.kafka.core.KafkaTemplate;
 
 @Configuration
+@Import({
+        KafkaMessageProducerConfiguration.class
+})
 public class KafkaProducerConfiguration {
 
     /***************************************************************************
@@ -27,18 +28,15 @@ public class KafkaProducerConfiguration {
     @ConditionalOnProperty(value = "kafka.client.enabled", matchIfMissing = true)
     public static class KafkaProducerConfigurationReal {
 
-        /***************************************************************************
-         *                                                                         *
-         * Fields                                                                  *
-         *                                                                         *
-         **************************************************************************/
 
-        @Autowired
-        private KafkaTemplate<String, Object> kafkaOperations;
 
         @Autowired(required = false)
         @Qualifier("kafkaTemplateTransactional")
         private KafkaTemplate<String, Object> kafkaOperationsTx;
+
+        @Autowired(required = false)
+        @Qualifier("elderKafkaTemplateTransactional")
+        private KafkaTemplate<Object, Object> elderKafkaOperationsTx;
 
         /***************************************************************************
          *                                                                         *
@@ -49,7 +47,7 @@ public class KafkaProducerConfiguration {
         @Bean
         @DependsOn("elderKafkaNewTopicCreator")
         @Primary
-        public KafkaProducer<String, Object> kafkaProducer(){
+        public KafkaProducer<String, Object> kafkaProducer(KafkaTemplate<String, Object> kafkaOperations){
             return new KafkaProducerImpl<>(kafkaOperations);
         }
 
@@ -58,6 +56,26 @@ public class KafkaProducerConfiguration {
         public KafkaProducerTx<String, Object> kafkaProducerTx(){
             return new KafkaProducerTxImpl<>(kafkaOperationsTx);
         }
+
+        /***************************************************************************
+         *                                                                         *
+         * Public API                                                              *
+         *                                                                         *
+         **************************************************************************/
+
+        @Bean
+        @DependsOn("elderKafkaNewTopicCreator")
+        @Primary
+        public KafkaProducer<Object, Object> elderKafkaProducer(KafkaTemplate<Object, Object> kafkaOperations){
+            return new KafkaProducerImpl<>(kafkaOperations);
+        }
+
+        @Bean
+        @ConditionalOnProperty("kafka.client.producer.transaction.id")
+        public KafkaProducerTx<Object, Object> elderKafkaProducerTx(){
+            return new KafkaProducerTxImpl<>(elderKafkaOperationsTx);
+        }
+
     }
 
 
@@ -96,6 +114,25 @@ public class KafkaProducerConfiguration {
         public KafkaProducerTx<String, Object> kafkaProducerTx(){
             return new KafkaProducerTxMock<>();
         }
+
+        /***************************************************************************
+         *                                                                         *
+         * Public API                                                              *
+         *                                                                         *
+         **************************************************************************/
+
+        @Bean
+        @DependsOn("elderKafkaNewTopicCreator")
+        @Primary
+        public KafkaProducer<Object, Object> elderKafkaProducer(){
+            return new KafkaProducerMock<>();
+        }
+
+        @Bean
+        public KafkaProducerTx<Object, Object> elderKafkaProducerTx(){
+            return new KafkaProducerTxMock<>();
+        }
+
     }
 
 }
