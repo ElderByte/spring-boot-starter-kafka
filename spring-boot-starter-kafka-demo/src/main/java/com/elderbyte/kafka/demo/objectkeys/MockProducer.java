@@ -80,9 +80,9 @@ public class MockProducer {
     }
 
 
-    private void sendAllMessages(String topic, Collection<?> messages){
+    private void sendAllMessages(String topic, Collection<OrderUpdatedMessage> messages){
         log.info("Sending " + messages.size() + " messages to topic " + topic);
-        this.kafkaProducer.sendAllTransactionally(topic, (Collection)messages);
+        this.kafkaProducer.sendAllTransactionally(topic, messages);
     }
 
 }
