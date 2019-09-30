@@ -34,3 +34,6 @@ kafka:
       - name: demo.store.orders.order
         partitions: 1
         cleanUpPolicy: compact
+      - name: demo.store.orders.test
+        partitions: 1
+        cleanUpPolicy: compact
