@@ -15,6 +15,16 @@ public class MessageBlueprint<K, M> {
 
     /***************************************************************************
      *                                                                         *
+     * Static Builder                                                          *
+     *                                                                         *
+     **************************************************************************/
+
+    public static <K, M> MessageBlueprint<K, M> from(Class<M> messageClazz){
+        return MessageBlueprintFactory.lookupOrCreate(messageClazz);
+    }
+
+    /***************************************************************************
+     *                                                                         *
      * Fields                                                                  *
      *                                                                         *
      **************************************************************************/
@@ -34,7 +44,7 @@ public class MessageBlueprint<K, M> {
      *                                                                         *
      **************************************************************************/
 
-    public MessageBlueprint(
+    MessageBlueprint(
             boolean tomstone,
             MessageKeyField keyField,
             Collection<MetadataField> headerFields

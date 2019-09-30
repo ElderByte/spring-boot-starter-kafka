@@ -7,6 +7,7 @@ import com.elderbyte.messaging.annotations.MessageKey;
 
 import java.lang.reflect.Constructor;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static java.util.stream.Collectors.toList;
 
@@ -18,7 +19,31 @@ public class MessageKeyBlueprint<K> {
      *                                                                         *
      **************************************************************************/
 
+    private static final Map<Class<?>, MessageKeyBlueprint<?>> blueprintCache = new ConcurrentHashMap<>();
+
+    @SuppressWarnings("unchecked")
+    static <K> MessageKeyBlueprint<K> lookupOrCreate(Class<K> messageClazz){
+
+        if(messageClazz == null) throw new ArgumentNullException("messageClazz");
+
+        return (MessageKeyBlueprint<K>)blueprintCache
+                .computeIfAbsent(
+                        messageClazz,
+                        (clazz) -> build(messageClazz)
+                );
+    }
+
     public static <K> MessageKeyBlueprint<K> from(Class<K> keyClazz){
+        return lookupOrCreate(keyClazz);
+    }
+
+    /***************************************************************************
+     *                                                                         *
+     * Static Builder                                                          *
+     *                                                                         *
+     **************************************************************************/
+
+    private static <K> MessageKeyBlueprint<K> build(Class<K> keyClazz){
 
         var compositeKey = keyClazz.getAnnotation(MessageCompositeKey.class);
         var keyFields = new HashMap<String, MessageKeyField>();

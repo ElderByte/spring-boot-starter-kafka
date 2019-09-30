@@ -34,7 +34,7 @@ public class MessageBlueprintFactory {
 
 
     @SuppressWarnings("unchecked")
-    public static <K, M> MessageBlueprint<K,M> lookupOrCreate(Class<M> messageClazz){
+    static <K, M> MessageBlueprint<K,M> lookupOrCreate(Class<M> messageClazz){
 
         if(messageClazz == null) throw new ArgumentNullException("messageClazz");
 

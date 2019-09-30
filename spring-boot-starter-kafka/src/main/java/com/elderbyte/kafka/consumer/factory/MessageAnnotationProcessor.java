@@ -1,5 +1,6 @@
 package com.elderbyte.kafka.consumer.factory;
 
+import com.elderbyte.kafka.messages.MessageBlueprint;
 import com.elderbyte.kafka.messages.MessageBlueprintFactory;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
@@ -27,7 +28,7 @@ public class MessageAnnotationProcessor {
     }
 
     private static <K, M, V> M buildMessageInt(M message, ConsumerRecord<K, V> record, Class<M> messageClazz){
-        var blueprint = MessageBlueprintFactory.lookupOrCreate(messageClazz);
+        var blueprint = MessageBlueprint.from(messageClazz);
         return blueprint.updateFromRecord(message, record);
     }
 }
