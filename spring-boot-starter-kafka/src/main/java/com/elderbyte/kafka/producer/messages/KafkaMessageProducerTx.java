@@ -9,6 +9,6 @@ import java.util.concurrent.CompletableFuture;
 public interface KafkaMessageProducerTx extends KafkaMessageProducer {
 
     <MK,MV>
-    List<CompletableFuture<SendResult<MK, MV>>> sendAllMessagesTransactionally(String topic, Collection<? extends MV> messageBodys);
+    List<CompletableFuture<SendResult<MK, MV>>> sendAllTransactionally(String topic, Collection<? extends MV> messageBodys);
 
 }

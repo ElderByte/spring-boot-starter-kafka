@@ -43,7 +43,7 @@ public class KafkaMessageProducerTxImpl extends KafkaMessageProducerImpl impleme
             MK,
             MV
             >
-    List<CompletableFuture<SendResult<MK, MV>>> sendAllMessagesTransactionally(String topic, Collection<? extends MV> messageBodys) {
+    List<CompletableFuture<SendResult<MK, MV>>> sendAllTransactionally(String topic, Collection<? extends MV> messageBodys) {
         var messages = messageBodys.stream()
                 .map(this::fromMessage)
                 .collect(toList());

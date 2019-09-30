@@ -9,8 +9,8 @@ import java.util.concurrent.CompletableFuture;
 
 public interface KafkaMessageProducer {
 
-    <MK, MV> CompletableFuture<SendResult<MK, MV>> sendMessage(String topic, MV messageBody);
+    <MK, MV> CompletableFuture<SendResult<MK, MV>> send(String topic, MV messageBody);
 
-    <MK,MV> List<CompletableFuture<SendResult<MK, MV>>> sendAllMessages(String topic, Collection<? extends MV> messageBodys);
+    <MK,MV> List<CompletableFuture<SendResult<MK, MV>>> sendAll(String topic, Collection<? extends MV> messageBodys);
 
 }

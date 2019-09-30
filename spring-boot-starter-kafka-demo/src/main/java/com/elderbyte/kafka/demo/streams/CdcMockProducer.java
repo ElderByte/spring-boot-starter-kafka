@@ -141,7 +141,7 @@ public class CdcMockProducer {
 
     private void sendAllMessages(String topic, Collection<? extends CdcEvent<?>> messages){
         log.info("Sending " + messages.size() + " messages to topic " + topic);
-        this.messageProducer.sendAllMessagesTransactionally(topic, messages);
+        this.messageProducer.sendAllTransactionally(topic, messages);
     }
 
 }

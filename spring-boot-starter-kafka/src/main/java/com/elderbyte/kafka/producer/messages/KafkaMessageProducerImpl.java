@@ -42,7 +42,7 @@ public class KafkaMessageProducerImpl implements KafkaMessageProducer {
      **************************************************************************/
 
     public
-    <MK, MV> CompletableFuture<SendResult<MK, MV>> sendMessage(
+    <MK, MV> CompletableFuture<SendResult<MK, MV>> send(
             String topic,
             MV messageBody
     ) {
@@ -50,7 +50,7 @@ public class KafkaMessageProducerImpl implements KafkaMessageProducer {
         return (CompletableFuture<SendResult<MK, MV>>)(Object)producer.send(topic, message);
     }
 
-    public <MK,MV> List<CompletableFuture<SendResult<MK, MV>>> sendAllMessages(
+    public <MK,MV> List<CompletableFuture<SendResult<MK, MV>>> sendAll(
             String topic,
             Collection<? extends MV> messageBodys
     ) {
