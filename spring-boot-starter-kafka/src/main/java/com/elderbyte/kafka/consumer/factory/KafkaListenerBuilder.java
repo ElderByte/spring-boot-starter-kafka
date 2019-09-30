@@ -38,6 +38,8 @@ public interface KafkaListenerBuilder<K,V> {
 
     KafkaListenerBuilder<String,V> stringKey();
 
+    <NK> KafkaListenerBuilder<NK,V> compositeKey(Class<NK> keyClazz);
+
     <NV> KafkaListenerBuilder<K,NV> valueDeserializer(Deserializer<NV> valueDeserializer);
 
     <NK> KafkaListenerBuilder<NK,V> keyDeserializer(Deserializer<NK> keyDeserializer);
