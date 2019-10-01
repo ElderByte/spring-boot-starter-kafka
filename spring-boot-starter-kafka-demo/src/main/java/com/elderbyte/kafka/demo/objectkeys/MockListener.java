@@ -1,6 +1,7 @@
 package com.elderbyte.kafka.demo.objectkeys;
 
 import com.elderbyte.kafka.consumer.factory.KafkaListenerFactory;
+import com.elderbyte.kafka.demo.streams.model.orders.OrderKey;
 import com.elderbyte.kafka.demo.streams.model.orders.OrderUpdatedMessage;
 import com.elderbyte.kafka.metrics.MetricsContext;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -40,7 +41,7 @@ public class MockListener {
         this.messageListener = kafkaListenerFactory.start(MockProducer.TOPIC)
                 .consumerGroup("kafka-demo")
                 .jsonValue(OrderUpdatedMessage.class)
-                .stringKey()
+                .compositeKey(OrderKey.class)
                 .metrics(MetricsContext.from("kafka-demo", "kafka-demo-1"))
                 .blockingRetries(2)
                 .buildBatch(this::handle);
@@ -58,7 +59,7 @@ public class MockListener {
      *                                                                         *
      **************************************************************************/
 
-    private void handle(List<ConsumerRecord<String, OrderUpdatedMessage>> messages) {
+    private void handle(List<ConsumerRecord<OrderKey, OrderUpdatedMessage>> messages) {
 
         messages.forEach(m ->
             this.log.info("Received message, msg-key: {}, value-key: {}, value: {}",

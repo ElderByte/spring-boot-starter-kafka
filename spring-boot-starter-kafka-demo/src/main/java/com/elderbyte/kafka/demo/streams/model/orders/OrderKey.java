@@ -15,9 +15,9 @@ public class OrderKey {
     @MessageKey public String number;
     @MessageKey public String company;
 
-    public OrderKey(){}
+    protected OrderKey(){}
 
-    public OrderKey(String company, String number) {
+    protected OrderKey(String company, String number) {
         this.company = company;
         this.number = number;
     }
