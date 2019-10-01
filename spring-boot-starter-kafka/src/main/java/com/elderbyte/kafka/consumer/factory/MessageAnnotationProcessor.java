@@ -2,6 +2,7 @@ package com.elderbyte.kafka.consumer.factory;
 
 import com.elderbyte.kafka.messages.MessageBlueprint;
 import com.elderbyte.kafka.messages.MessageBlueprintFactory;
+import com.elderbyte.kafka.messages.ReflectionSupport;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 
@@ -20,7 +21,7 @@ public class MessageAnnotationProcessor {
 
         M instance;
         try {
-            instance = messageClazz.getDeclaredConstructor().newInstance();
+            instance = ReflectionSupport.createInstance(messageClazz);
         } catch (Exception e) {
             throw new IllegalStateException("The given tomb-stone message class could not be instantiated!", e);
         }

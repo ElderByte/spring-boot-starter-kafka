@@ -125,6 +125,7 @@ public class MessageKeyBlueprint<K> {
 
         try {
             this.keyConstructor = keyClazz.getDeclaredConstructor();
+            this.keyConstructor.setAccessible(true);
         } catch (Exception e) {
             throw new InvalidMessageException("Failed to locate no args constructor for message-key object "+keyClazz.getName(), e);
         }

@@ -12,6 +12,17 @@ public class ReflectionSupport {
      *                                                                         *
      **************************************************************************/
 
+    public static  <T> T createInstance(Class<T> clazz){
+        try {
+            var constructor = clazz.getDeclaredConstructor();
+            constructor.setAccessible(true);
+            return constructor.newInstance();
+        } catch (Exception e) {
+            throw new InvalidMessageException("Failed to access constructor / create new instance of "+clazz.getName(), e);
+        }
+    }
+
+
     @SuppressWarnings("unchecked")
     public static  <V> void setFieldString(Field field, V message, String headerValue){
         if(field.getType() == String.class){
