@@ -71,6 +71,10 @@ public class ElKStream<K,V> extends ElStreamBase<K,V> {
         kstream.foreach(action);
     }
 
+    public ElKStream<K,V> filter(final Predicate<? super K, ? super V> predicate){
+        return builder().el(kstream.filter(predicate));
+    }
+
     public ElKStream<K,V> merge(ElKStream<K,V> otherStream){
         return builder().el(kstream.merge(otherStream.kstream()));
     }
