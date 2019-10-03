@@ -3,6 +3,8 @@ package com.elderbyte.kafka.messages;
 import com.elderbyte.commons.exceptions.ArgumentNullException;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Headers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
@@ -28,6 +30,8 @@ public class MessageBlueprint<K, M> {
      * Fields                                                                  *
      *                                                                         *
      **************************************************************************/
+
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final boolean tombstone;
     private final MessageKeyField keyField;
@@ -103,27 +107,14 @@ public class MessageBlueprint<K, M> {
 
     public <RK, RV> M updateFromRecord(M message, ConsumerRecord<RK, RV> record) {
 
-
         if(record.key() != null && keyField.isPopulateField()){
             var key = record.key();
             ReflectionSupport.setField(keyField.getField(), message, key);
         }
 
-        var headers = record.headers();
-
-        headerFields.forEach((k, field) -> {
-            if(field.isPopulate()){
-                if(Map.class.isAssignableFrom(field.getField().getType())){
-                    readAllHeadersToMap(headers, message, field.getField());
-                }else{
-                    // Assume standard field
-                    var header = headers.lastHeader(k);
-                    if(header != null){
-                        setStringFieldBytes(field.getField(), message, header.value());
-                    }
-                }
-            }
-        });
+        if(record.headers() != null){
+            updateHeadersFromRecord(message, record.headers());
+        }
 
         return message;
     }
@@ -133,6 +124,32 @@ public class MessageBlueprint<K, M> {
      * Private methods                                                         *
      *                                                                         *
      **************************************************************************/
+
+    private void updateHeadersFromRecord(M message, Headers headers){
+
+        try {
+            headerFields.forEach((k, field) -> {
+                if(field.isPopulate()){
+
+                    var targetType = field.getField().getType();
+
+                    if(Map.class.isAssignableFrom(targetType)) {
+                        readAllHeadersToMap(headers, message, field.getField());
+                    }else if(String.class.isAssignableFrom(targetType)){
+                        // Assume standard field
+                        var header = headers.lastHeader(k);
+                        if(header != null){
+                            setStringFieldBytes(field.getField(), message, header.value());
+                        }
+                    }else{
+                        logger.warn("Skipping header field, since can not write field with type " + targetType + "!");
+                    }
+                }
+            });
+        }catch (Exception e){
+            logger.error("Failed to update headers in message from record!", e);
+        }
+    }
 
     private void readAllHeadersToMap(Headers headers, Object message, Field mapField){
 
