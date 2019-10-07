@@ -57,7 +57,6 @@ public class DefaultKafkaAdminConfiguration {
         var configs = new HashMap<String, Object>();
         configs.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, config.getServers());
         configs.put(AdminClientConfig.CLIENT_ID_CONFIG, defaultAdminClientId());
-        configs.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
         return configs;
     }
 
