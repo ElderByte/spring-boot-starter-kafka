@@ -9,7 +9,7 @@ buildscript {
 	}
 }
 
-apply plugin: 'java'
+apply plugin: 'java-library'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply plugin: 'org.springframework.boot'
@@ -28,18 +28,18 @@ repositories {
 dependencies {
 
 	// Basic Spring Boot
-	implementation('org.springframework.boot:spring-boot-starter')
+	api('org.springframework.boot:spring-boot-starter')
 
 	// Jackson (version managed by Spring Boot)
-	implementation('com.fasterxml.jackson.core:jackson-core')
-	implementation('com.fasterxml.jackson.core:jackson-databind')
+	api('com.fasterxml.jackson.core:jackson-core')
+	api('com.fasterxml.jackson.core:jackson-databind')
 
 	// Kafka Client
-	implementation('org.springframework.kafka:spring-kafka')
+	api('org.springframework.kafka:spring-kafka')
 	compileOnly('org.apache.kafka:kafka-streams')
 
 
-	implementation("com.elderbyte.starter:starter:${starterVersion}")
+	api("com.elderbyte.starter:starter:${starterVersion}")
 
 
 	// Test
