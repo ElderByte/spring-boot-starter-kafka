@@ -26,12 +26,16 @@ repositories {
 
 dependencies {
 
-	compile project(':spring-boot-starter-kafka')
+	implementation project(':spring-boot-starter-kafka')
 
 	// Basic Spring Boot
-	compile('org.springframework.boot:spring-boot-starter')
+	implementation('org.springframework.boot:spring-boot-starter')
+
+
+	implementation("com.elderbyte.starter:starter:${starterVersion}")
+
 
 	// Kafka Client
-	compile('org.springframework.kafka:spring-kafka')
-	compile('org.apache.kafka:kafka-streams')
+	implementation('org.springframework.kafka:spring-kafka')
+	implementation('org.apache.kafka:kafka-streams')
 }

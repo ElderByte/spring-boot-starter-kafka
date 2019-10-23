@@ -28,24 +28,24 @@ repositories {
 dependencies {
 
 	// Basic Spring Boot
-	compile('org.springframework.boot:spring-boot-starter')
+	implementation('org.springframework.boot:spring-boot-starter')
 
 	// Jackson (version managed by Spring Boot)
-	compile('com.fasterxml.jackson.core:jackson-core')
-	compile('com.fasterxml.jackson.core:jackson-databind')
+	implementation('com.fasterxml.jackson.core:jackson-core')
+	implementation('com.fasterxml.jackson.core:jackson-databind')
 
 	// Kafka Client
-	compile('org.springframework.kafka:spring-kafka')
+	implementation('org.springframework.kafka:spring-kafka')
 	compileOnly('org.apache.kafka:kafka-streams')
 
 
-	compile("com.elderbyte.starter:starter:${starterVersion}")
+	implementation("com.elderbyte.starter:starter:${starterVersion}")
 
 
 	// Test
 
-	testCompile "org.springframework.kafka:spring-kafka-test"
-	testCompile('org.springframework.boot:spring-boot-starter-test')
+	testImplementation("org.springframework.kafka:spring-kafka-test")
+	testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
 
